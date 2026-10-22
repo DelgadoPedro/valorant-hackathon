@@ -1,0 +1,103 @@
+﻿metric_id,time,estrato,esperado,obtido,passou
+TRD-01,time_vermelho,,0.14285714285714285,0.14285714285714285,True
+TRD-01,time_azul,,0.0,0.0,True
+TRD-02,time_vermelho,,2.0,2.0,True
+TRD-03,time_vermelho,,0.8571428571428571,0.8571428571428571,True
+OPN-01,time_vermelho,,0.6666666666666666,0.6666666666666666,True
+OPN-02,time_vermelho,,0.5,0.5,True
+OPN-03,time_vermelho,,1.0,1.0,True
+OPN-07,time_vermelho,,1.0,1.0,True
+OPN-08,time_vermelho,,0.5,0.5,True
+KEY-01,time_vermelho,,1.0,1.0,True
+KEY-01,time_azul,,0.0,0.0,True
+KEY-02,time_vermelho,,1.0,1.0,True
+KEY-03,time_azul,,0.0,0.0,True
+KEY-06,time_vermelho,,1.0,1.0,True
+KEY-15,time_azul,,0.0,0.0,True
+KEY-08,time_vermelho,,0.0,0.0,True
+KEY-11,time_azul,1v5,0.5,0.5,True
+KEY-11,time_azul,1v3,0.0,0.0,True
+KEY-12,time_vermelho,,0.5,0.5,True
+KEY-12,time_azul,,0.0,0.0,True
+POS-01,time_vermelho,,1.0,1.0,True
+RET-01,time_azul,,0.0,0.0,True
+POS-04,time_vermelho,,0.0,0.0,True
+POS-12,time_vermelho,,1.0,1.0,True
+POS-03,time_vermelho,,40.0,40.0,True
+POS-13,time_vermelho,,10.0,10.0,True
+POS-14,time_vermelho,,0.0,0.0,True
+RET-11,time_azul,não defusou,-3.0,-3.0,True
+RET-12,time_azul,,0.0,0.0,True
+DYN-04,time_vermelho,,0.3333333333333333,0.3333333333333333,True
+DYN-04,time_azul,,1.0,1.0,True
+DYN-05,time_vermelho,,2.0,2.0,True
+DYN-01,time_vermelho,+4,0.5,0.5,True
+DYN-02,time_azul,-4,0.5,0.5,True
+ECO-01,time_vermelho,,14333.333333333334,14333.333333333334,True
+ECO-09,time_azul,,0.5,0.5,True
+TRD-07,time_vermelho,,0.7142857142857143,0.7142857142857143,True
+AGT-03,time_vermelho,Iniciador,2.0,2.0,True
+AGT-03,time_vermelho,Controlador,1.0,1.0,True
+AGT-04,time_vermelho,,1.0,1.0,True
+AGT-04,time_vermelho,Duelista,0.0,0.0,True
+AGT-04,time_azul,Duelista,1.0,1.0,True
+AGT-05,time_vermelho,,1.0,1.0,True
+AGT-08,time_vermelho,,0.0,0.0,True
+AGT-09,time_vermelho,,0.6,0.6,True
+AGT-11,time_vermelho,Jett · Killjoy · Omen · Skye · Sova,0.6666666666666666,0.6666666666666666,True
+AGT-14,time_vermelho,Jett · Killjoy · Omen · Skye · Sova,0.5,0.5,True
+AGT-15,time_vermelho,Jett · Killjoy · Omen · Skye · Sova,0.14285714285714285,0.14285714285714285,True
+AGT-16,time_vermelho,Jett · Killjoy · Omen · Skye · Sova,1.0,1.0,True
+AGT-23,time_vermelho,plant | Omen,1.0,1.0,True
+AGT-23,time_vermelho,trade | Sova,1.0,1.0,True
+HAL-02,time_vermelho,1º half,1.0,1.0,True
+HAL-02,time_azul,1º half,0.0,0.0,True
+HAL-03,time_vermelho,1º half,1.0,1.0,True
+HAL-04,time_vermelho,2-0,0.0,0.0,True
+HAL-04,time_azul,0-2,1.0,1.0,True
+HAL-05,time_vermelho,,1.0,1.0,True
+HAL-05,time_azul,,-1.0,-1.0,True
+HAL-07,time_vermelho,,0.0,0.0,True
+HAL-10,time_vermelho,,0.0,0.0,True
+HAL-12,time_vermelho,,0.0,0.0,True
+HAL-12,time_azul,,0.0,0.0,True
+HAL-13,time_vermelho,r2,1.9218125974762528,1.9218125974762528,True
+HAL-18,time_vermelho,1º half,0.6666666666666666,0.6666666666666666,True
+DYN-09,time_vermelho,geral,0.6666666666666666,0.6666666666666666,True
+DYN-09,time_vermelho,5v4,0.5,0.5,True
+DYN-09,time_vermelho,3v2,1.0,1.0,True
+DYN-10,time_azul,geral,0.3333333333333333,0.3333333333333333,True
+DYN-10,time_azul,4v5,0.5,0.5,True
+DYN-10,time_vermelho,geral,1.0,1.0,True
+DYN-11,time_vermelho,revertida,6.0,6.0,True
+DYN-11,time_azul,revertida,23.0,23.0,True
+DYN-11,time_azul,não revertida,10.0,10.0,True
+DYN-12,time_vermelho,mantida até o fim,1.0,1.0,True
+DYN-12,time_vermelho,mais de 15 s,0.0,0.0,True
+DYN-12,time_azul,até 5 s,0.0,0.0,True
+DYN-12,time_azul,5–15 s,0.0,0.0,True
+DYN-13,time_vermelho,até 5 s,1.0,1.0,True
+DYN-13,time_vermelho,5–15 s,1.0,1.0,True
+DYN-13,time_azul,mais de 15 s,1.0,1.0,True
+DYN-13,time_azul,não revertida,0.0,0.0,True
+OPN-13,time_vermelho,,0.0,0.0,True
+OPN-13,time_azul,,1.0,1.0,True
+OPN-14,time_vermelho,,0.0,0.0,True
+OPN-15,time_vermelho,fez,0.0,0.0,True
+OPN-15,time_vermelho,sofreu,0.0,0.0,True
+OPN-15,time_azul,fez,1.0,1.0,True
+OPN-15,time_azul,sofreu,1.0,1.0,True
+ECO-13,time_vermelho,superior,0.5,0.5,True
+ECO-13,time_azul,inferior,0.5,0.5,True
+TRD-13,time_vermelho,,0.0,0.0,True
+TRD-13,time_azul,,0.14285714285714285,0.14285714285714285,True
+TRD-14,time_vermelho,,0.8333333333333334,0.8333333333333334,True
+LEV-04,time_vermelho,,1.0,1.0000000000000002,True
+LEV-04,time_azul,,1.0,0.9999999999999997,True
+LEV-03,time_vermelho,,0.17303316077136854,0.17303316077136868,True
+LEV-08,time_vermelho,,0.6639664272760801,0.6639664272760804,True
+LEV-08,time_azul,,0.3360335727239199,0.3360335727239198,True
+LEV-09,time_vermelho,,-0.0027002393905865246,-0.002700239390586278,True
+LEV-12,time_vermelho,,0.4996256012083343,0.4996256012083346,True
+LEV-13,time_vermelho,,0.14053495791859083,0.14053495791859094,True
+LEV-06,time_vermelho,,0.9959496409141201,0.9959496409141207,True

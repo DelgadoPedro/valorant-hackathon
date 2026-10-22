@@ -1,0 +1,92 @@
+# RoundRx — configuração do pipeline (versionada).
+# Toda métrica que depende de limiar lê daqui. Ao mudar um valor, aumente `version`.
+version: "0.4.0"
+
+paths:
+  # Relativo à pasta deste arquivo. Na pasta do hackathon: hack/roundrx/config.yaml -> hack/dados/Dados .Json
+  data_dir: "../dados/Dados .Json"
+  output_dir: "outputs"
+  dictionary: "reference/metrics_dictionary.csv"
+  # Catálogo estático characterId -> agente/função (não contém estatísticas de partidas). Fonte e data no próprio CSV.
+  agents_catalog: "reference/agents_catalog.csv"
+
+output:
+  write_csv: true        # além de Parquet, grava CSV das tabelas de métricas e cobertura
+  write_canonical_csv: false  # CSV das tabelas canônicas (grandes); Parquet é sempre gravado
+
+# Unidades de posição: Unreal Engine usa centímetros (1 unidade = 1 cm).
+spatial:
+  near_radius: 1500        # "aliado próximo" = até 15 m (TRD-07/08/09, SPC-04, SPC-07, OPN-12)
+  distance_buckets: [0, 1000, 2000, 3000, 5000]   # faixas para TRD-06 / SPC-10 (cm); último = aberto
+  grid_cell: 1500          # SPC-08: tamanho da célula (cm) para agrupar regiões do mapa
+
+timing:
+  trade_window_s: 4.0      # janela de trade — decidido pelo time (dicionário sugeria ≤5 s; KAST da comunidade usa 3–4 s)
+  collapse_window_s: 5.0   # perda de ≥2 jogadores da mesma equipe nesta janela = colapso
+  post_plant_windows_s: [5, 10]   # POS-08
+  chain_window_s: 3.0      # TRD-11: intervalo máximo entre kills alternadas de uma chain
+  chain_min_kills: 3
+  opening_kills: 3         # OPN-10: "abertura" = primeiras N kills do round
+  spatial_cluster_window_s: 5.0   # SPC-09
+  episode_buckets_s: [5, 15]      # DYN-12/13: faixas de duração da vantagem / da desvantagem (até 5 s, 5–15 s, mais de 15 s)
+
+economy:
+  # Faixas por EQUIPE (soma de loadoutValue) — mesmas faixas do vlr.gg (Eco <10k, Half 10–18k, Full 18k+)
+  team_eco_max: 10000
+  team_full_min: 18000
+  # Faixas por JOGADOR (equivalente /5)
+  player_eco_max: 2000
+  player_full_min: 3600
+  big_gap: 8000            # vantagem/desvantagem econômica "expressiva" (diferença de Σ loadout)
+  even_gap: 3000           # |diferença| ≤ even_gap = economia equilibrada (OPN-06)
+  # KEY-09 force buy: após derrota, compra não-eco com ≥ force_min_players jogadores sem créditos
+  # (gasto + restante) para um kit completo (rifle 2900 + escudo pesado 1000 = 3900)
+  force_player_available_max: 3900
+  force_min_players: 3
+  # KEY-10 bonus: após vitória, compra "half" com Σ gasto ≤ bonus_spent_max (arsenal carregado do round anterior).
+  # Calibrado na base: no 3º round após vencer pistol + round 2, compras "half" têm gasto mediano ≈ 5 500.
+  bonus_spent_max: 6000
+
+# Lente AGT (composição) e HAL (abertura de half)
+composition:
+  loadout_ratio_bands: [0.67, 1.5]   # AGT-18: Σloadout time / adversário -> inferior | equilibrada | superior
+# Pressão e Leverage Index (LEV): P(vencer o mapa) por cadeia de Markov do placar + p_pre (logística fora da amostra)
+leverage:
+  shrink_m: 50             # rounds "virtuais" da taxa global ao estimar a taxa de vitória do ataque em cada mapa
+  folds: 5                 # validação separada por série (GroupKFold) para p_pre e para o relatório do modelo
+halves:
+  superior_ratio: 1.5      # HAL-07: "anti-eco" com equipamento superior = Σloadout ≥ 1,5 × adversário
+  log_gap_c: 1000          # HAL-13: c em log((loadout_time + c) / (loadout_adv + c))
+
+# Fundamentos coletivos (diagnóstico): eventos com contexto, baselines e detector de padrões
+fundamentals:
+  trade_windows_s: [3, 5, 7]       # desfechos de trade calculados para cada janela
+  default_window_s: 5              # janela usada no diagnóstico (a interface mostra as outras)
+  baseline:
+    model: auto                    # auto = escolhe M0/M1/M2 pela validação por série; ou fixe um deles
+    shrink_m: 20                   # M1: força do encolhimento de cada célula para a célula-pai
+    cv_folds: 5                    # validação separada por série (GroupKFold)
+    logistic_C: 1.0                # M2: regularização L2
+  patterns:
+    min_events: 30                 # eventos no recorte
+    min_matches: 3                 # partidas com eventos no recorte
+    min_events_per_match: 2        # para a partida contar na recorrência
+    null_sims: 10                  # simulações nulas para calibrar o limiar z*
+    null_team_rate: 0.05           # em dados sem padrão real, no máx. 5% dos times recebem algum padrão
+    validation_null_runs: 4        # sorteios nulos novos para medir falsos positivos depois da calibração
+    watch_z: 2.5                   # "sinal a observar": passa em tudo menos no limiar z* (amostra ainda insuficiente)
+    min_recurrence: 0.6            # fração das partidas na mesma direção do padrão
+    min_excess_pp: 3               # recorte só aparece à parte se for ≥ 3 pp mais extremo que o padrão geral do time
+    ci_level: 0.90                 # intervalo por bootstrap de partidas
+    bootstrap: 400
+    seed: 7
+    scopes_last_n: [10]            # conjuntos de partidas além de "todas"
+
+rounds:
+  regulation_rounds: 24
+  half_rounds: 12
+  loss_streaks: [2, 3]     # KEY-13
+
+aggregation:
+  consistency_metrics: ["TRD-01", "OPN-01", "OPN-02", "POS-01", "RET-01", "KEY-01", "DYN-04"]  # DYN-08
+  min_matches_consistency: 3

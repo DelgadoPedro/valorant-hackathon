@@ -1,0 +1,37 @@
+﻿metric_id,check,valor,n,passou
+KEY-12,rounds com CeremonyFlawless que nossa regra marca como flawless,0.9981617647058824,544,True
+KEY-11,rounds CeremonyClutch cobertos por 1v≥2 vencido (Riot também conta 1v1),1.0,247,True
+ECO-09,vitórias CeremonyThrifty com Σloadout próprio < adversário,1.0,215,True
+KEY-07,idem ECO-09 (mesmo campo oficial),1.0,215,True
+OPN-01,um único first blood por round,1.0,6588,True
+ECO-07,Σ(diferença) = 0 nos dois times do round,1.0,6618,True
+RET-01,Σ defuses = rounds com roundResult 'Bomb defused',1349.0,1349,True
+POS-01,Σ conversões = rounds com plant vencidos pelo ataque,3295.0,3295,True
+DYN-06,Σ dano agregado = Σ damage[] (inimigos),8906484.0,8906484,True
+TRD-13,TRD-13 = TRD-01 do adversário (kills do time trocadas = mortes do adversário trocadas),1.0,672,True
+OPN-13,OPN-13 = OPN-07 do adversário (FB feito trocado = FB sofrido trocado pelo adversário),1.0,671,True
+POS-13,POS-13 = RET-06 do adversário (1º contato pós-plant visto pelos dois times),1.0,661,True
+DYN-09,"rounds de 'geral' estão em DYN-01 +1, com o mesmo resultado",1.0,8988,True
+DYN-10,"rounds de 'geral' estão em DYN-02 -1, com o mesmo resultado",1.0,8988,True
+DYN-09,uma situação por round (Σ estratos = 'geral' = 1),1.0,8988,True
+DYN-10,uma situação por round (Σ estratos = 'geral' = 1),1.0,8988,True
+RET-12,cada par de estratos soma o total e só há casos em rounds com explosão,406.0,4653,True
+OPN-15,estrato 'sofreu' = OPN-12,2530.0,2530,True
+LEV-01,W+ do time + W− do adversário = 1 em cada round,1.0,13236,True
+LEV-02,0 ≤ W− ≤ W+ ≤ 1,1.0,13236,True
+LEV-04,LI igual para os dois times no mesmo round,1.0,13236,True
+LEV-04,LI médio da base = 1 (referência),1.0,13236,True
+LEV-01,W+ = 1 no round final para o vencedor do mapa,1.0,164,True
+LEV-13,mesmos time-rounds (mortes elegíveis) de TRD-01,1.0,12532,True
+AGT-14,Σ por estrato = OPN-02 (first bloods convertidos),1.0,6588,True
+AGT-15,Σ por estrato = TRD-01 (mortes trocadas),1.0,12532,True
+AGT-16,Σ por estrato = POS-01 (plants convertidos),1.0,4653,True
+AGT-17,Σ por estrato = RET-01 (defuses),1.0,4653,True
+HAL-02,Σ por estrato = KEY-01 (pistols vencidos),1.0,1344,True
+HAL-03,"Σ por estrato = KEY-02 (rounds 2/14 após vencer o pistol, por time-mapa)",1.0,492,True
+AGT-11,Σ rounds vencidos por composição = teams[].roundsWon,1.0,672,True
+AGT-01,time-mapas com composição válida / time-mapas,1.0,672,True
+AGT-03,funções somam 5 em cada time-mapa (catálogo cobre todos os agentes),1.0,672,True
+AGT-23,Σ plants por agente = rounds com plant (bombPlanter/bombDefuser),4653.0,4653,True
+AGT-23,Σ defuses por agente = rounds com defuse (bombPlanter/bombDefuser),1349.0,1349,True
+HAL-12,aberturas 3-0 recalculadas de roundResults[].winningTeam,1.0,1292,True

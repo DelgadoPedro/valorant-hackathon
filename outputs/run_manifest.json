@@ -1,0 +1,26 @@
+{
+  "roundrx_version": "0.1.0",
+  "run_at_utc": "2026-10-22T13:32:00+00:00",
+  "config_version": "0.4.0",
+  "config_fingerprint": "ca23e4409df5",
+  "data_fingerprint": "6fd3c4f46936",
+  "data_dir": "../dados/Dados .Json",
+  "n_files": 336,
+  "n_matches": 336,
+  "n_rounds": 6618,
+  "n_teams": 68,
+  "n_metric_rows": 1612620,
+  "python": "3.13.16",
+  "pandas": "3.0.5",
+  "timings_s": {
+    "ingestão": 3.06,
+    "linha do tempo (vivos/revives)": 6.49,
+    "trades": 4.81,
+    "time-round + economia": 27.83,
+    "qualidade": 0.12,
+    "métricas": 91.43,
+    "agregação": 1.67,
+    "sanidade": 0.28,
+    "checagens cruzadas": 1.69
+  }
+}

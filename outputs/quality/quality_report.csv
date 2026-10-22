@@ -1,0 +1,19 @@
+﻿check_id,descricao,nivel,falhas,total,status,exemplos
+Q01,nome do arquivo segue o padrão <fase>_<n>_<data>_<timeA>_<a>_x_<b>_<timeB>_<mapa>,erro,0,336,ok,
+Q02,placar do nome do arquivo casa com teams[].roundsWon,erro,0,336,ok,
+Q03,codinome de mapa corresponde a um único nome,erro,0,336,ok,
+Q04,partidas com observador (excluído das métricas),aviso,22,336,aviso,"('Rush Series Esquenta 2/RUSH2_028_21-06-26_azure_bears_black_5_x_13_azure_bears_golden_split.json',); ('Rush Series Inclusivo/RUSH_INCLUSIVO_003_08-08-26_macklogic_rainbow_13_x_6_ufu_saints_auryn_haven.json',); ('Rush Series Inclusivo/RUSH_INCLUSIVO_005_08-08-26_azure_bears_white_13_x_7_usp_stars_gc_sunset.json',)"
+Q05,5 jogadores (não observadores) por time,erro,0,672,ok,
+Q06,nº de rounds = soma do placar,erro,0,336,ok,
+Q07,lado atacante segue o padrão (troca no 13º round; alterna na prorrogação),aviso,0,6618,ok,
+Q08,plantRoundTime > 0 sempre que há bombPlanter,erro,0,4653,ok,
+Q09,defuse só ocorre em round com plant,erro,0,1349,ok,
+Q10,round com defuse foi vencido pelos defensores,erro,0,1349,ok,
+Q11,kills com timestamp negativo,erro,0,46753,ok,
+Q12,economia presente (loadoutValue não nulo),erro,0,66180,ok,
+Q13,kills não-combate (spike/suicídio/aliado) — excluídas de trades e first blood,info,382,46753,info,"('02e4c729-6b8e-4341-bf35-6678ffad6dad', 0, 'bomb'); ('02e4c729-6b8e-4341-bf35-6678ffad6dad', 0, 'bomb'); ('02e4c729-6b8e-4341-bf35-6678ffad6dad', 6, 'bomb')"
+Q14,kill com snapshot de posições vazio (afeta métricas espaciais),aviso,84,46753,aviso,"('9050596f-5a36-4554-a002-d7bbe68fccac', 28, 9); ('0e831693-5b30-4c9f-bc6e-e357d319159d', 7, 9); ('0e831693-5b30-4c9f-bc6e-e357d319159d', 17, 9)"
+Q15,kills reconstruídas ≈ players[].stats.kills (tolerância 1),aviso,0,3360,ok,
+Q16,revives inferidos (jogador volta a aparecer vivo),info,105,46173,info,"('0f515cda-ee0d-4b23-b9d8-ebde188f77e6', 12, 'reapareceu no snapshot'); ('10800c5a-fb9b-469a-8f27-8713257d598b', 4, 'reapareceu no snapshot'); ('10800c5a-fb9b-469a-8f27-8713257d598b', 14, 'reapareceu no snapshot')"
+Q17,contagem de vivos nunca negativa,erro,0,52279,ok,
+Q18,rounds 'Eliminated': time perdedor termina com 0 vivos,aviso,10,4597,aviso,"('e63826e5-85e5-480a-ad59-537cd7ab2a69', 6); ('0f515cda-ee0d-4b23-b9d8-ebde188f77e6', 12); ('ae195e5f-4d34-4636-ad29-2ac22a6078da', 8)"
