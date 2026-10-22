@@ -52,6 +52,7 @@ G2, G3, G4 = ("Trade kill", "Pós-plant", "Retake")
 # HAL-01..18 (22/10/2026: a página de início de half é feita das sequências de rounds), DYN-06..08 (dano e consistência, 22/10/2026), as métricas LEV-01..18 (22/10/2026: a página de pressão usa os campos li/wp/wm/pp/lq de R;
 # as médias de pressão não são estáveis por time e as ponderadas repetem a taxa de vitória) e toda a composição de agentes (AGT).
 SECTIONS = [
+    ("about", "Como usar", None, "Início"),   # tela de abertura: o que é a ferramenta e como navegar
     ("home", "Panorama", None, "Início"),
     ("overview", "Partida", None, "Início"),
     ("diag", "Fundamentos", None, "Diagnóstico"),   # rota das telas de padrão e de round (fora da barra lateral)

@@ -497,17 +497,8 @@ table.sb { margin-bottom: 14px; table-layout: fixed; width: auto; border-collaps
 .sb-pl { overflow: hidden; padding-left: 6px !important; }
 .sb-pl b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; font-size: 13px; }
 .sb-ag img { display: block; width: 28px; height: 28px; border-radius: 5px; background: var(--panel-2); border: 1px solid var(--line); }
-.sb-grid { display: grid; grid-template-columns: max-content minmax(260px, 1fr); gap: 18px; align-items: start; }
-.sb-tables { min-width: 0; }
-.sb-notes { margin-top: 4px; padding: 14px 16px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); }
-.sb-notes h3 { margin: 0 0 8px; font-size: 14px; }
-.sb-notes ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 12px; font-size: 13px; line-height: 1.45; }
+.sb-body { width: fit-content; max-width: 100%; margin-inline: auto; }
 
-.sb-notes li { display: grid; gap: 2px; }
-.sb-notes li .k { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--mut); }
-.sb-notes li small { color: var(--mut); font-size: 11.5px; }
-.sb-notes .note { margin: 12px 0 0; }
-@media (max-width: 1180px) { .sb-grid { grid-template-columns: minmax(0, 1fr); } }
 .sbc { display: block; padding: 5px 3px; border-radius: 4px; font-size: 12.5px; background: var(--panel-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sbc.strong { font-weight: 600; }
 .sbc.up { color: var(--good); background: color-mix(in srgb, var(--good) 10%, var(--panel-2)); }
@@ -769,3 +760,49 @@ h2.sec-sub { margin: 16px 0 -4px; }
 .status.good.soft { background: none; box-shadow: inset 0 0 0 1px var(--good); color: var(--good); }
 .status.weak { box-shadow: none; outline: 1px dashed currentColor; outline-offset: -1px; background: none; }
 .status.weak.good, .status.weak.bad, .status.weak.good.soft, .status.weak.bad.soft { box-shadow: none; background: none; outline: 0; border: 1px dashed currentColor; padding: 2px 8px 2px 6px; }
+
+/* "i" dos fundamentos (Panorama) */
+.ft-head h3 details.help.info { display: inline-block; margin-left: 2px; vertical-align: middle; font-weight: 400; }
+.ft-head h3 details.help.info summary { color: var(--faint); }
+.ft-head h3 details.help.info summary:hover { color: var(--accent); }
+.help-pop .info-k { margin: 8px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--mut); }
+.help-pop .info-list { margin: 0; padding-left: 16px; display: grid; gap: 2px; font-size: 12.5px; }
+.ft-head h3 details.help.info > summary { font-size: 15px; padding: 3px; }
+details.help.info .help-pop { left: 0; right: auto; width: min(360px, calc(100vw - 40px)); font-size: 13px; }
+
+/* ---------- Como usar (tela de abertura) ---------- */
+body.diag-mode main:has(.lp-hero) { gap: 40px; padding-top: 30px; }
+.lp-hero { display: grid; gap: 14px; justify-items: start; max-width: 860px; }
+.lp-hero h1 { margin: 0; font: 800 clamp(44px, 7vw, 76px)/.92 var(--f-display); font-variation-settings: "wdth" 125; letter-spacing: -.015em; }
+.lp-lead { margin: 2px 0 4px; font-size: clamp(16px, 2vw, 19px); line-height: 1.5; color: var(--ink); max-width: 680px; }
+.lp-cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.lp-cta .btn, .lp-end .btn { padding: 10px 16px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.lp-hint { margin: 0; font-size: 13px; color: var(--mut); }
+.lp-facts { display: flex; flex-wrap: wrap; gap: 8px 36px; margin: 10px 0 0; padding-top: 16px; border-top: 1px solid var(--line); width: 100%; }
+.lp-facts div { display: grid; }
+.lp-facts dt { font-size: 12.5px; color: var(--mut); }
+.lp-facts dd { margin: 0; font: 600 26px/1.1 var(--f-display); font-variation-settings: "wdth" 80; font-variant-numeric: tabular-nums; }
+.lp-facts dd.sm { font-size: 20px; padding-top: 4px; }
+.lp-block { display: grid; gap: 14px; }
+.lp-block h2 { margin: 0; font: 700 22px var(--f-display); }
+.lp-steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.lp-steps li { counter-increment: s; display: grid; gap: 4px; align-content: start; padding: 16px 18px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); font-size: 13.5px; line-height: 1.45; color: var(--mut); }
+.lp-steps li::before { content: counter(s); display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; margin-bottom: 6px;
+  background: var(--accent); color: var(--panel); font: 700 13px var(--f-body); }
+.lp-steps li b { color: var(--ink); font-size: 15px; }
+.lp-fund:hover { border-color: var(--accent); }
+.lp-ic { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); font-size: 18px; flex: none; }
+.lp-funds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.lp-fund { display: flex; gap: 12px; align-items: center; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel);
+  font: inherit; color: var(--ink); cursor: pointer; }
+.lp-fund > span:last-child { display: grid; gap: 2px; }
+.lp-fund b { font-size: 14px; }
+.lp-fund small { color: var(--mut); font-size: 12.5px; line-height: 1.4; }
+.lp-read { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 22px; align-items: start; padding: 18px 20px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+.lp-ex { display: grid; gap: 6px; }
+.lp-ex-nums { display: flex; align-items: baseline; gap: 10px; }
+.lp-ex .note { margin: 2px 0 0; }
+.lp-rules { margin: 0; padding-left: 18px; display: grid; gap: 10px; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+.lp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.lp-end { display: flex; justify-content: center; padding: 6px 0 10px; }
+@media (max-width: 760px) { .lp-steps, .lp-read { grid-template-columns: minmax(0, 1fr); } .lp-funds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

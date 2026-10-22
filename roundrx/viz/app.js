@@ -416,7 +416,7 @@
 
   // ------------------------------------------------------------------ estado
   const state = {
-    team: 0, pos: 0, section: "home", dscope: "todas", dwin: Math.round(D.cfg.trade_window_s) || 4, dfund: "trade", dfb: "fb_open", dmore: {}, pat: null, rv: null, pdim: null,
+    team: 0, pos: 0, section: "about", dscope: "todas", dwin: Math.round(D.cfg.trade_window_s) || 4, dfund: "trade", dfb: "fb_open", dmore: {}, pat: null, rv: null, pdim: null,
     side: "all", show: { team: true, league: true }, sameMap: false, scope: "all",
     open: {}, view: {}, cut: {}, more: {}, phase: -1, lines: false, pistAll: false,
     levScope: "todas", levCmp: "map", levLS: "match", levOrd: "cost", evOrd: "peso", halScope: "todas", halMap: null, adim: {}, rvr: null, revOrd: "cost", revScope: "match",
@@ -590,7 +590,7 @@
                        "Rounds-chave": "pistol, eco, anti-eco, force e armados", Clutches: "clutches, perfeitos, bonus e thrifty", "Início de half": "os 3 primeiros rounds de cada half",
                        "Pressão": "quanto cada round vale para o mapa", "Rounds para revisar": "os rounds que mais mudaram o mapa, com o motivo" };
   const GROUP_ICON = { Fundamentos: "fund", Vantagem: "adv", "First blood": "fb", "Trade kill": "trade", "Pós-plant": "post", Retake: "retake", "Rounds-chave": "key", Clutches: "trophy", "Início de half": "calendar", "Pressão": "gauge", "Rounds para revisar": "film" };
-  const ITEM_ICON = { home: "home", overview: "match" };
+  const ITEM_ICON = { about: "info", home: "home", overview: "match" };
   function renderSide() {
     const groups = d3.groups(D.sections.filter((s) => s.group !== "Diagnóstico"), (s) => s.group);
     const go = (id) => () => { state.section = id; state.pat = null; state.rv = null; state.rvr = null; state.rvrFrom = null; render(); window.scrollTo({ top: 0 }); };
@@ -1525,117 +1525,6 @@
     const rp = g("rp", 0) + g("rp", 1), sum = (c) => g(c, 0) + g(c, 1);
     return { rp, acs: S.acs[i], k: S.k[i], d: S.d[i], a: S.a[i], adr: S.adr[i], hs: sum("hs"), sh: sum("sh"), kast: sum("kast"), fk: sum("fk"), fd: sum("fd") };
   }
-  // referências da liga para a leitura do placar (todas as partidas): conversão do first blood, ataque por mapa, anti-eco
-  let LREF = null;
-  function leagueRef() {
-    if (LREF) return LREF;
-    const fb = [0, 1, 2].map(() => [[0, 0], [0, 0]]), atk = new Map(), anti = [0, 0];   // fb[lado: 0 ataque, 1 defesa, 2 todos][sofreu, fez]
-    for (let i = 0; i < D.R.m.length; i++) {
-      const w = D.R.w[i];
-      const f = D.R.fb[i];
-      if (f === 0 || f === 1) for (const k of [D.R.sd[i], 2]) { fb[k][f][0] += w; fb[k][f][1]++; }
-      if (D.R.sd[i] === 0) { const mp = M.map[D.R.m[i]], a = atk.get(mp) || atk.set(mp, [0, 0]).get(mp); a[0] += w; a[1]++; }
-      if (D.R.ob[i] === 1 && D.R.b[i] >= 2) { anti[0] += w; anti[1]++; }
-    }
-    LREF = { fb: fb.map(([l, w_]) => [l[0] / l[1], w_[0] / w_[1]]), atk: new Map([...atk].map(([k, [w, n]]) => [k, w / n])), anti: anti[0] / anti[1] };
-    return LREF;
-  }
-  // comentários do placar: curtos, cada um com uma referência (liga, o próprio time, o próprio jogador)
-  function sbNotes(m, t, sd) {
-    const S = D.SB, L = leagueRef(), o = opp(m, t), sdi = sd === "atk" ? 0 : sd === "def" ? 1 : null, mp = M.map[m];
-    const us = (SB_by_m.get(m + "|" + t) || []).map((i) => [i, sbStats(i, sd)]), them = SB_by_m.get(m + "|" + o) || [];
-    if (!us.length) return null;
-    const name = (i) => D.players[S.p[i]] ?? "—", P = (v) => NF0.format(100 * v) + "%", B = (txt) => h("b", null, txt);
-    const sg = (v) => (v > 0 ? "+" : v < 0 ? "−" : "±") + NF0.format(Math.abs(v));
-    const item = (k, ...body) => h("li", null, h("span", { class: "k" }, k), h("span", null, ...body));
-    const rows = (tm) => R_by_m[m].filter((i) => D.R.t[i] === tm).sort((a, b) => D.R.r[a] - D.R.r[b]);
-    const mine = rows(t), wn = (l) => l.filter((i) => D.R.w[i] === 1).length;
-    const items = [];
-    // lado do mapa
-    const la = L.atk.get(mp);
-    if (la != null) {
-      const sideL = (k) => mine.filter((i) => D.R.sd[i] === k), A = sideL(0), Df = sideL(1), strong = la >= 0.5 ? 0 : 1, nm = ["ataque", "defesa"];
-      const tr = [A.length ? wn(A) / A.length : null, Df.length ? wn(Df) / Df.length : null], lg = [la, 1 - la];
-      const off = (k) => (tr[k] == null ? 0 : tr[k] - lg[k]);
-      const v = Math.abs(la - 0.5) < 0.02 ? "" : off(strong) <= -0.08 ? ` Ficou abaixo justamente na ${nm[strong]}.` : off(1 - strong) >= 0.08 ? ` Foi bem no lado mais difícil (${nm[1 - strong]}).` : off(1 - strong) <= -0.08 ? ` Ficou abaixo no lado mais difícil (${nm[1 - strong]}).` : "";
-      items.push(item("Lado do mapa", Math.abs(la - 0.5) < 0.02 ? `${mp} é equilibrado na liga. ` : `${mp} favorece a ${nm[strong]} na liga (${P(lg[strong])}). `,
-        "Time: ataque ", B(`${wn(A)}/${A.length}`), ", defesa ", B(`${wn(Df)}/${Df.length}`), "." + v));
-    }
-    // jogadores contra o próprio normal (ACS nas outras partidas do time; segue o filtro de lado)
-    const hist = us.map(([i, x]) => {
-      let a = 0, n = 0, k = 0;
-      for (let j = 0; j < S.p.length; j++) {
-        if (S.p[j] !== S.p[i] || S.t[j] !== t || S.m[j] === m) continue;
-        const y = sbStats(j, sd); if (!y.rp) continue; a += y.acs * y.rp; n += y.rp; k++;
-      }
-      return k >= 2 ? { i, dl: x.acs - a / n } : null;
-    }).filter(Boolean);
-    const up = hist.filter((r) => r.dl >= 25).sort((a, b) => b.dl - a.dl), dn = hist.filter((r) => r.dl <= -25).sort((a, b) => a.dl - b.dl);
-    const lst = (l) => l.map((r) => `${name(r.i)} (${sg(r.dl)})`).join(", ");
-    if (up.length || dn.length) items.push(item("Contra o próprio normal" + (sdi == null ? "" : sdi === 0 ? " (ataque)" : " (defesa)"),
-      up.length ? ["Acima: ", B(lst(up)), dn.length ? ". " : "."] : "", dn.length ? ["Abaixo: ", B(lst(dn)), "."] : "", h("small", null, " ACS contra a média do jogador nas outras partidas do time")));
-    // economia: round comprado perdido seguido de eco ou force (quebra)
-    const theirs = new Map(rows(o).map((i) => [D.R.r[i], i]));
-    const broke = (row, next) => row != null && next != null && D.R.b[row] === 3 && D.R.w[row] === 0 && (D.R.b[next] === 1 || D.R.fo[next] === 1);
-    let suf = 0, cau = 0;
-    for (let k = 0; k < mine.length - 1; k++) {
-      const r = D.R.r[mine[k]]; if (r === 11 || r >= 23) continue;
-      const nx = mine[k + 1]; if (D.R.r[nx] !== r + 1) continue;
-      if (broke(mine[k], nx)) suf++;
-      if (broke(theirs.get(r), theirs.get(r + 1))) cau++;
-    }
-    items.push(item("Economia", "Quebrou a economia do adversário ", B(`${cau}×`), " e teve a sua quebrada ", B(`${suf}×`), ".",
-      h("small", null, " quebra = perder um round com compra completa e ir de eco ou force no seguinte")));
-    // sequências
-    const streak = (wv) => { let best = [0, 0, 0], cur = 0, st = 0;
-      mine.forEach((i, k) => { if (D.R.w[i] === wv) { if (!cur) st = D.R.r[i]; cur++; if (cur > best[0]) best = [cur, st, D.R.r[i]]; } else cur = 0; });
-      return best; };
-    const [wl, ws, we] = streak(1), [ll, ls, le] = streak(0);
-    const sq = [];
-    if (wl >= 3) sq.push(["venceu ", B(`${wl} seguidos`), ` (R${ws + 1}–R${we + 1})`]);
-    if (ll >= 3) sq.push([sq.length ? "; perdeu " : "Perdeu ", B(`${ll} seguidos`), ` (R${ls + 1}–R${le + 1})`]);
-    if (sq.length) { if (sq[0][0] === "venceu ") sq[0][0] = "Venceu "; items.push(item("Sequências", ...sq.flat(), ".")); }
-    // composição no mapa: do time e na liga
-    const comp = compOf(m, t);
-    if (comp && comp.length) {
-      const lab = compLabel(comp);
-      let tN = 0, tS = 0, lN = 0, lW = 0;
-      for (let i = 0; i < D.C.m.length; i++) {
-        const mm = D.C.m[i], tt = D.C.t[i]; if (mm === m || M.map[mm] !== mp) continue;
-        const c = compOf(mm, tt); if (!c) continue; const same = compLabel(c) === lab;
-        if (tt === t) { tN++; if (same) tS++; }
-        if (same) { lN++; const [a, b] = scoreOf(mm, tt); if (a > b) lW++; }
-      }
-      items.push(item("Composição", tN ? (tS ? `Usada pelo time em ${tS} de ${tN} outros mapas em ${mp}. ` : `Nova para o time em ${mp} (${tN} outros mapas lá). `) : `Primeiro ${mp} do time. `,
-        lN ? ["Na liga: ", B(`${lW} vitórias em ${lN}`), " mapas com ela."] : "Ninguém mais usou essa comp nesse mapa."));
-    }
-    // clutches: o último vivo do time contra 1 ou mais
-    const ids = (tm) => new Set((SB_by_m.get(m + "|" + tm) || []).map((i) => S.p[i]));
-    const pu = ids(t), po = ids(o);
-    const cl = { us: [], them: [] };
-    for (const i of mine) {
-      const r = D.R.r[i], ks = (K_by_m[m] || []).filter((k) => D.K.r[k] === r).sort((a, b) => D.K.t[a] - D.K.t[b]);
-      const dead = new Set(); let a = 5, b = 5, fu = false, fo = false;
-      for (const k of ks) {
-        dead.add(D.K.v[k]); if (D.K.vt[k] === t) a--; else b--;
-        if (!fu && a === 1 && b >= 1) { fu = true; const who = [...pu].find((p) => !dead.has(p)); cl.us.push({ r, n: b, won: D.R.w[i] === 1, who }); }
-        if (!fo && b === 1 && a >= 1) { fo = true; cl.them.push({ won: D.R.w[i] === 0 }); }
-      }
-    }
-    if (cl.us.length || cl.them.length) {
-      const wonUs = cl.us.filter((c) => c.won), best = wonUs.sort((x, y) => y.n - x.n)[0];
-      items.push(item("Clutches", "Último vivo contra 1 ou mais: o time venceu ", B(`${wonUs.length} de ${cl.us.length}`),
-        best ? ` (${D.players[best.who] ?? "—"} 1v${best.n} no R${best.r + 1})` : "", `; o adversário, ${cl.them.filter((c) => c.won).length} de ${cl.them.length}.`));
-    }
-    // ultimates: total do time × adversário × o normal do time
-    if (S.ul) {
-      const tot = (l) => l.reduce((a, i) => a + (S.ul[i] || 0), 0);
-      const mu = tot(SB_by_m.get(m + "|" + t) || []), mo = tot(them);
-      let a = 0, n = 0; for (const mm of teamMatches[t]) if (mm !== m) { const l = SB_by_m.get(mm + "|" + t); if (l) { a += tot(l); n++; } }
-      items.push(item("Ultimates", "Usou ", B(String(mu)), ` × ${mo} do adversário`, n ? `; o time costuma usar ${NF0.format(a / n)} por mapa.` : "."));
-    }
-    return h("aside", { class: "sb-notes" }, h("h3", null, "Leitura do placar"), h("ul", null, items));
-  }
   function scoreboard(m, t) {
     const o = opp(m, t), [a, b] = scoreOf(m, t), sd = state.sbSide || "all";
     const sgn = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + NF0.format(Math.abs(v));
@@ -1669,9 +1558,9 @@
           h("p", null, "ACS = pontuação de combate por round. ADR = dano em adversários por round; HS% = acertos na cabeça entre os acertos em adversários."),
           h("p", null, `KAST = % de rounds em que o jogador teve kill, assistência, sobreviveu ou teve a morte trocada (em até ${tw} s). FK / FD = 1ª kill / 1ª morte do round; o último +/− é FK − FD.`))),
       roundTimeline(m, t, sd),
-      h("div", { class: "ctl-row sb-ctl" }, seg([["all", "Todos"], ["atk", "Ataque"], ["def", "Defesa"]], sd, (v) => { state.sbSide = v; render(); }, "Lado")),
-      h("div", { class: "sb-grid" }, h("div", { class: "sb-tables" }, h("div", { class: "tbl-wrap" }, table(t, a, a > b, true)), h("div", { class: "tbl-wrap" }, table(o, b, b > a, false))),
-        sbNotes(m, t, sd)));
+      h("div", { class: "sb-body" },
+        h("div", { class: "ctl-row sb-ctl" }, seg([["all", "Todos"], ["atk", "Ataque"], ["def", "Defesa"]], sd, (v) => { state.sbSide = v; render(); }, "Lado")),
+        h("div", { class: "tbl-wrap" }, table(t, a, a > b, true)), h("div", { class: "tbl-wrap" }, table(o, b, b > a, false))));
   }
   function renderOverview(main) {
     const m = curMatch(), t = state.team;
@@ -2952,6 +2841,17 @@
   const ICONS = window.RRX_ICONS || {};
   function icon(name, cls) { const s = h("span", { class: "icw" + (cls ? " " + cls : "") }); s.innerHTML = ICONS[name] || ""; return s; }
   // ajuda: explicações longas ficam atrás do botão (?), sem sair da tela
+  // botão "i" (mesmo popover da ajuda): o que é o fundamento e o que tem dentro da seção
+  function infoBtn(title, ...kids) {
+    const sm = h("summary", { "aria-label": "Sobre: " + title, title: "O que é" }, icon("info"));
+    const pop = h("div", { class: "help-pop", role: "note" }, h("b", { class: "help-t" }, title), ...kids);
+    const d = h("details", { class: "help info" }, sm, pop);
+    // abre para a direita; se passar da borda da tela, desloca para dentro
+    d.addEventListener("toggle", () => { if (!d.open) return; pop.style.left = "0px";
+      const r = pop.getBoundingClientRect(), over = r.right - (document.documentElement.clientWidth - 12);
+      if (over > 0) pop.style.left = `${-over}px`; });
+    return d;
+  }
   function helpBtn(title, ...kids) {
     const sm = h("summary", { "aria-label": "Ajuda: " + title, title: "Como ler" }, icon("help"));
     return h("details", { class: "help" }, sm, h("div", { class: "help-pop", role: "note" }, h("b", { class: "help-t" }, title), ...kids));
@@ -3020,13 +2920,31 @@
       h("div", { class: "facts" },
         h("span", null, h("b", null, `${y} de ${FD.n[i]}`), ` ${U.noun} ${U.did}`)));
   }
+  const FUND_INFO = {
+    TRD: ["Quando um jogador morre com um aliado vivo, o time mata o autor em até " + NF0.format(D.cfg.trade_window_s) + " s? O esperado vem de outros times nas mesmas situações: distância do aliado mais próximo, momento do round, nº de jogadores, lado, economia e mapa."],
+    ADV: ["Quando o time fica com mais jogadores vivos (5v4, 4v3…), ele fecha o round? O esperado considera o estado, o lado, a spike, o momento e a economia."],
+    FB: ["O primeiro duelo do round. Abertura: o time vence o first blood? Depois de sofrer: o time recupera o round mesmo tendo sofrido o first blood?"],
+    POS: ["Depois de plantar a spike, o time segura até o fim? O esperado considera quantos estão vivos de cada lado no plant, o site, o momento do plant e a economia."],
+    RET: ["Quando o adversário planta, o time consegue o defuse ou elimina todos? Mesmo contexto do pós-plant, do ponto de vista de quem defende."],
+    KEY: ["Pistol, eco, anti-eco, force buy e rounds armados (full × full): o time vence o que se espera em cada tipo de round?"],
+    HAL: ["Os rounds 2 e 3 de cada half, pelo caminho até ali: depois de vencer ou perder o pistol, e depois de 2–0, 1–1 ou 0–2."],
+    LEV: ["Os rounds que mais valem para o mapa (os 25% com maior índice de pressão: quanto vencer ou perder muda a chance de levar o mapa). O time vence o esperado nesses momentos?"],
+  };
+  const SECTION_PAGES = { HAL: ["Pistol → round 2 → round 3 de cada half", "Caminhos da abertura e o resultado do mapa", "Por mapa e lado"],
+    LEV: ["Curva da chance de vencer o mapa", "Onde o time perde mapas", "Vitória sob pressão", "Rounds de maior peso"] };
+  function fundInfo(section, title) {
+    const ids = (SEC_IDS[section] || []).filter((id) => MI[id] != null && !HIDDEN.has(id) && METRICS[MI[id]].status !== "adiada");
+    const items = ids.length ? ids.map((id) => lbl(METRICS[MI[id]])) : SECTION_PAGES[section] || [];
+    return infoBtn(title, h("p", null, (FUND_INFO[section] || [""])[0]),
+      items.length ? [h("p", { class: "info-k" }, ids.length ? "Métricas na seção" : "Na seção"), h("ul", { class: "info-list" }, items.map((x) => h("li", null, x)))] : null);
+  }
   function fundTile(fks, team, title, iconName, section, extra) {
     // várias leituras (First blood: abertura e depois de sofrer): mostra a mais preocupante, depois a mais forte
     const sts = fks.map((fk) => fundStatus(fk, team)).sort((a, b) => TIER_RANK[a.k] - TIER_RANK[b.k]);
     const k = sts[0].k, weakAll = sts[0].weak;
     const nPat = fks.reduce((a, fk) => a + fdRows(fk, team, state.dscope).filter((i) => Fd(fk).FD.sel[i]).length, 0);
     return h("article", { class: "ftile" },
-      h("header", { class: "ft-head" }, h("h3", null, icon(iconName), title), statusChip(k, weakAll)),
+      h("header", { class: "ft-head" }, h("h3", null, icon(iconName), title, fundInfo(section, title)), statusChip(k, weakAll)),
       h("div", { class: "flines" }, fks.map((fk) => fundLine(fk, team, fks.length > 1 ? FUI[fk].tab : null))),
       h("footer", { class: "ft-foot" },
         h("span", { class: "mut" }, nPat ? `${nPat} ${nPat === 1 ? "padrão recorrente" : "padrões recorrentes"}` : "Nenhum padrão recorrente"),
@@ -3066,7 +2984,7 @@
         h("div", { class: "att-vs" }, unitsVs(fk, FD.vs[i])),
         h("div", { class: "att-acts" },
           h("button", { class: "btn ghost sm", type: "button", onclick: openPat(fk, i, false) }, "Ver padrão"),
-          kind === "abaixo" ? h("button", { class: "btn sm", type: "button", onclick: openPat(fk, i, true) }, icon("film"), "Ver rounds") : null)));
+)));
   }
   function collectPatterns(team, dir) {
     const out = [];
@@ -3144,6 +3062,49 @@
     });
     return h("div", { class: "mcards", role: "list", "aria-label": "Campanha por mapa" }, cards);
   }
+  // ================================================================== COMO USAR (tela de abertura)
+  function renderAbout(main) {
+    const go = (id, extra) => () => { Object.assign(state, extra || {}); state.section = id; state.pat = null; state.rv = null; state.rvr = null; render(); window.scrollTo({ top: 0 }); };
+    const dates = M.date.slice().sort(), r = D.run;
+    const team = prettyTeam(D.teams[state.team]);
+    const FUNDS = [["trade", "Trade kill", "TRD"], ["adv", "Preservação de vantagem", "ADV"], ["fb", "First blood", "FB"], ["post", "Pós-plant", "POS"],
+      ["retake", "Retake", "RET"], ["key", "Rounds-chave", "KEY"], ["calendar", "Início de half", "HAL"], ["gauge", "Pressão", "LEV"]];
+    main.append(
+      h("section", { class: "lp-hero" },
+        h("h1", null, "RoundRx"),
+        h("p", { class: "lp-lead" }, "Revisão pós-partida para times de VALORANT: onde o time fica acima ou abaixo do que outros times fazem nas mesmas situações, e quais rounds rever no VOD."),
+        h("div", { class: "lp-cta" },
+          h("button", { class: "btn", type: "button", onclick: go("home") }, `Abrir o panorama de ${team}`, icon("next")),
+          h("button", { class: "btn ghost", type: "button", onclick: go("overview") }, "Ver a última partida")),
+        h("p", { class: "lp-hint" }, "Troque o time a qualquer momento no seletor ", h("b", null, "Equipe"), " no topo da página."),
+        h("dl", { class: "lp-facts" },
+          h("div", null, h("dt", null, "Partidas"), h("dd", null, NF0.format(r.n_matches))),
+          h("div", null, h("dt", null, "Rounds"), h("dd", null, NF0.format(r.n_rounds))),
+          h("div", null, h("dt", null, "Times"), h("dd", null, D.teams.length)),
+          h("div", null, h("dt", null, "Período"), h("dd", { class: "sm" }, `${fmtDate(dates[0])} a ${fmtDate(dates[dates.length - 1])}`)))),
+      h("section", { class: "lp-block" }, h("h2", null, "Como usar em 3 passos"),
+        h("ol", { class: "lp-steps" },
+          h("li", null, h("b", null, "Escolha o time"), h("span", null, "No seletor Equipe, no topo. Tudo no painel passa a ser sobre esse time.")),
+          h("li", null, h("b", null, "Comece pelo Panorama"), h("span", null, "Os mapas do time e os 8 fundamentos, cada um com o observado contra o esperado. Os pontos de atenção aparecem primeiro.")),
+          h("li", null, h("b", null, "Aprofunde"), h("span", null, "\"Ver análise detalhada\" mostra onde a diferença aparece mais. A aba Partida traz o placar, o round a round e os rounds que mais mudaram o mapa.")))),
+      h("section", { class: "lp-block" }, h("h2", null, "Os 8 fundamentos"),
+        h("div", { class: "lp-funds" }, FUNDS.map(([ic, t, sec]) => h("button", { class: "lp-fund", type: "button", onclick: go(sec) },
+          h("span", { class: "lp-ic" }, icon(ic)), h("b", null, t))))),
+      h("section", { class: "lp-block" }, h("h2", null, "Como ler"),
+        h("div", { class: "lp-read" },
+          h("div", { class: "lp-ex" },
+            h("div", { class: "lp-ex-nums" }, h("b", { class: "fl-obs t-bad" }, "18%"), h("span", { class: "fl-exp" }, "esperado ", h("b", null, "22%"))),
+            ruler({ obs: 0.18, exp: 0.22, tone: "bad", band: false, aria: "Exemplo: 18% observado, 22% esperado" }),
+            h("p", { class: "note" }, "Ponto = o time. Traço = o esperado.")),
+          h("ul", { class: "lp-rules" },
+            h("li", null, h("b", null, "Esperado"), " é o que outros times fazem nas mesmas situações (lado, economia, momento do round, mapa). O próprio time nunca entra nessa conta."),
+            h("li", null, h("span", { class: "lp-chips" }, statusChip("dentro"), statusChip("abaixo", true), statusChip("muito_acima")),
+              "Dentro, acima ou abaixo do esperado pela diferença em pontos percentuais. Rótulo tracejado = sinal fraco ou variado; cheio = sinal forte."),
+            h("li", null, h("b", null, "Padrão recorrente"), " é uma diferença que se repete entre partidas, e não um acaso de um mapa só."),
+            h("li", null, h("b", null, "Denominadores visíveis:"), " toda taxa mostra de quantos casos ela vem (\"192 de 1064 mortes\")."),
+            h("li", null, "Tudo é ", h("b", null, "pista para revisar no VOD"), ", não prova: habilidade, comunicação e intenção não estão nos dados.")))),
+      h("div", { class: "lp-end" }, h("button", { class: "btn", type: "button", onclick: go("home") }, "Começar pelo Panorama", icon("next"))));
+  }
   function renderHome(main) {
     const team = state.team, ms = homeMatches(team), nAll = teamMatches[team].length;
     let w = 0, rw = 0, rl = 0;
@@ -3161,9 +3122,9 @@
       mapCards(team, ms));
     if (!FU) { main.append(hero); return; }
     const bad = collectPatterns(team, "abaixo").slice(0, 4), good = collectPatterns(team, "acima").slice(0, 3);
-    // "O que pede atenção" e "Pontos fortes" só aparecem quando há padrão recorrente naquela direção
+    // "Pontos de atenção" e "Pontos fortes" só aparecem quando há padrão recorrente naquela direção
     const attention = bad.length ? h("section", { class: "block" },
-      h("div", { class: "block-head" }, h("h2", null, "O que pede atenção")),
+      h("div", { class: "block-head" }, h("h2", null, "Pontos de atenção")),
       h("ol", { class: "att-list" }, bad.map(([fk, i]) => attentionItem(fk, i, "abaixo")))) : null;
     const board = h("section", { class: "block" },
       h("div", { class: "block-head" }, h("h2", null, "Fundamentos"), h("p", { class: "sub" }, "Observado × esperado em situações parecidas"), methodHelp()),
@@ -3189,9 +3150,10 @@
     renderFilters(); renderSide();
     const main = $("#main"); main.replaceChildren();
     if (state.section === "diag" && state.pat == null) state.section = "home";
-    document.body.classList.toggle("diag-mode", state.section === "diag" || state.section === "home");
+    document.body.classList.toggle("diag-mode", state.section === "diag" || state.section === "home" || state.section === "about");
     document.body.classList.toggle("home-mode", state.section === "home");
-    if (state.section === "home") renderHome(main);
+    if (state.section === "about") renderAbout(main);
+    else if (state.section === "home") renderHome(main);
     else if (state.section === "diag") renderDiag(main);
     else if (state.section === "overview") renderOverview(main);
     else if (state.section === "LEV") renderLev(main);

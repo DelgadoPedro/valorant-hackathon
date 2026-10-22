@@ -21,9 +21,10 @@ O que já funciona e fica: denominadores sempre visíveis, comparação com outr
 ## 2. Arquitetura de informação (progressive disclosure)
 
 ```
+Nível 0  Como usar (abertura): o que é, 3 passos, os 8 fundamentos (nome e ícone) e como ler
 Nível 1  Panorama do time (home)
          ├─ quem é o time: mapas, vitórias, rounds, período; um cartão por mapa (foto, V–D, saldo, histórico V/D)
-         ├─ o que pede atenção: até 4 padrões abaixo do esperado (só quando há)
+         ├─ pontos de atenção: até 4 padrões abaixo do esperado (só quando há)
          ├─ pontos fortes: padrões acima do esperado (só quando há)
          └─ quadro de fundamentos, cada um com "Ver análise detalhada"
 Nível 2  Fundamento (seções Trades, Vantagem numérica, First blood, Pós-plant)
@@ -120,7 +121,7 @@ Uma só codificação para observado × esperado em todo o painel:
 - Sem sombras: a hierarquia vem de espaço, peso e uma régua de status de 3 px à esquerda nos itens de atenção.
 
 ### Texto
-Títulos curtos em forma de pergunta ou de nome ("O que pede atenção", "Fundamentos"). Botões dizem o que fazem ("Ver rounds", "Abrir fundamento"). Nada de "→" no fim do texto: a direção vem de um ícone de chevron.
+Títulos curtos em forma de pergunta ou de nome ("Pontos de atenção", "Fundamentos"). Botões dizem o que fazem ("Ver rounds", "Abrir fundamento"). Nada de "→" no fim do texto: a direção vem de um ícone de chevron.
 
 ## 4. Plano incremental
 

@@ -77,11 +77,14 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
 - **Mapas oficiais**: os mapas do painel usam as imagens oficiais (displayIcon de valorant-api.com, uso autorizado pela
   organização do hackathon) e a transformação oficial de coordenadas, com os nomes oficiais das regiões. Os PNGs e os
   parâmetros ficam em `roundrx/viz/vendor/maps/` e são embutidos no HTML (o painel continua funcionando offline).
-- **Panorama** (tela inicial): estado do time (mapas, vitórias, rounds, período); um cartão por mapa com a tela de
+- **Como usar** (tela de abertura, 1º item da barra lateral): o que é o RoundRx, botões para o Panorama do time
+  e a última partida, a base (partidas, rounds, times, período), os 3 passos de uso, os 8 fundamentos (só nome e
+  ícone; cada um abre a seção) e "Como ler" com a régua e os rótulos de verdade do painel.
+- **Panorama**: estado do time (mapas, vitórias, rounds, período); um cartão por mapa com a tela de
   carregamento, a campanha (V–D), o saldo, os rounds e o histórico naquele mapa (quadrados V/D, mais recente à esquerda,
-  cada um abre a partida); "O que pede atenção" (padrões abaixo do
+  cada um abre a partida); "Pontos de atenção" (padrões abaixo do
   esperado, com denominador e recorrência) e "Pontos fortes", que só aparecem quando há algum padrão naquela direção;
-  e o quadro dos fundamentos (cada um com "Ver análise detalhada"). Design system e arquitetura de informação em `docs/DESIGN.md`
+  e o quadro dos fundamentos (cada um com um "i" que explica o fundamento e lista as métricas da seção, e "Ver análise detalhada"). Design system e arquitetura de informação em `docs/DESIGN.md`
   (fonte Archivo e ícones lucide embutidos; o painel não depende de internet).
 - **Análise** (22/10/2026, substitui a antiga categoria "Fundamentos"): nas seções Trade kill, Vantagem e First blood,
   antes da lista de métricas, um bloco com observado × esperado (outros times nas mesmas situações), a leitura
@@ -195,12 +198,7 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
     por lado, vêm dos rounds daquele lado (kills em adversários, mortes menos a da spike, assistências; a soma dos lados
     bate com o oficial em 100% / 99,9% / 99,8% dos jogadores). HS% pelos acertos em adversários; FK/FD = 1ª kill em jogo
     do round; KAST com trade na janela de `timing.trade_window_s` (`viz/build.py::_scoreboard`; Σ FK = Σ FD em todas
-    as partidas). Ao lado das tabelas, a caixa "Leitura do placar", com comentários curtos: lado do mapa (que lado a
-    liga vence mais no mapa e como o time foi em cada um); jogadores ≥ 25 pontos de ACS acima ou abaixo da própria média
-    nas outras partidas do time (segue o filtro de lado); quebras de economia causadas e sofridas (perder um round com
-    compra completa e ir de eco ou force no seguinte); maiores sequências de rounds (≥ 3); composição (quantas vezes o
-    time usou no mapa e quanto ela vence na liga ali); clutches (último vivo contra 1 ou mais, dos dois times) e
-    ultimates usadas × adversário × média do time. O cabeçalho da partida fica verde na vitória e vermelho na derrota.
+    as partidas). As tabelas ficam centralizadas no bloco. O cabeçalho da partida fica verde na vitória e vermelho na derrota.
     Retratos: `displayIconSmall` de valorant-api.com, 64×64 WebP em `roundrx/viz/vendor/agents/`;
   - **Análise**: filtro de lado e comparação, 6 indicadores (com números absolutos) e "o que mudou nesta partida" (taxas
     com |z| ≥ 1,5 em relação à média do time);
