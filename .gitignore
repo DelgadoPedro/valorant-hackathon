@@ -3,9 +3,6 @@ __pycache__/
 .venv/
 *.pyc
 
-# dados do hackathon ficam fora do repositório (config.yaml → paths.data_dir)
-dados/
-
 # saídas geradas por `python -m roundrx run` (pesadas; cada um gera localmente).
 # O painel que vai para a Vercel é site/index.html (gerado junto, versionado).
 outputs/canonical/

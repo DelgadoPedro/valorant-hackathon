@@ -24,7 +24,12 @@ class Config:
     @property
     def data_dir(self) -> Path:
         # normpath (e não resolve) para preservar atalhos/links e manter caminhos relativos legíveis
-        return Path(os.path.normpath(self.root / self.raw["paths"]["data_dir"]))
+        p = Path(os.path.normpath(self.root / self.raw["paths"]["data_dir"]))
+        if not p.exists():  # layout antigo: dados numa pasta irmã do projeto (hack/dados ao lado de hack/roundrx)
+            alt = Path(os.path.normpath(self.root / ".." / self.raw["paths"]["data_dir"]))
+            if alt.exists():
+                return alt
+        return p
 
     @property
     def output_dir(self) -> Path:

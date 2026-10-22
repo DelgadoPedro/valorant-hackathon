@@ -4,7 +4,7 @@ version: "0.4.0"
 
 paths:
   # Relativo à pasta deste arquivo. Na pasta do hackathon: hack/roundrx/config.yaml -> hack/dados/Dados .Json
-  data_dir: "../dados/Dados .Json"
+  data_dir: "dados/Dados .Json"
   output_dir: "outputs"
   dictionary: "reference/metrics_dictionary.csv"
   # Catálogo estático characterId -> agente/função (não contém estatísticas de partidas). Fonte e data no próprio CSV.

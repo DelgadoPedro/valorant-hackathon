@@ -48,13 +48,14 @@ python -m pytest -q            :: testes rápidos (não precisam da base)
 python -m roundrx fundamentals :: só o diagnóstico de fundamentos + painel
 ```
 
-O pipeline espera os JSONs em `hack\dados\Dados .Json` (configurável em `config.yaml` → `paths.data_dir`,
+O pipeline espera os JSONs em `dados\Dados .Json`, dentro do repositório (configurável em `config.yaml` → `paths.data_dir`;
+se a pasta não existir, ele também procura em `..\dados\Dados .Json`, o layout antigo,
 ou via `python -m roundrx run --data-dir "C:\...\Dados .Json"`). Requer Python ≥ 3.10.
 
 ## Colaboração (GitHub) e publicação (Vercel)
 
-- **Repositório:** só código, configuração, dicionário, testes e documentação. Os JSONs do hackathon **não** entram
-  (ficam em `../dados/`, fora da pasta) e as saídas pesadas (`outputs/canonical`, `derived`, `metrics`, `fundamentals`,
+- **Repositório:** código, configuração, dicionário, testes, documentação e os JSONs do hackathon (`dados/Dados .Json`,
+  336 partidas, ~194 MB; repositório privado). As saídas pesadas (`outputs/canonical`, `derived`, `metrics`, `fundamentals`,
   `dashboard`, `*.parquet`) são geradas por cada um com `python -m roundrx run`. Ficam versionados só os relatórios
   pequenos de validação (`outputs/quality`, `outputs/coverage`, `outputs/leverage`).
 - **Painel na Vercel:** `python -m roundrx run` (ou `python -m roundrx viz`) grava também `site/index.html`, o painel
