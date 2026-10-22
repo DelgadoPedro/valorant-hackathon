@@ -492,8 +492,12 @@ def _fundamentals_payload(out: Path, cfg, mix, tix, pix) -> dict | None:
                                "near_m": cfg["spatial"]["near_radius"] / 100}}
 
 
-def build_html(out: Path, cfg) -> Path:
-    payload = build_payload(out, cfg)
+def build_html(out: Path, cfg, *, payload: dict | None = None) -> Path:
+    # A prepared payload also lets visual-only rebuilds reuse an existing snapshot.
+    if payload is None:
+        payload = build_payload(out, cfg)
+    scene = HERE / "vendor" / "mission" / "ascent.jpg"
+    payload["MISSIONIMG"] = {"Ascent": base64.b64encode(scene.read_bytes()).decode()} if scene.exists() else {}
     data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     tpl = (HERE / "template.html").read_text(encoding="utf-8")
     font = base64.b64encode((HERE / "vendor" / "fonts" / "archivo-latin-wdth-normal.woff2").read_bytes()).decode()
@@ -504,8 +508,10 @@ def build_html(out: Path, cfg) -> Path:
     tpl = tpl.replace("<!--__LOGO__-->", logo).replace("__FAVICON__", "data:image/svg+xml;base64," + base64.b64encode(logo.encode()).decode())
     html = (tpl.replace("/*__FONTS__*/", fonts).replace("/*__ICONS__*/", "window.RRX_ICONS=" + icons + ";")
                .replace("/*__CSS__*/", (HERE / "app.css").read_text(encoding="utf-8"))
+               .replace("/*__MISSION_CSS__*/", (HERE / "mission.css").read_text(encoding="utf-8"))
                .replace("/*__D3__*/", (HERE / "vendor" / "d3.min.js").read_text(encoding="utf-8"))
                .replace("/*__DATA__*/", "window.RRX=" + data + ";")
+               .replace("/*__MISSION_JS__*/", (HERE / "mission.js").read_text(encoding="utf-8"))
                .replace("/*__APP__*/", (HERE / "app.js").read_text(encoding="utf-8")))
     dest = out / "dashboard" / "roundrx_painel.html"
     dest.parent.mkdir(parents=True, exist_ok=True)

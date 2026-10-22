@@ -72,6 +72,17 @@ ou via `python -m roundrx run --data-dir "C:\...\Dados .Json"`). Requer Python �
 
 ## Painel interativo por equipe
 
+O botão **Iniciar missão**, no início do Panorama, abre um briefing imersivo de evolução: até três focos do time,
+comparação observado × esperado, acesso às evidências e objetivos selecionáveis para o próximo treino. O cenário
+de Ascent tem movimentos de câmera e paralaxe; é ilustrativo e não representa as posições das partidas analisadas.
+Os focos priorizam padrões recorrentes abaixo do esperado. Quando não há padrões confirmados, o briefing sinaliza
+explicitamente que a leitura é exploratória ou que a amostra ainda está em formação. A seleção de objetivos é salva
+apenas no navegador, por time, recorte e versão da base; o plano pode ser baixado em texto. Setas navegam e Esc fecha;
+a experiência respeita a preferência de movimento reduzido. Implementação isolada em `viz/mission.js` e `mission.css`.
+O [design system atômico](docs/MISSION_DESIGN_SYSTEM.md) define os tokens, átomos, moléculas e organismos;
+a box original de métricas é reutilizada em todas as etapas pelo componente `panel()`.
+Os testes de seleção dos focos podem ser executados com `node tests/mission.test.cjs` (sem dependências npm).
+
 `python -m roundrx run` também gera **`outputs/dashboard/roundrx_painel.html`**: um único arquivo que abre no navegador e
 funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m roundrx viz`.
 
