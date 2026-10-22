@@ -2,6 +2,10 @@
 
 Versão 1 (21/10/2026); paleta revista em 22/10/2026 (verde = melhor, roxo = marca). Vale para o painel offline (`roundrx/viz/`: template.html, app.css, app.js; d3 v7).
 
+A experiência imersiva de evolução inicia uma nova direção visual, definida em
+[RoundRx Tactical — design system atômico](MISSION_DESIGN_SYSTEM.md). Sua box original de métricas
+é o componente compartilhado entre briefing, análise e plano; a adoção no dashboard pode ser gradual.
+
 ## 1. Auditoria da interface atual
 
 | Problema | Onde aparece | Efeito |

@@ -3144,6 +3144,34 @@
     });
     return h("div", { class: "mcards", role: "list", "aria-label": "Campanha por mapa" }, cards);
   }
+  // The immersive briefing uses the same scoped patterns and evidence as the dashboard.
+  // No new performance score is invented for the presentation.
+  function missionBanner(team, ms) {
+    if (!window.RoundRxMission || !FU) return null;
+    const candidates = [];
+    for (const fk of FK) {
+      const F = Fd(fk), FD = F.FD;
+      for (const i of fdRows(fk, team, state.dscope)) {
+        if (!(FD.n[i] > 0) || !Number.isFinite(FD.obs[i]) || !Number.isFinite(FD.exp[i])) continue;
+        if (!FD.sel[i] && FD.level[i] !== 0) continue;
+        candidates.push({ id: FD.id[i], key: fk, label: FD.label[i], name: fundName(fk),
+          selected: !!FD.sel[i], observed: FD.obs[i], expected: FD.exp[i], gap: FD.gap[i],
+          events: FD.n[i], matches: FD.nm[i], recurrence: FD.rec[i], recurrenceMatches: FD.nrec[i],
+          noun: FUI[fk].noun, did: FUI[fk].did, scope: FD.scope[i],
+          review: () => { if (fk === "trade") state.dwin = F.meta.window; openPat(fk, i, true)(); },
+        });
+      }
+    }
+    const min = FU.meta.criteria;
+    return window.RoundRxMission.banner({
+      team: prettyTeam(D.teams[team]), scope: state.dscope === "todas" ? "Todas as partidas" : "Últimas 10 partidas",
+      matches: ms.length, rounds: ms.reduce((n, m) => n + M.rs[m] + M.bs[m], 0),
+      storageKey: [D.run.data_fingerprint, D.teams[team], state.dscope].join("|"),
+      minEvents: min.min_events, minMatches: min.min_matches, candidates,
+      scene: D.MISSIONIMG?.Ascent ? `data:image/jpeg;base64,${D.MISSIONIMG.Ascent}` : null,
+      minimap: D.MAPIMG?.Ascent ? `data:image/png;base64,${D.MAPIMG.Ascent.png}` : null,
+    });
+  }
   function renderHome(main) {
     const team = state.team, ms = homeMatches(team), nAll = teamMatches[team].length;
     let w = 0, rw = 0, rl = 0;
@@ -3158,7 +3186,7 @@
         h("div", null, h("dt", null, "Vitórias"), h("dd", null, `${w}–${ms.length - w}`)),
         h("div", null, h("dt", null, "Rounds"), h("dd", null, `${rw}–${rl}`)),
         h("div", null, h("dt", null, "Período"), h("dd", { class: "sm" }, ms.length ? `${fmtDate(M.date[ms[0]])} a ${fmtDate(M.date[ms[ms.length - 1]])}` : "—"))),
-      mapCards(team, ms));
+      missionBanner(team, ms), mapCards(team, ms));
     if (!FU) { main.append(hero); return; }
     const bad = collectPatterns(team, "abaixo").slice(0, 4), good = collectPatterns(team, "acima").slice(0, 3);
     // "O que pede atenção" e "Pontos fortes" só aparecem quando há padrão recorrente naquela direção
