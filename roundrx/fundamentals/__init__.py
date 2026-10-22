@@ -25,11 +25,13 @@ def load_context(cfg):
 
 
 def run(ctx, cfg, quiet: bool = False) -> dict[str, pd.DataFrame]:
-    from .baselines import fit_advantage_baselines, fit_fb_baselines, fit_trade_baselines
+    from .baselines import (fit_advantage_baselines, fit_fb_baselines, fit_half_baselines, fit_key_baselines,
+                            fit_plant_baselines, fit_pressure_baselines, fit_trade_baselines)
+    from .rounds import build_half_events, build_key_events, build_plant_events, build_pressure_events
     from .events import build_advantage_episodes, build_death_events, build_fb_events
     from .evidence import build_evidence
-    from .patterns import (_prepare, adv_spec, calibrate_threshold, detect_patterns, fbo_spec, fbr_spec, trade_spec,
-                           validate_detector)
+    from .patterns import (_prepare, adv_spec, calibrate_threshold, detect_patterns, fbo_spec, fbr_spec, half_spec, key_spec,
+                           post_spec, press_spec, ret_spec, trade_spec, validate_detector)
 
     log = (lambda m: None) if quiet else (lambda m: print(f"[roundrx] {m}", flush=True))
     P = cfg["fundamentals"]["patterns"]
@@ -37,17 +39,24 @@ def run(ctx, cfg, quiet: bool = False) -> dict[str, pd.DataFrame]:
     deaths = build_death_events(ctx)
     adv = build_advantage_episodes(ctx)
     fb = build_fb_events(ctx)
+    pe, ke, he, pr = build_plant_events(ctx), build_key_events(ctx), build_half_events(ctx), build_pressure_events(ctx)
     log("fundamentos: baselines (validação por série, leave-one-team-out)…")
     deaths, rep_t = fit_trade_baselines(deaths, cfg)
     adv, rep_a = fit_advantage_baselines(adv, cfg)
     fb, rep_f = fit_fb_baselines(fb, cfg)
+    pe, rep_p = fit_plant_baselines(pe, cfg)
+    ke, rep_k = fit_key_baselines(ke, cfg)
+    he, rep_h = fit_half_baselines(he, cfg)
+    pr, rep_r = fit_pressure_baselines(pr, cfg)
     # conversão depois de FAZER o FB = a vantagem 5v4 aberta pelo first blood (mesmo esperado do fundamento de vantagem)
     conv = adv.loc[adv["from_fb"] & adv["eligible"], ["match_id", "round_num", "team_id", "exp_adv_won"]]
     fb = fb.merge(conv.rename(columns={"exp_adv_won": "exp_fb_conv"}), on=["match_id", "round_num", "team_id"], how="left")
-    out = {"death_events": deaths, "advantage_episodes": adv, "fb_events": fb,
-           "baseline_report": pd.concat([rep_t, rep_a, rep_f], ignore_index=True)}
+    out = {"death_events": deaths, "advantage_episodes": adv, "fb_events": fb, "plant_events": pe, "key_events": ke,
+           "half_events": he, "pressure_events": pr,
+           "baseline_report": pd.concat([rep_t, rep_a, rep_f, rep_p, rep_k, rep_h, rep_r], ignore_index=True)}
     pats, evs, vals, nulls = [], [], [], []
-    for spec, events in ((trade_spec(cfg), deaths), (adv_spec(cfg), adv), (fbo_spec(cfg), fb), (fbr_spec(cfg), fb)):
+    for spec, events in ((trade_spec(cfg), deaths), (adv_spec(cfg), adv), (fbo_spec(cfg), fb), (fbr_spec(cfg), fb),
+                         (post_spec(cfg), pe), (ret_spec(cfg), pe), (key_spec(cfg), ke), (half_spec(cfg), he), (press_spec(cfg), pr)):
         z_star, null = calibrate_threshold(_prepare(events, cfg, spec), cfg, spec)
         log(f"fundamentos: padrões de {spec.name} (z* = {z_star:.2f})…")
         pt = detect_patterns(events, cfg, z_star, spec)
@@ -68,6 +77,6 @@ def write(res: dict[str, pd.DataFrame], cfg) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     for k, df in res.items():
         df.to_parquet(out / f"{k}.parquet", index=False)
-        if k not in ("death_events", "advantage_episodes", "fb_events"):
+        if k not in ("death_events", "advantage_episodes", "fb_events", "plant_events", "key_events", "half_events", "pressure_events"):
             df.to_csv(out / f"{k}.csv", index=False, encoding="utf-8-sig")
     return out

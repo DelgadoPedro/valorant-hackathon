@@ -391,3 +391,101 @@ def validate_detector(deaths: pd.DataFrame, cfg, z_star: float, n_null: int = 5,
         rows.append({"fundamental": spec.name, "teste": f"déficit plantado: {team}, {pdim} = {pval}, −{effect_pp:.0f} pp", "rodada": 0, "times": 1,
                      "times_com_padrao": np.nan, "padroes": np.nan, "detectado": bool(len(hit))})
     return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------- fundamentos de round
+PLANT_DIMS = {"numbers": "saldo de vivos no plant", "pstate": "vivos no plant", "site": "site", "pwhen": "momento do plant",
+              "map_name": "mapa", "economy": "economia"}
+PLANT_PAIR_DIMS = ["numbers", "site", "pwhen", "map_name"]
+PWHEN = {"até 30 s": "plantados nos primeiros 30 s", "30–60 s": "plantados entre 30 e 60 s", "depois de 60 s": "plantados depois de 60 s"}
+
+
+def _plant_rest(ctx: dict, retake: bool) -> list[str]:
+    out = []
+    if "pstate" in ctx:
+        out.append(f"em {ctx['pstate']} no plant")
+    elif "numbers" in ctx:
+        out.append({"em vantagem": "com vantagem numérica no plant", "em desvantagem": "com desvantagem numérica no plant",
+                    "igualdade": "em igualdade numérica no plant"}[ctx["numbers"]])
+    if "site" in ctx:
+        out.append(f"no {ctx['site']}")
+    if "map_name" in ctx:
+        out.append(f"em {ctx['map_name']}")
+    if "pwhen" in ctx:
+        out.append(PWHEN.get(ctx["pwhen"], ctx["pwhen"]))
+    if "economy" in ctx:
+        out.append(phrase("economy", ctx["economy"]))
+    return out
+
+
+def post_label(ctx: dict) -> str:
+    return "Todos os rounds em que o time plantou" if not ctx else " ".join(["Pós-plant"] + _plant_rest(ctx, False))
+
+
+def ret_label(ctx: dict) -> str:
+    return "Todos os rounds com a spike adversária plantada" if not ctx else " ".join(["Retakes"] + _plant_rest(ctx, True))
+
+
+KEYR_DIMS = {"round_type": "tipo de round", "side": "lado", "map_name": "mapa", "half": "half"}
+KEYR_PAIR_DIMS = ["round_type", "side", "map_name"]
+RTYPE = {"pistol": "Pistols", "eco": "Rounds em eco", "anti-eco": "Anti-ecos", "force buy": "Rounds de force buy", "armado": "Rounds armados (full × full)"}
+
+
+def key_label(ctx: dict) -> str:
+    if not ctx:
+        return "Todos os rounds-chave"
+    head = RTYPE.get(ctx.get("round_type"), "Rounds-chave")
+    rest = [phrase(k, ctx[k]) for k in ("side", "map_name") if k in ctx]
+    if "half" in ctx:
+        rest.append(f"no {ctx['half']}")
+    return " ".join([head] + rest)
+
+
+HALF_DIMS = {"moment": "momento", "side": "lado", "map_name": "mapa", "half": "half"}
+HALF_PAIR_DIMS = ["moment", "side", "map_name"]
+
+
+def half_label(ctx: dict) -> str:
+    if not ctx:
+        return "Todos os rounds 2 e 3 de cada half"
+    head = ctx["moment"][0].upper() + ctx["moment"][1:] if "moment" in ctx else "Rounds 2 e 3 do half"
+    rest = [phrase(k, ctx[k]) for k in ("side", "map_name") if k in ctx]
+    if "half" in ctx:
+        rest.append(f"no {ctx['half']}")
+    return " ".join([head] + rest)
+
+
+def post_spec(cfg) -> Spec:
+    return Spec("post", "won", "exp_post", PLANT_DIMS, PLANT_PAIR_DIMS, post_label, ("site", "A"), eligible="eligible_post")
+
+
+def ret_spec(cfg) -> Spec:
+    return Spec("retake", "won", "exp_ret", PLANT_DIMS, PLANT_PAIR_DIMS, ret_label, ("site", "A"), eligible="eligible_ret")
+
+
+def key_spec(cfg) -> Spec:
+    return Spec("keyrounds", "won", "exp_key", KEYR_DIMS, KEYR_PAIR_DIMS, key_label, ("round_type", "eco"))
+
+
+def half_spec(cfg) -> Spec:
+    return Spec("halfopen", "won", "exp_half", HALF_DIMS, HALF_PAIR_DIMS, half_label, ("side", "atk"))
+
+
+PRESS_DIMS = {"lead": "placar", "phase": "fase do half", "side": "lado", "map_name": "mapa", "economy": "economia"}
+PRESS_PAIR_DIMS = ["lead", "phase", "side", "map_name"]
+
+
+def press_label(ctx: dict) -> str:
+    if not ctx:
+        return "Todos os rounds decisivos"
+    head = "Rounds decisivos" + ({"na frente": " com o time na frente", "atrás": " com o time atrás", "empatado": " com o placar empatado"}.get(ctx.get("lead"), ""))
+    rest = []
+    if "phase" in ctx:
+        rest.append({"abertura do half": "na abertura do half", "meio do half": "no meio do half", "fim do half": "no fim do half",
+                     "prorrogação": "na prorrogação"}.get(ctx["phase"], ctx["phase"]))
+    rest += [phrase(k, ctx[k]) for k in ("side", "map_name", "economy") if k in ctx]
+    return " ".join([head] + rest)
+
+
+def press_spec(cfg) -> Spec:
+    return Spec("pressure", "won", "exp_press", PRESS_DIMS, PRESS_PAIR_DIMS, press_label, ("side", "atk"))

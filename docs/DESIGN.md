@@ -1,6 +1,6 @@
 # RoundRx — design system e arquitetura de informação
 
-Versão 1 (21/10/2026). Vale para o painel offline (`roundrx/viz/`: template.html, app.css, app.js; d3 v7).
+Versão 1 (21/10/2026); paleta revista em 22/10/2026 (verde = melhor, roxo = marca). Vale para o painel offline (`roundrx/viz/`: template.html, app.css, app.js; d3 v7).
 
 ## 1. Auditoria da interface atual
 
@@ -22,10 +22,10 @@ O que já funciona e fica: denominadores sempre visíveis, comparação com outr
 
 ```
 Nível 1  Panorama do time (home)
-         ├─ quem é o time: mapas, vitórias, map pool, fita de resultados
-         ├─ o que pede atenção: até 4 padrões abaixo do esperado, com denominador e incerteza
-         ├─ quadro de fundamentos: Trade · Vantagem · First blood · Pós-plant
-         └─ pontos fortes
+         ├─ quem é o time: mapas, vitórias, rounds, período; um cartão por mapa (foto, V–D, saldo, histórico V/D)
+         ├─ o que pede atenção: até 4 padrões abaixo do esperado (só quando há)
+         ├─ pontos fortes: padrões acima do esperado (só quando há)
+         └─ quadro de fundamentos, cada um com "Ver análise detalhada"
 Nível 2  Fundamento (seções Trades, Vantagem numérica, First blood, Pós-plant)
          ├─ diagnóstico: observado × esperado, padrões recorrentes
          └─ métricas principais; o restante fica em "mais métricas"
@@ -36,7 +36,9 @@ Nível 3  Profundidade
 ```
 
 Navegação lateral:
-- **Início:** Panorama e Partida (relatório de uma partida, a antiga "Visão geral").
+- **Início:** Panorama e Partida. A Partida abre com a linha de partidas para escolher (mais recente à esquerda, seta "+N")
+  e tem três subseções: Visão geral (cabeçalho e o bloco Placar: round a round + placar por jogador com retrato do agente,
+  números em células cinza, +/− em verde/vermelho e filtro Todos/Ataque/Defesa), Análise e Rounds para revisar.
 - **As 6 categorias de métricas definidas pelo time.**
 
 O padrão e o round continuam sendo rotas próprias, abertas a partir do Nível 2.
@@ -56,19 +58,19 @@ Uma folha de revisão tática, como o caderno de um analista de time universitá
 
 | Token | Claro | Escuro | Uso |
 |---|---|---|---|
-| `--bg` papel | #EEF1ED | #10161B | fundo |
+| `--bg` papel | #F1F0F4 | #10161B | fundo |
 | `--panel` | #FFFFFF | #161E25 | blocos |
 | `--ink` tinta | #17222C | #E3E9EE | texto e o traço do "esperado" |
 | `--mut` | #59656F | #9AA6B0 | texto secundário |
-| `--accent` marca e ação | #0B6E69 | #3FB3A8 | navegação, botões, seleção. Nunca indica bom ou ruim |
+| `--accent` marca e ação (roxo) | #6D3FC0 | #A98BF5 | navegação, botões, seleção. Nunca indica bom ou ruim |
 | `--bad` abaixo do esperado | #C2362F | #EE6A61 | fragilidade potencial |
-| `--good` acima do esperado | #2563A8 | #6AA4E6 | ponto forte (azul, não verde, por daltonismo) |
+| `--good` acima do esperado | #1B8A4B | #4CC483 | ponto forte / aumento (verde; a cor nunca vem sozinha: sempre ícone e texto) |
 | `--neutral` | #8A949B | #6F7B85 | sem evidência ou inconclusivo |
 | `--band` | tinta a 9% | tinta a 12% | intervalo de confiança |
-| `--ref` liga | #6B5CA5 | #A995D6 | referência da liga |
+| `--ref` liga | #2F6DB5 | #7FB0EA | referência da liga |
 | `--teamavg` | #B4791F | #E0A948 | média do time |
 
-A cor nunca é a única pista: todo status leva ícone e texto ("Abaixo do esperado", "Dentro do esperado", "Acima do esperado").
+A cor nunca é a única pista: todo status leva ícone e texto ("Abaixo do esperado", "Dentro do esperado", "Acima do esperado"). Faixas: 0 pp = dentro; 1–3 pp = acima/abaixo (contorno); 4+ pp = muito acima/abaixo (preenchido); cheio = sinal forte, diferença consistente; tracejado = sinal fraco ou variado. O intervalo em si não aparece no painel; a régua não usa cursor de ajuda.
 
 ### Tipografia
 **Archivo** (variável, eixos de peso e largura, OFL) embutida no HTML, com um só tipo e três larguras:
@@ -104,7 +106,6 @@ Uma só codificação para observado × esperado em todo o painel:
 | scale | Armamento |
 | flag | Rounds-chave |
 | gauge | Pressão e Leverage Index |
-| layers | Outros |
 | house | Panorama |
 | clipboard-list | Partida |
 | trending-down / trending-up / minus | Status |

@@ -77,11 +77,49 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
 - **Mapas oficiais**: os mapas do painel usam as imagens oficiais (displayIcon de valorant-api.com, uso autorizado pela
   organização do hackathon) e a transformação oficial de coordenadas, com os nomes oficiais das regiões. Os PNGs e os
   parâmetros ficam em `roundrx/viz/vendor/maps/` e são embutidos no HTML (o painel continua funcionando offline).
-- **Panorama** (tela inicial): estado do time, o que pede atenção (padrões abaixo do esperado, com denominador, IC e
-  recorrência), quadro dos fundamentos e pontos fortes. Design system e arquitetura de informação em `docs/DESIGN.md`
+- **Panorama** (tela inicial): estado do time (mapas, vitórias, rounds, período); um cartão por mapa com a tela de
+  carregamento, a campanha (V–D), o saldo, os rounds e o histórico naquele mapa (quadrados V/D, mais recente à esquerda,
+  cada um abre a partida); "O que pede atenção" (padrões abaixo do
+  esperado, com denominador e recorrência) e "Pontos fortes", que só aparecem quando há algum padrão naquela direção;
+  e o quadro dos fundamentos (cada um com "Ver análise detalhada"). Design system e arquitetura de informação em `docs/DESIGN.md`
   (fonte Archivo e ícones lucide embutidos; o painel não depende de internet).
-- **Fundamentos** (categoria própria na barra lateral): Trade kill, Preservação de vantagem e First blood, cada um com
-  observado × esperado, padrões recorrentes e rounds para revisar. As métricas desses temas continuam nas categorias abaixo.
+- **Análise** (22/10/2026, substitui a antiga categoria "Fundamentos"): nas seções Trade kill, Vantagem e First blood,
+  antes da lista de métricas, um bloco com observado × esperado (outros times nas mesmas situações), a leitura
+  (padrão recorrente ou dentro do esperado), até 4 padrões recorrentes e "Onde aparece mais" (o mesmo indicador quebrado
+  por distância ao aliado, lado, momento, nº de jogadores, mapa, jogador, economia…). Filtros: partidas e janela de trade.
+- **Fundamentos de round** (22/10/2026, `fundamentals/rounds.py`): **Pós-plant**, **Retake**, **Rounds-chave** e
+  **Início de half** passaram a ter a mesma análise dos demais (esperado leave-one-team-out com validação por série,
+  padrões recorrentes com limiar calibrado por simulação nula, evidências), aparecem na Panorama e no bloco "Análise"
+  das seções. Uma linha por time-round, desfecho = venceu o round:
+  - pós-plant (o time plantou) e retake (o adversário plantou): contexto = vivos no plant, site, momento do plant,
+    economia e mapa (regressão logística escolhida; erro de calibração 1,9 e 1,7 pp);
+  - rounds-chave: pistol, eco, anti-eco, force buy e armado (mesma regra das métricas KEY), contexto = tipo, lado,
+    economia e mapa (células encolhidas);
+  - início de half: rounds 2 e 3 de cada half pelo caminho até ali (2–0, 1–1, 0–2…), contexto = momento e economia
+    (lado e mapa pioravam a calibração com ~2,6 mil eventos).
+  - pressão: os rounds decisivos (25% da base com maior índice de pressão), contexto = placar (na frente, empatado,
+    atrás), fase do half, economia, lado e mapa (regressão logística; erro de calibração 0,8 pp). Na base atual só 1
+    time tem padrão recorrente, coerente com a revisão crítica (vencer mais "sob pressão" quase não se repete).
+  Na simulação nula, 2–5% dos times recebem algum padrão por acaso. O teste de déficit plantado (−12 pp) é achado em
+  3 de 3 times no pós-plant e em 1 de 3 no retake, rounds-chave e início de half (amostras menores por time): nessas
+  três, um padrão é sinal forte, mas a ausência de padrão não garante que não haja problema.
+- **Leitura de cada fundamento** (Panorama e Análise), pela diferença observado − esperado arredondada: 0 pp =
+  "Dentro do esperado"; 1 a 3 pp = "Acima/Abaixo do esperado" (contorno); 4 pp ou mais = "Muito acima/abaixo"
+  (preenchido = "sinal forte, diferença consistente"). Quando o intervalo de 90% da diferença cruza o zero, o rótulo
+  fica tracejado ("sinal fraco ou variado"); o painel não mostra o intervalo em si. "Padrão recorrente" continua sendo o critério mais forte (limiar calibrado + recorrência entre partidas).
+- **Janela de trade**: fixa em 4 s (`timing.trade_window_s`) nas métricas e no diagnóstico
+  (`fundamentals.default_window_s`); a Análise de Trade kill abre em 4 s e deixa trocar para 3, 5, 6 ou 7 s
+  (`fundamentals.trade_windows_s`). Os padrões recorrentes sempre usam 4 s.
+- **TRD-10 (trade gap contextual)**: chegou a ser implementada (observado − esperado por morte com aliado vivo, mesmo
+  modelo do fundamento Trade kill) e foi retirada em 22/10/2026 por decisão do time: a leitura no painel ficou confusa
+  e repetia o que a Análise de Trade kill já mostra. Volta a constar como "adiada" na cobertura.
+- **Diferença observado − esperado** (Análise e páginas de padrão): verde quando o time está melhor que o esperado e
+  vermelho quando está pior.
+- **Rounds para revisar** (3ª subseção da Partida, depois de "Análise"; duas colunas, "Mais custaram" e "Mais
+  ganharam", 5 rounds cada, sem os motivos na lista: eles aparecem ao abrir o round): os 6 rounds que mais custaram (ou mais ganharam)
+  chance de vencer o mapa, cada um com os motivos tirados dos dados (vantagem perdida ou virada, first blood sofrido e se
+  foi trocado, mortes sem trade com aliado perto, plant e retake, tipo de compra, pressão do round). Clicar abre o
+  round: mapa com as mortes e a linha do tempo (a mesma tela abre pela faixa de rounds da Partida e pelos padrões).
 - **Explorar métricas** em 6 categorias definidas pelo time (cada métrica aparece em uma seção só; a lista está em
   `viz/build.py → SECTIONS`):
   1. **Vantagem** (DYN-09, 10, 03, 11 e ECO-13, vitória por vantagem de armamento) e **First blood** (todas com o recorte "Tipo de round": pistol × demais; OPN-01..04, 07, 10,
@@ -101,20 +139,22 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
      round anterior, a % de mapas ganhos e de rounds do half vencidos depois de cada caminho; (c) a grade mapa × lado com a
      sequência de cada half, clicável. Filtros: lado (topo), mapa e partidas (todas/últimas 10). As métricas HAL-01..18
      seguem nas tabelas de saída;
-  6. **Pressão e Leverage Index** (página própria, sem lista de métricas):
+  6. **Pressão** (página própria, sem lista de métricas; antes "Pressão e Leverage Index"): abre com "O que é a pressão de
+     um round" (explicação curta e exemplos do modelo por placar) e a Análise do fundamento Pressão; depois:
      - "Onde o time ganha e perde mapas": por situação (pistol, eco, anti-eco, force, depois de first blood a favor/sofrido,
        com vantagem/desvantagem numérica, pós-plant e retake), rounds, saldo do time e da liga e a diferença, em mapas a
        cada 10, agrupados em "perde mais mapas que a liga: o que treinar" e "ganha mais". Comparação com a liga **no mesmo
-       mapa ou em todos os mapas**, à escolha. A margem de erro (IC 90% por reamostragem das partidas) e a recorrência
+       mapa ou em todos os mapas**, à escolha. A força do sinal (forte ou fraco/variado) e a recorrência
        ficam na dica de cada linha; linhas com menos de 20 rounds aparecem apagadas;
      - "Fechar e reagir": mapas entregues (a chance de vencer o mapa chegou a 80% e o time perdeu; liga ≈ 13%), viradas
        (esteve com 20% ou menos e venceu) e rounds decisivos (25% de maior pressão) na frente e atrás, contra o esperado
        pela economia; lista dos mapas entregues e virados com o pico/mínimo e o round que mais mudou o mapa depois dele;
-     - "Rounds para revisar" (os que mais custaram ou ganharam chance de mapa) e "Curva do mapa".
+     - "Curva do mapa" (os rounds que mais mudaram o mapa ficam na seção "Rounds para revisar").
      As 14 métricas LEV que estavam na lista saíram do painel (médias de pressão não são estáveis por time; as
      ponderadas repetem a taxa de vitória, correlação 0,92–0,96) e seguem nas tabelas de saída;
-  7. **Outros**: A implementar (WPR, TRD-10, AGT-24). Dano e consistência (DYN-06..08), espaçamento, gestão econômica e
-     composição de agentes saíram do painel, mas seguem calculados nas tabelas de saída.
+  Dano e consistência (DYN-06..08), espaçamento, gestão econômica e composição de agentes saíram do painel, mas seguem
+  calculados nas tabelas de saída. A seção "Outros" / "A implementar" saiu do painel (22/10/2026); as métricas que
+  faltam (classe M adiadas, como WPR e AGT-24) seguem listadas em `outputs/coverage`.
   Em telas estreitas, a barra vira uma faixa horizontal no topo.
 - **Nomes das métricas padronizados** (22/10/2026) nas seções Vantagem, First blood, Trade kill, Pós-plant, Retake e
   Rounds-chave: taxas de vitória começam com "Vitória…" (com vantagem numérica, após o plant, no pistol, em eco…), tempos
@@ -147,9 +187,24 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
   anterior, funções por mapa, métricas de variação de picks e uma tabela de composições da equipe (resultados, por
   economia e sites de plant), além de duplas/trios, trade por dupla, first blood com assistência e "quem faz o quê".
 - **Aba Início de half**: pistol → round 2 → round 3 de cada half por partida, mais as métricas HAL.
-- **Aba A implementar**: as métricas de modelo que faltam (probabilidade de vitória dentro do round, AGT-24).
-- **Visão geral**: placar, histórico clicável, 6 indicadores (sem minigráficos, com números absolutos), "o que mudou nesta
-  partida" (taxas com |z| ≥ 1,5 em relação à média do time) e round a round.
+- **Partida**: no topo, a linha de partidas para escolher (mais recente à esquerda; só o que cabe na largura, seta "+N"
+  abre o resto). Três subseções:
+  - **Visão geral**: cabeçalho da partida e o bloco **Placar**: round a round e, abaixo, o placar por jogador dos dois
+    times (retrato do agente, ACS, K / D / A, +/−, KAST, ADR, HS%, FK, FD, +/− de FK−FD), com filtro Todos / Ataque /
+    Defesa (o round a round apaga os rounds do outro lado). No total, K/D/A, ACS e ADR batem com os oficiais do JSON;
+    por lado, vêm dos rounds daquele lado (kills em adversários, mortes menos a da spike, assistências; a soma dos lados
+    bate com o oficial em 100% / 99,9% / 99,8% dos jogadores). HS% pelos acertos em adversários; FK/FD = 1ª kill em jogo
+    do round; KAST com trade na janela de `timing.trade_window_s` (`viz/build.py::_scoreboard`; Σ FK = Σ FD em todas
+    as partidas). Ao lado das tabelas, a caixa "Leitura do placar", com comentários curtos: lado do mapa (que lado a
+    liga vence mais no mapa e como o time foi em cada um); jogadores ≥ 25 pontos de ACS acima ou abaixo da própria média
+    nas outras partidas do time (segue o filtro de lado); quebras de economia causadas e sofridas (perder um round com
+    compra completa e ir de eco ou force no seguinte); maiores sequências de rounds (≥ 3); composição (quantas vezes o
+    time usou no mapa e quanto ela vence na liga ali); clutches (último vivo contra 1 ou mais, dos dois times) e
+    ultimates usadas × adversário × média do time. O cabeçalho da partida fica verde na vitória e vermelho na derrota.
+    Retratos: `displayIconSmall` de valorant-api.com, 64×64 WebP em `roundrx/viz/vendor/agents/`;
+  - **Análise**: filtro de lado e comparação, 6 indicadores (com números absolutos) e "o que mudou nesta partida" (taxas
+    com |z| ≥ 1,5 em relação à média do time);
+  - **Rounds para revisar** (ver acima).
 - Toda média é Σnum ÷ Σden do recorte escolhido, a mesma regra do pipeline.
 
 ## O que acontece numa execução
@@ -249,7 +304,7 @@ parâmetros usados. É o contrato com a etapa de visualização.
     com a opção de voltar à ordem do detector.
   - Leitura: LI mede o peso do round para o mapa, não o que aconteceu nele; vencer pouco em rounds de pressão alta é
     um ponto para revisar, não prova de que o time "sente a pressão".
-- **AGT-24** depende de modelo (classe M): fica na aba "A implementar", junto com a probabilidade de vitória dentro do round.
+- **AGT-24** depende de modelo (classe M): fica como adiada em `outputs/coverage`, junto com a probabilidade de vitória dentro do round.
 
 ## Parâmetros que precisam de revisão de um jogador/coach
 

@@ -43,7 +43,7 @@ def _ids(prefix, nums):
     return [f"{prefix}-{n:02d}" for n in nums]
 
 
-G2, G3, G4, G6 = ("Trade kill", "Pós-plant", "Retake", "Outros")
+G2, G3, G4 = ("Trade kill", "Pós-plant", "Retake")
 # Seções do painel nas categorias definidas pelo time (21–22/10/2026; Vantagem e First blood viraram categorias próprias): (id, rótulo, métricas na ordem de exibição, grupo).
 # Uma métrica aparece numa seção só; o lugar dela no dicionário (lente) não muda.
 # Fora do painel por decisão do time (21–22/10/2026), mas ainda calculadas nas tabelas de saída: DYN-01, DYN-02, DYN-04, DYN-05, DYN-12, DYN-13,
@@ -54,9 +54,6 @@ G2, G3, G4, G6 = ("Trade kill", "Pós-plant", "Retake", "Outros")
 SECTIONS = [
     ("home", "Panorama", None, "Início"),
     ("overview", "Partida", None, "Início"),
-    ("F_TRD", "Trade kill", None, "Fundamentos"),
-    ("F_ADV", "Preservação de vantagem", None, "Fundamentos"),
-    ("F_FB", "First blood", None, "Fundamentos"),
     ("diag", "Fundamentos", None, "Diagnóstico"),   # rota das telas de padrão e de round (fora da barra lateral)
     ("ADV", "Vantagem", _ids("DYN", [9, 10, 3, 11]) + ["ECO-13"], "Vantagem"),
     ("FB", "First blood", _ids("OPN", [1, 2, 3, 4, 7, 13, 14, 15, 10, 12, 5, 6]), "First blood"),
@@ -66,8 +63,8 @@ SECTIONS = [
     ("KEY", "Rounds-chave", _ids("KEY", [1, 15, 6, 9, 16]), "Rounds-chave"),
     ("HAL", "Início de half", [], "Início de half"),   # página própria: sequências pistol → round 2 → round 3 (campos de R)
     # página própria (curva do mapa, onde o time perde mapas, vitória sob pressão), calculada dos campos de pressão em R
-    ("LEV", "Pressão e Leverage Index", [], "Pressão e Leverage Index"),
-    ("WPR", "A implementar", None, G6),
+    ("LEV", "Pressão", [], "Pressão"),
+    ("REV", "Round", [], "Diagnóstico"),   # tela de um round (aberta da Partida, do padrão ou da faixa de rounds); fora da barra lateral
 ]
 FB_ROUND_CUT = ["OPN-01", "OPN-02", "OPN-03", "OPN-04", "OPN-07", "OPN-10", "OPN-12", "OPN-13", "OPN-14", "OPN-15"]
 TABLE_EXCLUDE = {"TRD-04", "SPC-08"}  # exibidas em visualizações próprias (matriz de duplas, mapa)
@@ -240,7 +237,7 @@ def build_payload(out: Path, cfg) -> dict:
          "vt": team_idx(k["match_id"], k["victim_team"]), "v": [pix.get(x) for x in k["victim"]],
          "k": [pix.get(x) for x in k["killer"]], "vx": _i(k["victim_x"]), "vy": _i(k["victim_y"]),
          "kx": _i(k["kx"]), "ky": _i(k["ky"]), "tr": [int(bool(x)) for x in k["traded"].fillna(False)],
-         "trd": [pix.get(x) for x in k["trader"]], "ph": _i(k["ph"]), "iso": k["iso"].tolist(), "op": k["op"].tolist(),
+         "trd": [pix.get(x) for x in k["trader"]], "ph": _i(k["ph"]), "iso": [int(bool(x)) for x in k["iso"]], "op": [int(bool(x)) for x in k["op"]],
          "tt": _r(k["trade_time_s"], 2), "ki": _i(k["kill_idx"]), "va": _i(k["va"]), "ka": _i(k["ka"])}
 
     # ---- plants
@@ -265,6 +262,11 @@ def build_payload(out: Path, cfg) -> dict:
         cp.append([v for p_, c_ in sorted(zip(g["puuid"], g["cid"]), key=lambda x: aix[x[1]]) for v in (pix[p_], aix[c_])])
     C = {"m": cm, "t": ct, "pa": cp}
 
+    # ---- placar da partida por jogador (como nos sites de estatística): K/D/A oficiais do JSON; ACS = score / rounds;
+    # ADR e HS% pelo dano em adversários; FK/FD = 1ª kill em jogo de cada round; KAST = rounds com kill, assistência,
+    # sobrevivência ou morte trocada (trade na janela de timing.trade_window_s) / rounds jogados
+    SB = _scoreboard(pl, kills, trades, rd("canonical/damage"), rd("canonical/round_players"), rd("derived/team_rounds"), mix, pix, team_idx, aix)
+
     M = {"id": matches["match_id"].tolist(), "file": matches["file"].tolist(), "date": matches["date"].tolist(),
          "comp": matches["competition"].tolist(), "stage": matches["stage"].tolist(), "series": matches["series"].tolist(),
          "map": matches["map_name"].tolist(), "red": [tix[x] for x in matches["red_name"]],
@@ -285,21 +287,105 @@ def build_payload(out: Path, cfg) -> dict:
                 c = mm[name]
                 MAPIMG[name] = {"png": base64.b64encode(f.read_bytes()).decode(), "xm": c["xm"], "ym": c["ym"], "xa": c["xa"], "ya": c["ya"],
                                 "co": [[x["s"], x["r"], round(x["x"]), round(x["y"])] for x in c["callouts"]]}
+    # telas de carregamento dos mapas (splash de valorant-api.com, recortadas 120×160 em JPEG; uso autorizado pela organização)
+    SPLASH = {f.stem: base64.b64encode(f.read_bytes()).decode() for f in sorted((HERE / "vendor" / "splash").glob("*.jpg"))}
+    # retratos dos agentes (displayIconSmall de valorant-api.com, 64×64 WebP; uso autorizado), na ordem do catálogo
+    adir = HERE / "vendor" / "agents"
+    AGIMG = [base64.b64encode((adir / f"{c.lower()}.webp").read_bytes()).decode() if (adir / f"{c.lower()}.webp").exists() else None
+             for c in cat["character_id"]]
     rep_p = out / "leverage" / "model_report.csv"
     LEVREP = pd.read_csv(rep_p, keep_default_na=False).to_dict(orient="records") if rep_p.exists() else []
-    return {"MAPIMG": MAPIMG, "FUND": FUND, "LEVREP": LEVREP, "run": run_info, "teams": team_names, "maps": maps, "players": [pname[p] for p in pu], "metrics": metrics,
+    # exemplos do índice de pressão para a explicação do painel (mesmo modelo, time médio, taxa global do ataque)
+    LEVEX = []
+    if LEVREP:
+        from ..leverage import g_state
+        pa, lref = float(LEVREP[0]["taxa_ataque_global"]), float(LEVREP[0]["l_ref"])
+        for a_, b_, k_, lbl in ((0, 0, 0, "0–0 (pistol)"), (3, 0, 3, "3–0"), (6, 6, 12, "6–6 (pistol do 2º half)"),
+                                (2, 9, 11, "2–9"), (11, 11, 22, "11–11"), (12, 11, 23, "12–11 (match point)"), (12, 12, 24, "12–12 (prorrogação)")):
+            wp = g_state(a_ + 1, b_, k_ + 1, True, True, pa)
+            wm = g_state(a_, b_ + 1, k_ + 1, True, True, pa)
+            LEVEX.append({"s": lbl, "wp": round(wp, 3), "wm": round(wm, 3), "li": round(max(0.0, wp - wm) / lref, 2)})
+    return {"MAPIMG": MAPIMG, "SPLASH": SPLASH, "AGIMG": AGIMG, "FUND": FUND, "LEVREP": LEVREP, "LEVEX": LEVEX, "run": run_info, "teams": team_names, "maps": maps, "players": [pname[p] for p in pu], "metrics": metrics,
             "strata": strata, "sections": [{"id": a, "label": b, "ids": c, "group": g} for a, b, c, g in SECTIONS],
-            "M": M, "TM": TM, "LG": LG, "AG": AG, "R": R, "K": K, "P": P, "C": C, "agents": agents,
+            "M": M, "TM": TM, "LG": LG, "AG": AG, "R": R, "K": K, "P": P, "C": C, "SB": SB, "agents": agents,
             "cfg": {"trade_window_s": cfg["timing"]["trade_window_s"], "near_radius": R_, "episode_buckets_s": cfg["timing"]["episode_buckets_s"],
                     "team_eco_max": cfg["economy"]["team_eco_max"], "team_full_min": cfg["economy"]["team_full_min"]}}
+
+
+def _scoreboard(pl, kills, trades, dmg, rp, tr, mix, pix, team_idx, aix) -> dict:
+    """Placar por jogador e por lado (0 = ataque, 1 = defesa), uma linha por jogador-partida.
+
+    Por lado: rounds, ACS (score / rounds), K (kills em adversários), D (mortes, menos spike), A, ADR (dano em
+    adversários / rounds), acertos na cabeça e acertos totais em adversários (para HS%), rounds KAST, FK e FD (1ª kill em
+    jogo do round). No total, K/D/A são os oficiais do JSON e o resto é a soma dos dois lados.
+    KAST = round com kill, assistência, sobrevivência ou morte trocada (trade na janela de timing.trade_window_s)."""
+    key = ["match_id", "puuid"]
+    base = pl[pl["match_id"].isin(mix)].copy()
+    base["ag"] = [aix.get(str(c).lower()) for c in base["character_id"]]
+    side = tr[["match_id", "round_num", "team_id", "atk_team"]].copy()
+    side["sd"] = (side["team_id"] != side["atk_team"]).astype(int)
+    sd = side.set_index(["match_id", "round_num", "team_id"])["sd"]
+    r = rp[["match_id", "round_num", "puuid", "team_id", "score"]].drop_duplicates(["match_id", "round_num", "puuid"])
+    r = r[r["puuid"].isin(base["puuid"])]
+    r["sd"] = sd.reindex(pd.MultiIndex.from_frame(r[["match_id", "round_num", "team_id"]])).to_numpy()
+    r = r[r["sd"].notna()].copy()
+    r["sd"] = r["sd"].astype(int)
+    rk = ["match_id", "round_num", "puuid"]
+
+    def per_round(df, who, name):
+        g = df.groupby(["match_id", "round_num", who]).size().rename(name).reset_index().rename(columns={who: "puuid"})
+        return g
+
+    for g in (per_round(kills[kills["kill_type"] == "enemy"], "killer", "k"), per_round(kills[kills["kill_type"] != "bomb"], "victim", "d")):
+        r = r.merge(g, on=rk, how="left")
+    a = kills.assign(who=kills["assistants"].fillna("").str.split(",")).explode("who")
+    r = r.merge(per_round(a[a["who"].fillna("") != ""], "who", "a"), on=rk, how="left")
+    e = dmg[dmg["attacker_team"] != dmg["receiver_team"]].assign(sh=lambda x: x["headshots"] + x["bodyshots"] + x["legshots"])
+    e = e.groupby(["match_id", "round_num", "attacker"])[["damage", "headshots", "sh"]].sum().reset_index().rename(columns={"attacker": "puuid", "headshots": "hs"})
+    r = r.merge(e, on=rk, how="left")
+    kp = kills[kills["in_play"].astype(bool)].sort_values(["match_id", "round_num", "t_ms"])
+    first = kp.groupby(["match_id", "round_num"]).head(1)
+    r = r.merge(per_round(first, "killer", "fk"), on=rk, how="left").merge(per_round(first, "victim", "fd"), on=rk, how="left")
+    kr = set(zip(kp["match_id"], kp["round_num"], kp["killer"]))
+    ar = {(m, n, x) for m, n, s_ in zip(kp["match_id"], kp["round_num"], kp["assistants"]) for x in str(s_ or "").split(",") if x}
+    dr = set(zip(kp["match_id"], kp["round_num"], kp["victim"]))
+    tt = trades[trades["traded"].fillna(False).astype(bool)]
+    trr = set(zip(tt["match_id"], tt["round_num"], tt["victim"]))
+    r["kast"] = [int(x in kr or x in ar or x not in dr or x in trr) for x in zip(r["match_id"], r["round_num"], r["puuid"])]
+    r = r.fillna(0)
+    g = r.groupby(key + ["sd"]).agg(rp=("round_num", "size"), sc=("score", "sum"), k=("k", "sum"), d=("d", "sum"), a=("a", "sum"),
+                                     dm=("damage", "sum"), hs=("hs", "sum"), sh=("sh", "sum"), kast=("kast", "sum"),
+                                     fk=("fk", "sum"), fd=("fd", "sum")).reset_index()
+    g["acs"] = (g["sc"] / g["rp"]).round()
+    g["adr"] = (g["dm"] / g["rp"]).round()
+    out = {"m": [mix[x] for x in base["match_id"]], "t": team_idx(base["match_id"], base["team_id"]), "p": [pix.get(x) for x in base["puuid"]],
+           "ag": base["ag"].tolist(), "k": _i(base["kills"]), "d": _i(base["deaths"]), "a": _i(base["assists"]),
+           "acs": _i((base["score"] / base["rounds_played"].clip(lower=1)).round()), "ul": _i(base["ultimate_casts"])}
+    tot = g.groupby(key)[["dm", "rp"]].sum().reindex(pd.MultiIndex.from_frame(base[key]))
+    out["adr"] = [0 if pd.isna(x) or not n else int(round(x / n)) for x, n in zip(tot["dm"], tot["rp"])]
+    idx = pd.MultiIndex.from_frame(base[key])
+    for s_ in (0, 1):
+        x = g[g["sd"] == s_].set_index(key).reindex(idx)
+        for c in ("rp", "acs", "k", "d", "a", "adr", "hs", "sh", "kast", "fk", "fd"):
+            out[f"{c}{s_}"] = [0 if pd.isna(v) else int(v) for v in x[c]]
+    return out
 
 
 DE_CATS = ["side", "phase", "numbers", "ally_dist", "allies_near_b", "economy", "fb_context"]
 ADV_CATS = ["state", "side", "spike", "when", "economy"]
 FB_CATS = ["side", "economy", "when", "duel_role"]
-FUND_KEYS = ("trade", "advantage", "fb_open", "fb_rec")
+FUND_KEYS = ("trade", "advantage", "fb_open", "fb_rec", "post", "retake", "keyrounds", "halfopen", "pressure")
+# fundamentos de round (fundamentals/rounds.py): arquivo de eventos, coluna de elegibilidade, esperado e dimensões
+ROUND_FUND = {"post": ("plant_events", "eligible_post", "exp_post", ["numbers", "pstate", "site", "pwhen", "economy"]),
+              "retake": ("plant_events", "eligible_ret", "exp_ret", ["numbers", "pstate", "site", "pwhen", "economy"]),
+              "keyrounds": ("key_events", "eligible", "exp_key", ["round_type", "side", "half", "economy"]),
+              "halfopen": ("half_events", "eligible", "exp_half", ["moment", "side", "half", "economy"]),
+              "pressure": ("pressure_events", "eligible", "exp_press", ["lead", "phase", "side", "economy"])}
 # alvo do relatório de baseline que corresponde ao desfecho usado pelo detector
-FUND_TARGET = {"advantage": "converteu (venceu o round)", "fb_open": "fez o first blood", "fb_rec": "venceu depois de sofrer o FB"}
+FUND_TARGET = {"advantage": "converteu (venceu o round)", "fb_open": "fez o first blood", "fb_rec": "venceu depois de sofrer o FB",
+               "post": "venceu depois de plantar", "retake": "venceu com a spike adversária plantada",
+               "keyrounds": "venceu o round-chave", "halfopen": "venceu o round 2/3 do half",
+               "pressure": "venceu o round decisivo"}
 
 
 def _fd(show, tix):
@@ -346,7 +432,7 @@ def _fundamentals_payload(out: Path, cfg, mix, tix, pix) -> dict | None:
             continue
         show = p[(p["tier"] == "padrão") | (p["level"] == 0)].reset_index(drop=True)
         fid = {x: i for i, x in enumerate(show["pattern_id"])}
-        base = lambda el: {"t": [tix.get(x) for x in el["team_name"]], "m": [mix[x] for x in el["match_id"]], "r": _i(el["round_num"])}
+        base = lambda el: {"t": [tix.get(x) for x in el["team_name"]], "m": _rle([mix[x] for x in el["match_id"]]), "r": _i(el["round_num"])}
         if fk == "trade":
             de = pd.read_parquet(fdir / "death_events.parquet")
             el = de[de["eligible"] & de[f"exp_trade_{w}s"].notna()].sort_values(["match_id", "round_num", "kill_idx"])
@@ -363,6 +449,12 @@ def _fundamentals_payload(out: Path, cfg, mix, tix, pix) -> dict | None:
                  "p": _p1000(el["exp_adv_won"]), "lo": [int(x) for x in el["lost_adv"]],
                  "pl": _p1000(el["exp_adv_lost"]), "hs": _r(el["held_s"], 1),
                  "ce": [int(x) for x in el["censored"]], "co": [int(x) for x in el["collapse"]], "un": _i(el["unanswered"]), **codes}
+        elif fk in ROUND_FUND:
+            fname, elig, pcol, cols = ROUND_FUND[fk]
+            re_ = pd.read_parquet(fdir / f"{fname}.parquet")
+            el = re_[re_[elig] & re_[pcol].notna()].sort_values(["match_id", "round_num", "team_id"])
+            cats, codes = _cats(el, cols)
+            E = {**base(el), "y": [int(x) for x in el["won"]], "p": _p1000(el[pcol]), **codes}
         else:
             rec = fk == "fb_rec"
             pcol = "exp_fb_rec" if rec else "exp_fb_open"
@@ -372,7 +464,7 @@ def _fundamentals_payload(out: Path, cfg, mix, tix, pix) -> dict | None:
                  "p": _p1000(el[pcol]), "v": [pix.get(x) for x in el["duel_player"]], "tr": [int(x) for x in el["fb_traded"]], **codes}
             if not rec:  # para os resumos do card: venceu o round, esperado depois de fazer / sofrer o FB
                 E.update({"w": [int(x) for x in el["won"]], "pc": _p1000(el["exp_fb_conv"]), "pr": _p1000(el["exp_fb_rec"])})
-        ev = evd[evd["pattern_id"].isin(fid) & (evd["rank"] < 15)]
+        ev = evd[evd["pattern_id"].isin(fid) & (evd["rank"] < 8)]   # 8 rounds para revisar por padrão (limite de tamanho do painel)
         EV = {"f": [fid[x] for x in ev["pattern_id"]], "m": [mix[x] for x in ev["match_id"]], "r": _i(ev["round_num"]),
               "k": _i(ev["kill_idx"]), "why": ev["why_listed"].tolist()}
         keys = ev[["match_id", "round_num", "kill_idx"]].dropna(subset=["kill_idx"]).drop_duplicates().copy()

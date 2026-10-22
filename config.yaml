@@ -60,8 +60,8 @@ halves:
 
 # Fundamentos coletivos (diagnóstico): eventos com contexto, baselines e detector de padrões
 fundamentals:
-  trade_windows_s: [3, 5, 7]       # desfechos de trade calculados para cada janela
-  default_window_s: 5              # janela usada no diagnóstico (a interface mostra as outras)
+  trade_windows_s: [3, 4, 5, 6, 7]  # desfechos de trade calculados para cada janela (4 s = timing.trade_window_s, padrão do painel)
+  default_window_s: 4              # janela usada no diagnóstico = timing.trade_window_s (a interface mostra as outras)
   baseline:
     model: auto                    # auto = escolhe M0/M1/M2 pela validação por série; ou fixe um deles
     shrink_m: 20                   # M1: força do encolhimento de cada célula para a célula-pai

@@ -55,6 +55,21 @@ def _why_fbr(r, w) -> str:
             f"times parecidos vencem {100 * r.p:.0f}% desses rounds")
 
 
+def _why_round(r, spec_name) -> str:
+    lado = "ataque" if r.side == "atk" else "defesa"
+    res = "venceu o round" if r.y else "perdeu o round"
+    if spec_name in ("post", "retake"):
+        who = "o time plantou" if spec_name == "post" else "o adversário plantou"
+        end = f" ({r.result.lower()})" if isinstance(r.result, str) else ""
+        return f"{who} no {r.site} aos {r.t_s:.0f} s em {r.pstate} ({lado}); {res}{end}; times parecidos vencem {100 * r.p:.0f}% desses rounds"
+    if spec_name == "pressure":
+        return (f"round decisivo no {r.score} ({r.phase}, {lado}, {r.economy}; pressão {r.LI:.1f}×); {res}; "
+                f"times parecidos vencem {100 * r.p:.0f}% desses rounds")
+    if spec_name == "keyrounds":
+        return f"{r.round_type} ({lado}, {r.economy}); {res}; times parecidos vencem {100 * r.p:.0f}% desses rounds"
+    return f"{r.moment} ({lado}, {r.economy}); {res}; times parecidos vencem {100 * r.p:.0f}% desses rounds"
+
+
 def _last_sets(d, scopes):
     last = {}
     for sc in scopes:
@@ -96,6 +111,9 @@ def build_evidence(events: pd.DataFrame, patterns: pd.DataFrame, cfg, spec=None)
             elif spec.name == "advantage":
                 base.update({"kill_idx": None if pd.isna(r.start_kill_idx) else int(r.start_kill_idx), "t_s": float(r.t0_s),
                              "team_id": r.team_id, "state": r.state, "why_listed": _why_adv(r, w)})
+            elif spec.name in ("post", "retake", "keyrounds", "halfopen", "pressure"):
+                base.update({"kill_idx": None, "t_s": float(getattr(r, "t_s", 0.0) or 0.0), "team_id": r.team_id,
+                             "state": getattr(r, "pstate", None), "why_listed": _why_round(r, spec.name)})
             else:
                 why = _why_fbo(r, w) if spec.name == "fb_open" else _why_fbr(r, w)
                 base.update({"kill_idx": int(r.kill_idx), "t_s": float(r.t_s), "team_id": r.team_id,

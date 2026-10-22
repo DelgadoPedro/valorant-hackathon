@@ -189,3 +189,32 @@ def fit_fb_baselines(fb: pd.DataFrame, cfg) -> tuple[pd.DataFrame, pd.DataFrame]
     d, r2 = fit_baselines(d, cfg, FB_FEATURES, {"won": "exp_fb_rec"}, "fb_rec", {"won": "venceu depois de sofrer o FB"},
                           eligible="eligible_rec")
     return d, pd.concat([r1, r2], ignore_index=True)
+
+
+# ---------------------------------------------------------------- fundamentos de round (fundamentals/rounds.py)
+PLANT_FEATURES = ["pstate", "site", "pwhen", "economy", "map_name"]
+KEYR_FEATURES = ["round_type", "side", "economy", "map_name"]
+HALF_FEATURES = ["moment", "economy"]  # lado e mapa pioram a calibração com ~2,6 mil eventos (validação por série)
+
+
+def fit_plant_baselines(pe: pd.DataFrame, cfg) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Pós-plant (o time plantou) e retake (o adversário plantou): esperado de vencer o round a partir de vivos no
+    plant, site, momento do plant, economia e mapa."""
+    d, r1 = fit_baselines(pe, cfg, PLANT_FEATURES, {"won": "exp_post"}, "post", {"won": "venceu depois de plantar"},
+                          eligible="eligible_post")
+    d, r2 = fit_baselines(d, cfg, PLANT_FEATURES, {"won": "exp_ret"}, "retake", {"won": "venceu com a spike adversária plantada"},
+                          eligible="eligible_ret")
+    return d, pd.concat([r1, r2], ignore_index=True)
+
+
+def fit_key_baselines(ke: pd.DataFrame, cfg) -> tuple[pd.DataFrame, pd.DataFrame]:
+    return fit_baselines(ke, cfg, KEYR_FEATURES, {"won": "exp_key"}, "keyrounds", {"won": "venceu o round-chave"})
+
+
+def fit_half_baselines(he: pd.DataFrame, cfg) -> tuple[pd.DataFrame, pd.DataFrame]:
+    return fit_baselines(he, cfg, HALF_FEATURES, {"won": "exp_half"}, "halfopen", {"won": "venceu o round 2/3 do half"})
+PRESS_FEATURES = ["lead", "phase", "economy", "side", "map_name"]
+
+
+def fit_pressure_baselines(pe: pd.DataFrame, cfg) -> tuple[pd.DataFrame, pd.DataFrame]:
+    return fit_baselines(pe, cfg, PRESS_FEATURES, {"won": "exp_press"}, "pressure", {"won": "venceu o round decisivo"})
