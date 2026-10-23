@@ -268,7 +268,8 @@ As tabelas Parquet e o HTML gerado são saídas locais e pesadas, ignoradas pelo
 
 ## 8. Onde continuar lendo
 
-- [README operacional](../README.md): decisões detalhadas, dicionário de métricas e histórico de implementação.
+- [Referência técnica completa](TECHNICAL_REFERENCE.md): decisões detalhadas, dicionário de métricas e histórico de implementação.
+- [README](../README.md): resumo e quickstart para Windows e Ubuntu/Linux.
 - [Direção visual e arquitetura de informação](DESIGN.md).
 - [Design system da missão](MISSION_DESIGN_SYSTEM.md).
 - [Dicionário de métricas](../reference/metrics_dictionary.csv).
