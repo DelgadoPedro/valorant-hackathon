@@ -9,7 +9,7 @@
 :root {
   --bg: #f1f0f4; --panel: #ffffff; --panel-2: #f7f6f9; --ink: #17222c; --mut: #59656f; --faint: #8a949b;
   --line: #dfdde6; --accent: #6d3fc0; --accent-soft: #ebe4f8;
-  --bad: #c2362f; --bad-soft: #f8e3e1; --good: #1b8a4b; --good-soft: #def2e6; --neutral: #8a949b; --neutral-soft: #eceff1;
+  --loss: #c41e3a; --bad: #c2362f; --bad-soft: #f8e3e1; --good: #1b8a4b; --good-soft: #def2e6; --neutral: #8a949b; --neutral-soft: #eceff1;
   --band: rgba(23, 34, 44, .09); --warn: #b9811c; --ref: #2f6db5; --teamavg: #b4791f;
   --atk: #cf5f2a; --def: #4f7c99; --opp: #6b7773; --silhouette: rgba(23, 34, 44, .09);
   --f-display: "Archivo", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -22,7 +22,7 @@
   :root:not([data-theme="light"]) {
     --bg: #10161b; --panel: #161e25; --panel-2: #1b242c; --ink: #e3e9ee; --mut: #9aa6b0; --faint: #6f7b85;
     --line: #2a3540; --accent: #a98bf5; --accent-soft: #2a2140;
-    --bad: #ee6a61; --bad-soft: #3a1f1e; --good: #4cc483; --good-soft: #15301f; --neutral: #6f7b85; --neutral-soft: #222c34;
+    --loss: #f0566c; --bad: #ee6a61; --bad-soft: #3a1f1e; --good: #4cc483; --good-soft: #15301f; --neutral: #6f7b85; --neutral-soft: #222c34;
     --band: rgba(227, 233, 238, .12); --warn: #e3ad4a; --ref: #7fb0ea; --teamavg: #e0a948;
     --atk: #ef8a5c; --def: #7fa9c6; --opp: #a3aeaa; --silhouette: rgba(227, 233, 238, .07); color-scheme: dark;
   }
@@ -30,7 +30,7 @@
 :root[data-theme="dark"] {
   --bg: #10161b; --panel: #161e25; --panel-2: #1b242c; --ink: #e3e9ee; --mut: #9aa6b0; --faint: #6f7b85;
   --line: #2a3540; --accent: #a98bf5; --accent-soft: #2a2140;
-  --bad: #ee6a61; --bad-soft: #3a1f1e; --good: #4cc483; --good-soft: #15301f; --neutral: #6f7b85; --neutral-soft: #222c34;
+  --loss: #f0566c; --bad: #ee6a61; --bad-soft: #3a1f1e; --good: #4cc483; --good-soft: #15301f; --neutral: #6f7b85; --neutral-soft: #222c34;
   --band: rgba(227, 233, 238, .12); --warn: #e3ad4a; --ref: #7fb0ea; --teamavg: #e0a948;
   --atk: #ef8a5c; --def: #7fa9c6; --opp: #a3aeaa; --silhouette: rgba(227, 233, 238, .07); color-scheme: dark;
 }
@@ -110,11 +110,12 @@ main { padding-block: 18px 36px; display: grid; gap: 14px; min-width: 0; }
 .mut { color: var(--mut); }
 
 /* ---------- partida */
-.match-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 20px; align-items: center; }
+.match-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 20px; align-items: center; }
+.match-card .vs { justify-content: flex-end; text-align: right; }
 .vs { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 .vs .us { font: 700 30px/1 var(--f-display); font-variation-settings: "wdth" 80;}
 .vs .them { font: 500 20px/1 var(--f-display); color: var(--mut); font-variation-settings: "wdth" 80;}
-.score { font: 700 40px/1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: .02em; text-align: right; white-space: nowrap; font-variation-settings: "wdth" 80;}
+.score { font: 700 40px/1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: .02em; white-space: nowrap; font-variation-settings: "wdth" 80;}
 .score .res { font-size: 15px; vertical-align: middle; margin-left: 8px; padding: 3px 8px 2px; border-radius: 4px; color: var(--panel); }
 .res.w { background: var(--good); } .res.l { background: var(--bad); }
 .meta { color: var(--mut); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 4px; }
@@ -248,7 +249,7 @@ table.mt { width: 100%; border-collapse: collapse; font-variant-numeric: tabular
 }
 @media (max-width: 640px) {
   .top { position: static; }
-  .match-card { grid-template-columns: 1fr; }
+  .match-card { grid-template-columns: 1fr; } .match-card .vs { justify-content: flex-start; text-align: left; }
   .score { text-align: left; }
   .sec-head h1 { font-size: 24px; }
   .filters { gap: 6px 14px; }
@@ -478,7 +479,8 @@ h1.team { margin: 0; font: 800 clamp(34px, 5.4vw, 56px)/.95 var(--f-display); fo
 .sb-panel .rtl-legend { justify-content: center; }
 /* cabeçalho da partida na cor do resultado */
 .panel.match.w { background: color-mix(in srgb, var(--good) 9%, var(--panel)); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); }
-.panel.match.l { background: color-mix(in srgb, var(--bad) 8%, var(--panel)); border-color: color-mix(in srgb, var(--bad) 38%, var(--line)); }
+.panel.match.l { background: color-mix(in srgb, var(--loss) 7%, var(--panel)); border-color: color-mix(in srgb, var(--loss) 40%, var(--line)); }
+.panel.match .res.l { background: var(--loss); }
 /* rounds para revisar: duas colunas */
 .rev-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .rev-col h3 { margin: 0 0 10px; font-size: 14px; }
@@ -713,6 +715,7 @@ h2.sec-sub { margin: 16px 0 -4px; }
 .lx-bar { display: inline-block; width: 90px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
 .lx-bar i { display: block; height: 100%; background: var(--accent); }
 @media (max-width: 860px) { .panel.lev-explain { grid-template-columns: 1fr; } }
+.panel.lev-explain.one { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
 /* round a round (Partida) */
 .rtl-wrap { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
 .rtl { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
@@ -830,6 +833,16 @@ details.more > summary:hover, details.more[open] > summary { color: var(--accent
 details.more > summary .icw { font-size: 13px; }
 details.more .more-body { margin-top: 6px; padding: 8px 12px; border-left: 2px solid var(--accent-soft); color: var(--mut); display: grid; gap: 4px; }
 details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; line-height: 1.45; }
+
+.lp-steps.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lp-lead2 { margin: -4px 0 4px; font-size: 15px; line-height: 1.5; color: var(--ink); max-width: 760px; }
+@media (max-width: 1100px) { .lp-steps.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .lp-steps.four { grid-template-columns: minmax(0, 1fr); } }
+
+/* início de half: tabela dos momentos da abertura */
+.hal-tbl td { height: 38px; }
+.hal-tbl tr.hal-top td { background: color-mix(in srgb, var(--bad) 7%, transparent); }
+.hal-prio { margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 45%, transparent); }
 </style>
 <header class="top" id="top">
   <div class="top-in">
@@ -1545,7 +1558,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
           rs.map((x) => h("th", { class: "num" }, h("i", { class: "sw", style: `background:var(${x.color})` }), x.key === "team" ? "Time" : "Liga")),
           kind(m0) === "pct" ? stripHead() : h("th", { class: "strip" }, `${fmt(m0, lo)} → ${fmt(m0, hi)}`))),
         h("tbody", null, body))),
-      h("p", { class: "note" }, kind(m0) === "pct" ? "7/9 = casos. Na faixa: ● esta partida, traço grosso = média do time, traço fino = liga." : "n = casos. Na faixa: ● esta partida, traço grosso = média do time, traço fino = liga."));
+      h("p", { class: "note" }, kind(m0) === "pct" ? "Ao lado de cada taxa, os casos (ex.: 7/9). Na régua: ● esta partida, traço grosso = média do time, traço fino = liga." : "n = casos. Na régua: ● esta partida, traço grosso = média do time, traço fino = liga."));
   }
   function ordinalChart(rows, o = {}) {
     const m0 = rows[0].m, rs = refs();
@@ -1582,7 +1595,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
       });
     });
     return h("div", null, legendRow([[`esta partida (maior = mais ${unit})`, "--accent"], ...rs.map((k) => [k.label, k.color, k.key === "league" ? "dash" : "line"])]), box,
-      h("p", { class: "note" }, "n = casos do time em cada ponto. Passe o mouse para ver os números."));
+      h("p", { class: "note" }, "Cada ponto é a taxa naquela faixa; n = casos do time. Passe o mouse para ver os números."));
   }
 
   // ------------------------------------------------------------------ evolução partida a partida (pontos: tamanho = nº de eventos)
@@ -1618,7 +1631,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
       });
     });
     return h("div", null, legendRow([["cada partida (maior = mais eventos)", "--faint"], ["partida selecionada", "--accent"], ...rs.map((r) => [r.label, r.color, r.key === "league" ? "dash" : "line"])]),
-      box, h("p", { class: "note" }, "Clique num ponto para abrir aquela partida." + (mp ? ` Só partidas em ${mp}.` : "")));
+      box, h("p", { class: "note" }, "Cada ponto é uma partida. Clique para abri-la." + (mp ? ` Só partidas em ${mp}.` : "")));
   }
 
   // ------------------------------------------------------------------ recortes (uma dimensão por vez)
@@ -1646,7 +1659,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     }
     const rows = items.map((it) => ({ label: it.label, m: METRICS[MI[it.id]], st: stat(it.id, it.s != null ? [it.s] : undefined, it.o || {}) }))
       .filter((r) => r.st.entries.length || r.st.league);
-    const notes = { Lado: "Ignora o filtro de lado da tabela.", Mapa: "“Esta partida” só aparece no mapa em que foi jogada; ignora o filtro de mapa da tabela.",
+    const notes = { Lado: "Ignora o filtro de lado da tabela.", Mapa: "“Esta partida” só aparece no mapa em que foi jogada.",
                     Site: "A, B e C só se comparam dentro do mesmo mapa: escolha o mapa acima." };
     return h("div", null,
       dims.length > 1 ? h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Recortar por"), seg(dims.map((d, i) => [i, d[0]]), cur, (v) => { state.cut[id] = v; render(); })) : null,
@@ -1735,7 +1748,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     drawers.push(run);
     return wrap;
   }
-  const mapNote = () => h("p", { class: "note" }, "Mapa oficial do jogo (via valorant-api.com, uso autorizado pela organização), com os nomes oficiais das regiões.");
+  const mapNote = () => h("p", { class: "note" }, "Mapa oficial do jogo, com os nomes das regiões (valorant-api.com).");
   function statList(items) { return h("div", { class: "statlist" }, items.map(([l, v, cls]) => h("div", null, h("span", null, l), h("b", { class: cls || "" }, v)))); }
   const scopeBar = (extra) => h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Partidas"), scopeSeg(), extra || null);
 
@@ -1761,7 +1774,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
       draw(bg, css("--accent"), 0); draw(bl, css("--bad"), 1);
     });
     return h("div", null, scopeBar(), legendRow([[`first bloods feitos (${got.length})`, "--accent"], [`sofridos (${lost.length})`, "--bad"]]), body,
-      h("p", { class: "note" }, "Segundos desde o início do round" + sideNote() + "."));
+      h("p", { class: "note" }, "Em que segundo do round sai o first blood" + sideNote() + "."));
   }
   // quem faz e quem sofre o first blood (tabela por jogador com barra divergente)
   function viewFbPlayers() {
@@ -1793,7 +1806,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
         })),
         h("tfoot", null, h("tr", null, h("td", null, "Time"), h("td", { class: "num" }, totM, h("span", { class: "n" }, ` de ${rounds} rounds`)),
           h("td", { class: "num" }, totL), h("td", { class: "num " + (totM >= totL ? "d-good" : "d-bad") }, (totM - totL > 0 ? "+" : totM - totL < 0 ? "−" : "") + Math.abs(totM - totL)), h("td", null))))),
-      h("p", { class: "note" }, "% = parte de cada jogador nos first bloods do time" + sideNote() + "."));
+      h("p", { class: "note" }, "Parte de cada jogador nos first bloods do time" + sideNote() + "."));
   }
   // histograma simples: bins de largura fixa, séries empilhadas
   function stackedHist(series, o) {
@@ -1907,7 +1920,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     const rec = AG.get(state.team + "|" + MI["TRD-05"] + "|" + (SI[""] ?? -1));
     return h("div", null, scopeBar(), h("div", { class: "grid" },
       h("div", { class: "tbl-wrap" }, h("h3", null, "Cobertura de cada jogador"), per, h("p", { class: "note" }, `Isolada = sem aliado vivo a ≤ ${NF0.format(D.cfg.near_radius / 100)} m na hora da morte.`)),
-      h("div", { class: "tbl-wrap" }, h("h3", null, "Quem troca quem"), mat, h("p", { class: "note" }, "Linha = quem trocou; coluna = quem foi trocado." + (rec ? ` Reciprocidade das duplas (base inteira): ${NF2.format(rec.v)} (1 = equilibrada).` : "")))));
+      h("div", { class: "tbl-wrap" }, h("h3", null, "Quem troca quem"), mat, h("p", { class: "note" }, "Linha = quem trocou; coluna = quem foi trocado." + (rec ? ` Reciprocidade: ${NF2.format(rec.v)} (1 = as duplas se trocam igualmente).` : "")))));
   }
   // por jogador (sem a matriz de quem troca quem): TRD-14 = isoladas entre as mortes sem trade; TRD-08 = trade possível não feito
   function viewPlayerDeaths(id) {
@@ -1961,7 +1974,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
           [`Sem trade, com aliado a ≤ ${NF0.format(D.cfg.near_radius / 100)} m`, `${NF0.format(100 * near / n)}% · ${near}`, "d-warn"],
           ["Sem trade, isoladas", `${NF0.format(100 * iso / n)}% · ${iso}`, "d-bad"]]),
           h("div", { style: "margin-top:10px" }, check("chk-lines", "ligar cada morte ao killer", state.lines, (v) => { state.lines = v; render(); })),
-          h("p", { class: "note" }, "Amarelo = havia companheiro perto e não houve trade: bons lances para revisar no VOD."))));
+          h("p", { class: "note" }, "Amarelo = morte sem trade com companheiro perto: bons lances para o VOD."))));
   }
   // pós-plant por site: onde o time planta, como o round termina (explosão, eliminação, defuse) e onde a spike foi plantada
   const PO = { 2: ["Explosão", "--good"], 0: ["Eliminação", "--ref"], 1: ["Defuse", "--bad"] };  // código do resultado do round
@@ -2006,7 +2019,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
         h("div", null, pts.length ? mapView(mp, [{ points: pts }]) : h("div", { class: "empty" }, "Sem plants."), mapNote()),
         h("div", null, h("h3", null, fs ? `Plants no site ${fs}` : `Todos os plants em ${mp}`),
           legendRow([["venceu por explosão", "--good"], ["venceu por eliminação", "--ref"], ["perdeu por defuse", "--bad"]]),
-          h("p", { class: "note" }, "Clique num site na tabela para ver só os plants dele; clique de novo para voltar a todos. Plants do time (sempre no ataque); o filtro de lado do topo não se aplica."))));
+          h("p", { class: "note" }, "Clique num site para ver só os plants dele. Só plants do time (ataque); o filtro de lado não vale aqui."))));
   }
   // por site: onde o round aconteceu (site do plant, ou "sem plant") e quanto o time vence, por lado, num tipo de round
   // (pistol, eco, anti-eco, force, armados); os filtros são as mesmas regras das métricas KEY-01/15/06/09/16
@@ -2100,7 +2113,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
         rows.forEach((i) => tipOn(svg.append("circle").attr("cx", x(D.R.r[i])).attr("cy", y(D.R.lo[i])).attr("r", 4).attr("opacity", sideOk(D.R.sd[i]) ? 1 : .3)
           .attr("fill", D.R.w[i] ? css("--accent") : css("--panel")).attr("stroke", css("--accent")).attr("stroke-width", 1.6),
           `<b>Round ${D.R.r[i] + 1}</b> · ${D.R.w[i] ? "venceu" : "perdeu"}<br>time ${NF0.format(D.R.lo[i])} (${BUY_LBL[BUYS[D.R.b[i]]]}) × adv. ${NF0.format(D.R.olo[i])} (${BUY_LBL[BUYS[D.R.ob[i]]]})`));
-      }), h("p", { class: "note" }, `Esta partida. ● venceu ○ perdeu. Tracejado: eco < ${NF0.format(D.cfg.team_eco_max / 1000)}k e full ≥ ${NF0.format(D.cfg.team_full_min / 1000)}k.`));
+      }), h("p", { class: "note" }, `Equipamento do time em cada round desta partida (● venceu, ○ perdeu). Linhas tracejadas: abaixo de ${NF0.format(D.cfg.team_eco_max / 1000)}k é eco; a partir de ${NF0.format(D.cfg.team_full_min / 1000)}k, full.`));
   }
   function viewBuyMatrix() {
     const k8 = MI["ECO-08"];
@@ -2115,13 +2128,13 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
         const dl = l ? c.v - l.v : 0;
         return h("td", { style: `background:color-mix(in srgb, var(${dl >= 0 ? "--good" : "--bad"}) ${Math.round(Math.min(55, Math.abs(dl) * 140))}%, transparent)` },
           h("b", null, NF0.format(c.v * 100) + "%"), h("div", { class: "cell-sub" }, `${NF0.format(c.n)} de ${c.d} · liga ${l ? NF0.format(l.v * 100) + "%" : "—"}`));
-      })))))), h("p", { class: "note" }, "Taxa de vitória por par de compras; cor = diferença para a liga no mesmo par. Pistols ficam fora."));
+      })))))), h("p", { class: "note" }, "Taxa de vitória em cada combinação de compra (time × adversário); a cor compara com a liga. Sem pistols."));
   }
   function viewCurve() {
     const ks = [-4, -3, -2, -1, 1, 2, 3, 4];
     const rows = ks.map((k) => ({ label: (k > 0 ? "+" : "−") + Math.abs(k), m: METRICS[MI[k > 0 ? "DYN-01" : "DYN-02"]], st: stat(k > 0 ? "DYN-01" : "DYN-02", [(k > 0 ? "+" : "") + k]) }));
     return h("div", null, ordinalChart(rows, { unit: "rounds", xTitle: "saldo de jogadores vivos alcançado no round" }),
-      h("p", { class: "note" }, "Taxa de vitória nos rounds em que o time chegou a cada saldo. À direita, quanto converte vantagem; à esquerda, quanto vira desvantagem."));
+      h("p", { class: "note" }, "Taxa de vitória nos rounds em que o time chegou a cada saldo de vivos. À direita, com vantagem; à esquerda, em desvantagem."));
   }
   // situações de vantagem / desvantagem: cada round conta uma vez (situação em que a 1ª vantagem começa); só a % de vitória
   function viewStates(id) {
@@ -2188,7 +2201,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     }
     if (!rows.length) return h("div", { class: "empty" }, "A equipe precisa de pelo menos 3 partidas.");
     return h("div", { class: "tbl-wrap" }, h("table", { class: "mt compact" }, h("thead", null, h("tr", null, h("th", null, "Métrica"), h("th", { class: "num" }, "Variação entre partidas (desvio-padrão)"), h("th", { class: "num" }, "Partidas"))), h("tbody", null, rows)),
-      h("p", { class: "note" }, "Base inteira. Quanto menor, mais estável o time de uma partida para outra."));
+      h("p", { class: "note" }, "Quanto a métrica varia de uma partida para outra (base inteira). Menor = time mais estável."));
   }
   function viewHow(m) {
     return h("div", { class: "def" }, h("div", null, m.rule), m.params ? h("div", null, h("b", null, "Parâmetros: "), m.params) : null,
@@ -2282,16 +2295,10 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
   function matchCard() {
     const m = curMatch(), t = state.team, o = opp(m, t);
     const [a, b] = scoreOf(m, t);
-    const rows = R_by_m[m].filter((i) => D.R.t[i] === t);
-    const won = (sd) => rows.filter((i) => D.R.sd[i] === sd && D.R.w[i]).length, tot = (sd) => rows.filter((i) => D.R.sd[i] === sd).length;
     return h("section", { class: "panel match " + (a > b ? "w" : "l") },
       h("div", { class: "match-card" },
-        h("div", null,
-          h("div", { class: "vs" }, h("span", { class: "us" }, prettyTeam(D.teams[t])), h("span", { class: "them" }, "vs " + prettyTeam(D.teams[o]))),
-          h("div", { class: "meta" }, h("span", null, h("b", null, `#${state.pos + 1}`), ` de ${T.ms.length}`), h("span", null, fmtDate(M.date[m])),
-            h("span", null, M.stage[m]), h("span", null, h("b", null, M.map[m])), h("span", null, "começou na " + firstSide(m, t)),
-            h("span", null, `ataque ${won(0)}/${tot(0)}`), h("span", null, `defesa ${won(1)}/${tot(1)}`))),
-        h("div", { class: "score" }, `${a}–${b}`, h("span", { class: "res " + (a > b ? "w" : "l") }, a > b ? "V" : "D"))));
+        h("div", { class: "score" }, `${a}–${b}`, h("span", { class: "res " + (a > b ? "w" : "l") }, a > b ? "V" : "D")),
+        h("div", { class: "vs" }, h("span", { class: "us" }, prettyTeam(D.teams[t])), h("span", { class: "them" }, "vs " + prettyTeam(D.teams[o])))));
   }
   // round a round em uma olhada (como nos sites de resultado): quem venceu cada round, de que lado e como
   const RES_IC = ["r_elim", "r_defuse", "r_boom", "r_time"], RES_TXT = ["eliminação", "defuse", "spike detonada", "tempo esgotado"];
@@ -2444,7 +2451,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
       h("p", { class: "hint" }, "Escolha a partida: do mais recente (à esquerda) ao mais antigo."),
       h("h2", { class: "sec-sub" }, "Visão geral"), matchCard(), D.SB ? scoreboard(m, t) : null,
       h("h2", { class: "sec-sub" }, "Análise"), filterBar(), kpiCards(),
-      panel("O que mudou nesta partida", `Contra a média do time${state.sameMap ? " em " + curMap() : ""}${sideNote()}; só diferenças que o acaso não explica. Clique para abrir.`, highlights()),
+      panel("O que mudou nesta partida", `Métricas em que esta partida ficou bem acima ou abaixo da média do próprio time${state.sameMap ? " em " + curMap() : ""}${sideNote()}. Só entram diferenças grandes demais para serem acaso, dado o número de rounds. Clique numa métrica para abri-la.`, highlights()),
       ...revSection());
   }
 
@@ -2464,9 +2471,30 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     AGT: "Que agentes o time escolhe, como muda de um mapa para outro e como cada composição se sai. Nomes e funções vêm de um catálogo estático dos agentes; os resultados são observados, não efeito causal da composição.",
     HAL: "Pistol, round 2 e round 3 de cada half: onde a abertura falha (pistol perdido, anti-eco entregue, 1º armado perdido) e quanto isso pesa no resultado do mapa. Use o filtro de lado no topo para ver só o ataque ou a defesa.",
   };
+  // explicação da vantagem numérica (botão "O que é vantagem?", como em Pressão); taxas da liga vêm dos eventos do fundamento
+  function advExplain() {
+    return h("section", { class: "panel lev-explain one" },
+      h("div", { class: "lx-text" },
+        h("h2", null, "O que é vantagem numérica"),
+        h("p", null, "O time está em vantagem quando tem ", h("b", null, "mais jogadores vivos"), " que o adversário (5v4, 4v3…). A vantagem começa na kill que cria a diferença e acaba quando o adversário empata ou o round termina."),
+        h("ul", null,
+          h("li", null, h("b", null, "Converter"), " = vencer o round depois de ficar na frente. ", h("b", null, "Virar"), " = vencer depois de ficar atrás."),
+          h("li", null, h("b", null, "Duração"), " = quanto tempo o time segura a vantagem antes de o adversário empatar."),
+          h("li", null, h("b", null, "Esperado"), " = quanto times parecidos convertem na mesma situação: placar de vivos, lado, spike, momento do round e economia."),
+          h("li", null, h("b", null, "Vantagem de equipamento"), " é outra coisa: o time comprou bem mais que o adversário naquele round."))));
+
+  }
   function renderLens(main, id) {
     const sec = D.sections.find((s) => s.id === id);
     const an = analysisPanel(id);
+    if (id === "ADV") {
+      const exBtn = h("button", { class: "lnk sm ex-toggle", type: "button", "aria-expanded": String(!!state.advEx),
+        onclick: () => { state.advEx = !state.advEx; render(); } }, icon("info"), state.advEx ? "Esconder explicação" : "O que é vantagem?");
+      main.append(...[h("div", { class: "sec-head fund-head-page" }, h("h1", null, sec.label), exBtn), ...(state.advEx ? [advExplain()] : []), ...(an || []),
+        an ? h("h2", { class: "sec-sub" }, "Métricas") : null, lensList(id),
+        h("p", { class: "note center" }, "Clique numa métrica para ver evolução, recortes e visualizações.")].filter(Boolean));
+      return;
+    }
     main.append(...[h("div", { class: "sec-head" }, h("h1", null, sec.label)), ...(an || []),
       an ? h("h2", { class: "sec-sub" }, "Métricas") : null, lensList(id),
       h("p", { class: "note center" }, "Clique numa métrica para ver evolução, recortes e visualizações.")].filter(Boolean));
@@ -2678,21 +2706,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     const hi = arcs.filter((x) => x.reachedHi), th = arcs.filter((x) => x.thrown), lo = arcs.filter((x) => x.reachedLo), cb = arcs.filter((x) => x.comeback);
     const L = levLeagueArcs();
     const rate = (a, b) => (b ? NF0.format(100 * a / b) + "%" : "—");
-    // rounds decisivos (25% de maior pressão), separados por quem estava na frente no mapa antes do round
-    const dec = (ahead, rowsSrc) => {
-      let n = 0, w = 0, e = 0;
-      for (const i of rowsSrc) {
-        if (D.R.lq[i] !== 3 || !sideOk(D.R.sd[i], side)) continue;
-        const o = levOf(i); if ((o.pre >= 0.5) !== ahead) continue;
-        n++; w += D.R.w[i]; e += o.p;
-      }
-      return { n, w, e: n ? e / n : null, v: n ? w / n : null };
-    };
-    const teamRows = ms.flatMap((m) => R_by_m[m].filter((i) => D.R.t[i] === t && hasLev(i) && D.R.lq[i] != null));
-    const fr = dec(true, teamRows), bk = dec(false, teamRows);
     const card = (k, big, small, tone) => h("div", null, h("span", { class: "k" }, k), h("b", { class: tone || "" }, big), h("small", null, small));
-    const decTxt = (x) => (x.n ? `${NF0.format(100 * x.v)}% · esperado pela economia ${NF0.format(100 * x.e)}%` : "sem rounds");
-    const decTone = (x) => (!x.n ? "" : x.v - x.e <= -0.05 ? "d-bad" : x.v - x.e >= 0.05 ? "d-good" : "");
     const list = th.concat(cb).sort((x, y) => T.pos.get(y.m) - T.pos.get(x.m));
     const li = (x) => {
       const ref = x.won ? x.lw : x.pk;
@@ -2707,10 +2721,8 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
       h("div", { class: "bigstats" },
         card("Mapas entregues", `${th.length} de ${hi.length}`, `chegou a ${NF0.format(100 * LEV_HI)}% de chance e perdeu · ${rate(th.length, hi.length)} · liga ${rate(L.th, L.hi)}`, th.length / (hi.length || 1) > L.th / L.hi + 0.05 ? "d-bad" : ""),
         card("Viradas", `${cb.length} de ${lo.length}`, `esteve com ${NF0.format(100 * LEV_LO)}% ou menos e venceu · ${rate(cb.length, lo.length)} · liga ${rate(L.cb, L.lo)}`, cb.length / (lo.length || 1) > L.cb / L.lo + 0.05 ? "d-good" : ""),
-        card("Rounds decisivos na frente", fr.n ? `${fr.w} de ${fr.n}` : "—", decTxt(fr), decTone(fr)),
-        card("Rounds decisivos atrás", bk.n ? `${bk.w} de ${bk.n}` : "—", decTxt(bk), decTone(bk))),
-      h("p", { class: "interp" }, `Na frente = o time tinha 50% ou mais de chance de vencer o mapa antes do round; rounds decisivos = os 25% que mais valiam para o mapa. `
-        + `“Esperado pela economia” é a chance média de vencer esses rounds com o equipamento que os dois times tinham.${side === "all" ? "" : " Rounds decisivos: só " + (side === "atk" ? "ataque" : "defesa") + "; mapas entregues e viradas usam o mapa inteiro."}`),
+      ),
+      h("p", { class: "note" }, `Mapa entregue = o time chegou a ${NF0.format(100 * LEV_HI)}% de chance de vencer o mapa e perdeu. Virada = esteve com ${NF0.format(100 * LEV_LO)}% ou menos e venceu. A chance de cada momento vem do placar, do lado e da rodada; os dois contam o mapa inteiro.`),
       list.length ? h("div", null, h("h3", { class: "sub-h" }, "Mapas para revisar"),
         h("div", { class: "tbl-wrap" }, h("table", { class: "mt compact" },
           h("thead", null, h("tr", null, h("th", null, ""), h("th", null, "Partida"), h("th", { class: "num" }, "Placar"), h("th", null, "Ponto de partida"), h("th", null, "Round que mais mudou o mapa depois disso"))),
@@ -2763,8 +2775,8 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
       ...(an ? [...an, h("h2", { class: "sec-sub" }, "Mapas e rounds")] : []),
       filterBar(false),
       panel("Onde o time ganha e perde mapas", "Em que situações o time ganha ou perde mais mapas que a liga." + sideNote(), levSituations()),
-      panel("Fechar e reagir", "Mapas entregues, viradas e rounds decisivos com o time na frente e atrás.", levPressure()),
-      h("div", { class: "lev-curve" }, panel("Curva do mapa", `${M.map[m]} · vs ${prettyTeam(D.teams[opp(m, state.team)])} · ${a}–${b}`, levCurve())));
+      panel("Fechar e reagir", "Mapas que o time tinha na mão e perdeu, e mapas perdidos que virou.", levPressure()),
+      h("div", { class: "lev-curve" }, panel(`Curva do mapa · ${M.map[m]} vs ${prettyTeam(D.teams[opp(m, state.team)])} · ${a}–${b}`, null, levCurve())));
   }
 
   // ------------------------------------------------------------------ análise (antigo "fundamento") dentro das seções de métricas
@@ -2786,7 +2798,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     return [
       h("div", { class: "sec-sub-row" }, h("div", null, h("h2", { class: "sec-sub" }, "Análise"), h("p", { class: "sub" }, U.q())), methodHelp()),
       h("div", { class: "ctl-row an-ctl" }, FB_KEYS.includes(fk) && FB_KEYS.length > 1 ? fbToggle(team) : null, diagControls(team, fk === "trade")),
-      panel("Padrões recorrentes", "O time contra outros times nas mesmas situações. Padrão = diferença que se repete entre partidas.",
+      panel("Padrões recorrentes", "O time comparado com outros times nas mesmas situações.",
         h("div", { class: "bigstats" },
           h("div", null, h("span", { class: "k" }, "Observado"), h("b", null, pct(a.obs)), h("small", null, `${a.y} de ${a.n} ${U.noun} em ${nm} partidas`)),
           h("div", null, h("span", { class: "k" }, "Esperado em situações parecidas"), h("b", { class: "mut" }, pct(a.exp)), h("small", null, "outros times, mesmo contexto")),
@@ -2801,10 +2813,17 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
           h("div", { class: "pat-main" }, h("span", { class: "pat-lbl" }, FD.label[i]),
             h("span", { class: "pat-sub" }, `${pct(FD.obs[i])} ${U.did} · esperado ${pct(FD.exp[i])} · ${FD.n[i]} ${U.noun} · em ${Math.round(FD.rec[i] * FD.nrec[i])} de ${FD.nrec[i]} partidas`)),
           h("div", { class: "pat-num" }, h("b", { class: FD.gap[i] < 0 ? "d-bad" : "d-good" }, pp(FD.gap[i])), h("span", null, unitsVs(fk, FD.vs[i]))))))
-          : h("p", { class: "note keep" }, isDef ? "Nenhum recorte com diferença recorrente entre partidas neste período." : `Padrões recorrentes usam a janela de ${F.meta.window} s.`)),
-      panel("Onde aparece mais", "O mesmo indicador separado por situação.",
+          : h("p", { class: "note keep" }, isDef ? "Nenhum recorte com diferença recorrente entre partidas neste período." : `Padrões recorrentes usam a janela de ${F.meta.window} s.`),
+        h("p", { class: "note" }, h("b", null, "Padrão recorrente: "), "uma situação em que o time fica acima ou abaixo de times parecidos de forma repetida. A diferença precisa passar de um limiar calibrado e aparecer na mesma direção na maioria das partidas. Aponta o que revisar no VOD; não prova a causa."),
+        h("p", { class: "note" }, h("b", null, "Observado × esperado: "), "observado é o que o time fez; esperado é o que outros times fazem nas mesmas situações (o próprio time nunca entra nessa conta). Diferença = observado − esperado, em pontos percentuais."),
+        h("p", { class: "note" }, h("b", null, "Leitura: "), "dentro do esperado (menos de 1 pp), acima ou abaixo (1 a 3 pp), muito acima ou abaixo (4 pp ou mais). Rótulo cheio = sinal forte: a diferença se mantém quando as partidas são sorteadas de novo. Rótulo tracejado = sinal fraco ou variado: pode ser acaso.")),
+      panel("Onde aparece mais", "O mesmo indicador separado por situação (lado, distância, momento…), com o esperado de cada uma.",
         h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Quebrar por"), seg(dims.map((d) => [d, dimName(fk, d)]), dim, (v) => { state.adim[fk] = v; render(); })),
-        breakdownTable(fk, ev, dim)),
+        breakdownTable(fk, ev, dim),
+        fk === "keyrounds" ? h("p", { class: "note" }, h("b", null, "Tipos de round: "),
+          `pistol = rounds 1 e 13; eco = o time com menos de ${NF0.format(D.cfg.team_eco_max / 1000)} mil em equipamento (fora dos pistols); `
+          + `anti-eco = o adversário em eco e o time comprado; force buy = depois de uma derrota, o time compra mesmo sem dinheiro para o kit completo; `
+          + `armado = os dois times com ${NF0.format(D.cfg.team_full_min / 1000)} mil ou mais (full buy).`) : null),
     ];
   }
 
@@ -3119,21 +3138,35 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
   }
   const pctOrDash = (v) => (v == null ? "—" : NF0.format(100 * v) + "%");
 
+  // os momentos da abertura em uma tabela, do que mais custou mapas ao que mais rendeu
+  const HAL_SHORT = { pistol: "Pistol", antieco: "Round 2 após vencer o pistol (anti-eco)", bonus: "Round 3 após abrir 2–0",
+    r2loss: "Round 2 após perder o pistol", armado: "1º round armado após 0–2", oneone: "Round 3 após 1–1" };
   function halMoments(team, lg) {
-    const cards = HAL_MOMENTS.map((mo) => {
+    const rows = HAL_MOMENTS.map((mo) => {
       const s = momentStat(mo, team), L = momentStat(mo, lg);
       const gap = s.v != null && L.v != null ? s.v - L.v : null;
-      const weak = gap != null && s.n >= 5 && gap <= -0.1, strong = gap != null && s.n >= 5 && gap >= 0.1;
       const swing = L.mapOk != null && L.mapKo != null ? L.mapOk - L.mapKo : null;
-      return h("div", { class: "hal-card" + (weak ? " weak" : strong ? " strong" : "") },
-        h("div", { class: "hc-top" }, h("span", { class: "hc-l" }, mo.label), weak ? statusChip("abaixo") : strong ? statusChip("acima") : null),
-        h("div", { class: "hc-q" }, mo.q),
-        h("div", { class: "hc-v" }, h("b", null, s.n ? `${s.w} de ${s.n}` : "—"), h("span", null, s.n ? ` ${pctOrDash(s.v)}` : ""), h("span", { class: "mut" }, ` · liga ${pctOrDash(L.v)}`)),
-        h("div", { class: "hc-sw" }, swing == null ? "" : `Na liga, vencer este round leva a ${pctOrDash(L.mapOk)} de mapas ganhos; perder, a ${pctOrDash(L.mapKo)} (${swing >= 0 ? "+" : "−"}${NF0.format(Math.abs(swing * 100))} pp).`),
-        s.n ? h("div", { class: "hc-sw mut" }, `Com o time: ${pctOrDash(s.mapOk)} quando vence (${s.nOk}) · ${pctOrDash(s.mapKo)} quando perde (${s.nKo}).`) : null);
-    });
-    return h("div", null, h("div", { class: "hal-cards" }, cards),
-      h("p", { class: "note" }, "Abaixo/acima = 10 pp ou mais de diferença para a liga (mínimo de 5 halves). O peso mostra quanto aquele round costuma decidir o mapa."));
+      // mapas a mais (+) ou a menos (−) que a liga: rounds a mais que a liga × quanto cada round vale no mapa
+      const maps = gap != null && swing != null ? gap * s.n * swing : null;
+      return { mo, s, L, gap, swing, maps };
+    }).sort((a, b) => (a.maps ?? 0) - (b.maps ?? 0));
+    const sg = (v, d = 0) => { const r = d ? Math.round(v * 10) / 10 : Math.round(v); return (r > 0 ? "+" : r < 0 ? "−" : "") + (d ? NF1 : NF0).format(Math.abs(r)); };
+    const tone = (v, lim) => (v == null || Math.abs(v) < lim ? "" : v < 0 ? "d-bad" : "d-good");
+    return h("div", null,
+      h("div", { class: "tbl-wrap" }, h("table", { class: "mt hal-tbl" },
+        h("thead", null, h("tr", null, h("th", null, "Momento"), h("th", { class: "num" }, "Time"), h("th", { class: "num" }, "Liga"),
+          h("th", { class: "num" }, "Diferença"), h("th", { class: "num", title: "Quanto vencer esse round muda a chance de vencer o mapa, na liga" }, "Peso no mapa"),
+          h("th", { class: "num", title: "Diferença para a liga × nº de casos × peso no mapa" }, "Mapas vs. liga"))),
+        h("tbody", null, rows.map((r, k) => h("tr", { class: k === 0 && (r.maps ?? 0) <= -0.2 ? "hal-top" : null,
+            title: r.s.n ? `${r.mo.q} Com o time: ${pctOrDash(r.s.mapOk)} de mapas ganhos quando vence (${r.s.nOk}) · ${pctOrDash(r.s.mapKo)} quando perde (${r.s.nKo}).` : r.mo.q },
+          h("td", null, h("b", null, HAL_SHORT[r.mo.key]), k === 0 && (r.maps ?? 0) <= -0.2 ? h("span", { class: "hal-prio" }, "prioridade") : null),
+          h("td", { class: "num" }, r.s.n ? [h("b", null, pctOrDash(r.s.v)), h("span", { class: "n" }, ` ${r.s.w}/${r.s.n}`)] : "—"),
+          h("td", { class: "num mut" }, pctOrDash(r.L.v)),
+          h("td", { class: "num " + tone(r.gap, 0.05) }, r.gap == null ? "—" : sg(100 * r.gap) + " pp"),
+          h("td", { class: "num" }, r.swing == null ? "—" : sg(100 * r.swing) + " pp"),
+          h("td", { class: "num " + tone(r.maps, 0.1) }, r.maps == null ? "—" : h("b", null, sg(r.maps, 1)))))))),
+      h("p", { class: "note" }, "Ordenado do momento que mais custou mapas ao que mais rendeu. Peso no mapa = quanto vencer esse round aumenta a chance de vencer o mapa, na liga. "
+        + "Mapas vs. liga = diferença para a liga × casos × peso: uma estimativa de quantos mapas o time ganhou (+) ou perdeu (−) naquele momento. Passe o mouse numa linha para ver os detalhes."));
   }
 
   // árvore de caminhos: half → pistol → round 2 → round 3 → % de mapas ganhos
@@ -3253,9 +3286,12 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     main.append(h("div", { class: "sec-head" }, h("h1", null, "Início de half")),
       ...(an ? [...an, h("h2", { class: "sec-sub" }, "Aberturas")] : []),
       ctl,
-      panel("Os momentos da abertura", "Do pistol ao 3º round: quanto o time converte contra a liga e quanto cada round pesa no mapa. " + scopeTxt, halMoments(team, lg)),
-      panel("Caminhos da abertura e o resultado do mapa", "Para onde vão os halves depois do pistol e com que resultado.", halTree(team, lg)),
-      panel("Por mapa e lado", "Pistol, anti-eco e 1º armado por mapa e lado.", halGrid(team)));
+      panel("Os momentos da abertura", "Do pistol ao 3º round: quanto o time vence contra a liga e quanto isso custou ou rendeu em mapas. " + scopeTxt, halMoments(team, lg)),
+      panel("Caminhos da abertura e o resultado do mapa", "Para onde vão os halves depois do pistol e com que resultado.",
+        h("div", { class: "ctl-row" },
+          h("span", { class: "flbl" }, "Lado do half"), seg([["all", "Todos"], ["atk", "Ataque"], ["def", "Defesa"]], state.side, (v) => setPref("side", v), "Lado"),
+          h("span", { class: "flbl" }, "Mapa"), seg([["", "Todos"], ...maps.map((m) => [m, m])], state.halMap || "", (v) => { state.halMap = v || null; render(); }, "Mapa")),
+        halTree(team, lg)));
   }
   // ================================================================== DIAGNÓSTICO: fundamentos coletivos
   // Tudo aqui vem de outputs/fundamentals (eventos com contexto, esperado leave-one-team-out, padrões e evidências).
@@ -3603,7 +3639,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
           h("td", { class: "num " + (Math.abs(r.a.gap) < 0.5 ? "d-neu" : r.a.gap < 0 ? "d-bad" : "d-good") }, pp(r.a.gap)),
           h("td", { class: "num" }, (r.a.vs < 0 ? "−" : "+") + NF1.format(Math.abs(r.a.vs))), strip);
       }))),
-      h("p", { class: "note" }, `Na faixa: traço = esperado, ponto = observado. “vs. esperado” = ${U.unit} a mais (+) ou a menos (−) do que outros times teriam nas mesmas situações.`)));
+      h("p", { class: "note" }, `Na régua: ponto = o time, traço = o esperado. “vs. esperado” = ${U.unit} a mais (+) ou a menos (−) que outros times nas mesmas situações.`)));
   }
   function perMatchChart(fk, ev, team) {
     const E = Fd(fk).E, by = new Map(), U = FUI[fk];
@@ -3816,7 +3852,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
     HAL: ["Os rounds 2 e 3 de cada half, pelo caminho até ali: depois de vencer ou perder o pistol, e depois de 2–0, 1–1 ou 0–2."],
     LEV: ["Os rounds que mais valem para o mapa (os 25% com maior índice de pressão: quanto vencer ou perder muda a chance de levar o mapa). O time vence o esperado nesses momentos?"],
   };
-  const SECTION_PAGES = { HAL: ["Pistol → round 2 → round 3 de cada half", "Caminhos da abertura e o resultado do mapa", "Por mapa e lado"],
+  const SECTION_PAGES = { HAL: ["Os momentos da abertura (pistol, round 2 e round 3)", "Caminhos da abertura e o resultado do mapa"],
     LEV: ["Curva da chance de vencer o mapa", "Onde o time perde mapas", "Vitória sob pressão", "Rounds de maior peso"] };
   function fundInfo(section, title) {
     const ids = (SEC_IDS[section] || []).filter((id) => MI[id] != null && !HIDDEN.has(id) && METRICS[MI[id]].status !== "adiada");
@@ -3964,18 +4000,20 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
         h("div", { class: "lp-cta" },
           h("button", { class: "btn", type: "button", onclick: go("home") }, `Abrir o Panorama de ${team}`, icon("next")),
           h("button", { class: "btn ghost", type: "button", onclick: go("overview") }, "Ver a última partida")),
-        h("p", { class: "lp-hint" }, "Troque o time a qualquer momento no seletor ", h("b", null, "Equipe"), " no topo da página."),
         h("dl", { class: "lp-facts" },
           h("div", null, h("dt", null, "Partidas"), h("dd", null, NF0.format(r.n_matches))),
           h("div", null, h("dt", null, "Rounds"), h("dd", null, NF0.format(r.n_rounds))),
           h("div", null, h("dt", null, "Times"), h("dd", null, D.teams.length)),
           h("div", null, h("dt", null, "Período"), h("dd", { class: "sm" }, `${fmtDate(dates[0])} a ${fmtDate(dates[dates.length - 1])}`)))),
-      h("section", { class: "lp-block" }, h("h2", null, "Como usar em 3 passos"),
-        h("ol", { class: "lp-steps" },
-          h("li", null, h("b", null, "Escolha o time"), h("span", null, "No seletor Equipe, no topo. Tudo no painel passa a ser sobre esse time.")),
-          h("li", null, h("b", null, "Comece pelo Panorama"), h("span", null, "Os mapas do time e os 8 fundamentos, cada um com o observado contra o esperado. Os pontos de atenção aparecem primeiro.")),
-          h("li", null, h("b", null, "Aprofunde"), h("span", null, "\"Ver análise detalhada\" mostra onde a diferença aparece mais. A aba Partida traz o placar, o round a round e os rounds que mais mudaram o mapa.")))),
+      h("section", { class: "lp-block" }, h("h2", null, "Depois de cada partida"),
+        h("ol", { class: "lp-steps four" },
+          h("li", null, h("b", null, "Veja o que pede atenção"), h("span", null, "No Panorama, os pontos de atenção mostram onde o time ficou abaixo de outros times nas mesmas situações.")),
+          h("li", null, h("b", null, "Entenda onde acontece"), h("span", null, "\"Ver análise detalhada\" separa por mapa, lado e situação: onde a diferença aparece mais.")),
+          h("li", null, h("b", null, "Revise no VOD"), h("span", null, "Na aba Partida, os rounds para revisar e o placar levam direto aos lances que mais pesaram.")),
+          h("li", null, h("b", null, "Treine e acompanhe"), h("span", null, "Leve um ajuste para o treino e veja, nas próximas partidas, se o número se move.")))),
       h("section", { class: "lp-block" }, h("h2", null, "Os 8 fundamentos"),
+        h("p", { class: "lp-lead2" }, "Fundamentos são as situações coletivas que decidem rounds: trocar a morte de um companheiro, fechar uma vantagem, segurar o plant. ",
+          h("b", null, "Comece por eles"), ": é onde o treino vira round ganho, e o painel mostra em qual o seu time está perdendo mais."),
         h("div", { class: "lp-funds" }, FUNDS.map(([ic, t, sec]) => h("button", { class: "lp-fund", type: "button", onclick: go(sec) },
           h("span", { class: "lp-ic" }, icon(ic)), h("b", null, t))))),
       h("section", { class: "lp-block" }, h("h2", null, "Como ler"),

@@ -81,7 +81,8 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
   organização do hackathon) e a transformação oficial de coordenadas, com os nomes oficiais das regiões. Os PNGs e os
   parâmetros ficam em `roundrx/viz/vendor/maps/` e são embutidos no HTML (o painel continua funcionando offline).
 - **Home** (tela de abertura e 1º item da barra lateral, que segue Home · Analisar resultados: Panorama e Partida · Explorar métricas): o que é o RoundRx, botões para o Panorama do time
-  e a última partida, a base (partidas, rounds, times, período), os 3 passos de uso, os 8 fundamentos (só nome e
+  e a última partida, a base (partidas, rounds, times, período), "Depois de cada partida" (4 passos para o próprio time: o que pede atenção, onde acontece, revisar no VOD,
+  treinar e acompanhar; sem passo de escolher equipe), os 8 fundamentos com uma frase sobre por que começar por eles (só nome e
   ícone; cada um abre a seção) e "Como ler" com a régua e os rótulos de verdade do painel.
 - **Panorama** (o panorama do time): estado do time (mapas, vitórias, rounds, período); um cartão por mapa com a tela de
   carregamento, a campanha (V–D), o saldo, os rounds e o histórico naquele mapa (quadrados V/D, mais recente à esquerda,
@@ -156,8 +157,8 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
        mapa ou em todos os mapas**, à escolha. A força do sinal (forte ou fraco/variado) e a recorrência
        ficam na dica de cada linha (linhas com poucos casos não ficam mais apagadas: o nº de casos já está na tabela);
      - "Fechar e reagir": mapas entregues (a chance de vencer o mapa chegou a 80% e o time perdeu; liga ≈ 13%), viradas
-       (esteve com 20% ou menos e venceu) e rounds decisivos (25% de maior pressão) na frente e atrás, contra o esperado
-       pela economia; lista dos mapas entregues e virados com o pico/mínimo e o round que mais mudou o mapa depois dele;
+       (esteve com 20% ou menos e venceu) — os cartões de rounds decisivos na frente e atrás saíram em 22/10/2026 por
+       não serem claros; lista dos mapas entregues e virados com o pico/mínimo e o round que mais mudou o mapa depois dele;
      - "Curva do mapa" (os rounds que mais mudaram o mapa ficam na seção "Rounds para revisar").
      As 14 métricas LEV que estavam na lista saíram do painel (médias de pressão não são estáveis por time; as
      ponderadas repetem a taxa de vitória, correlação 0,92–0,96) e seguem nas tabelas de saída;
@@ -195,7 +196,12 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
 - **Aba Composição**: agentes desta partida (com jogador e função) contra os do adversário, o que mudou desde o mapa
   anterior, funções por mapa, métricas de variação de picks e uma tabela de composições da equipe (resultados, por
   economia e sites de plant), além de duplas/trios, trade por dupla, first blood com assistência e "quem faz o quê".
-- **Aba Início de half**: pistol → round 2 → round 3 de cada half por partida, mais as métricas HAL.
+- **Aba Início de half**: pistol → round 2 → round 3 de cada half por partida, mais as métricas HAL. "Os momentos da abertura"
+  é uma tabela ordenada pelo que mais custou mapas: taxa do time e da liga, diferença, peso no mapa (quanto vencer o round
+  muda a chance de vencer o mapa, na liga) e mapas vs. liga ≈ diferença × casos × peso; o pior momento ganha o selo "prioridade". A árvore "Caminhos da
+  abertura" tem filtro próprio de lado do half e mapa (o mesmo filtro da página, repetido junto da árvore).
+- **Vantagem**: botão "O que é vantagem?" ao lado do título (como em Pressão) abre a explicação de vantagem numérica,
+  conversão, virada, duração e esperado, com a taxa de conversão da liga por situação (5v4, 4v3, 3v2, 2v1).
 - **Descrições e nomes (22/10/2026)**: as explicações de cada tabela e gráfico ficam numa caixa fechada "Saiba mais"
   (ícone de lupa); nomes de métricas, recortes e abas foram revistos para quem não conhece a ferramenta (ex.: "Mortes
   sem trade e sem aliado por perto", "Retakes com defuse", recortes "Por situação" e "Por mapa e site").
@@ -207,7 +213,7 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
     por lado, vêm dos rounds daquele lado (kills em adversários, mortes menos a da spike, assistências; a soma dos lados
     bate com o oficial em 100% / 99,9% / 99,8% dos jogadores). HS% pelos acertos em adversários; FK/FD = 1ª kill em jogo
     do round; KAST com trade na janela de `timing.trade_window_s` (`viz/build.py::_scoreboard`; Σ FK = Σ FD em todas
-    as partidas). As tabelas ficam centralizadas no bloco. O cabeçalho da partida fica verde na vitória e vermelho na derrota.
+    as partidas). As tabelas ficam centralizadas no bloco. O cabeçalho da partida mostra só o placar (à esquerda) e os times (à direita); fica verde na vitória e vermelho carmim (`--loss`) na derrota.
     Retratos: `displayIconSmall` de valorant-api.com, 64×64 WebP em `roundrx/viz/vendor/agents/`;
   - **Análise**: filtro de lado e comparação, 6 indicadores (com números absolutos) e "o que mudou nesta partida" (taxas
     com |z| ≥ 1,5 em relação à média do time);
