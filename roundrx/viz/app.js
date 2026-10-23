@@ -23,16 +23,16 @@
   // ------------------------------------------------------------------ catálogo editorial
   // [rótulo para o coach, pergunta que a métrica responde, unidade do denominador]
   const L = {
-    "OPN-01": ["First blood a favor", "Em quantos rounds o time faz a primeira kill?", "rounds"],
-    "OPN-02": ["Vitória após first blood a favor", "Depois de fazer a primeira kill, o time vence o round?", "first bloods a favor"],
-    "OPN-03": ["Vitória após first blood sofrido", "Depois de perder o primeiro jogador, o time ainda vence o round?", "first bloods sofridos"],
-    "OPN-04": ["Tempo até o first blood", "Em que segundo do round sai a primeira kill?", "rounds"],
-    "OPN-07": ["First blood sofrido trocado", "Quando o time sofre o first blood, alguém troca em seguida?", "first bloods sofridos"],
+    "OPN-01": ["Rounds com first blood do time", "Em quantos rounds o time faz a primeira kill?", "rounds"],
+    "OPN-02": ["Vitória depois de fazer o first blood", "Depois de fazer a primeira kill, o time vence o round?", "first bloods a favor"],
+    "OPN-03": ["Vitória depois de sofrer o first blood", "Depois de perder o primeiro jogador, o time ainda vence o round?", "first bloods sofridos"],
+    "OPN-04": ["Momento do first blood", "Em que segundo do round sai a primeira kill?", "rounds"],
+    "OPN-07": ["First blood sofrido e trocado", "Quando o time sofre o first blood, alguém troca em seguida?", "first bloods sofridos"],
     "OPN-08": ["Desperdiça o first blood", "Fez a primeira kill e mesmo assim perdeu o round?", "first bloods"],
     "OPN-09": ["Segura o 5v4", "Quantos segundos o time fica em 5v4 até perder alguém?", "5v4"],
-    "OPN-10": ["Duas mortes na abertura", "Em quantos rounds o time perde dois jogadores logo no início?", "rounds"],
+    "OPN-10": ["Rounds com 2 mortes na abertura", "Em quantos rounds o time perde dois jogadores logo no início?", "rounds"],
     "OPN-11": ["Assistências no first blood", "O primeiro abate é feito com apoio de companheiros?", "first bloods"],
-    "OPN-12": ["First blood sofrido sem cobertura", "A primeira vítima do time morre sem aliado por perto?", "first bloods sofridos"],
+    "OPN-12": ["First blood sofrido sem aliado por perto", "A primeira vítima do time morre sem aliado por perto?", "first bloods sofridos"],
     "TRD-01": ["Mortes trocadas", "Quando um jogador morre, um companheiro troca em seguida?", "mortes"],
     "TRD-02": ["Tempo até o trade", "Quanto tempo o time leva para trocar uma morte?", "trades"],
     "TRD-03": ["Mortes sem trade", "Quantas mortes ficam sem resposta?", "mortes"],
@@ -42,26 +42,26 @@
     "TRD-09": ["Aliados por perto na morte", "Quantos aliados estavam perto de quem morreu?", "mortes"],
     "TRD-11": ["Trocas em sequência", "Quantas sequências de kills alternadas acontecem por round?", "rounds"],
     "POS-01": ["Vitória após o plant", "Depois de plantar, o time vence o round?", "plants"],
-    "POS-03": ["Tempo até o plant", "Em que segundo do round o time planta?", "plants"],
+    "POS-03": ["Momento do plant", "Em que segundo do round o time planta?", "plants"],
     "POS-04": ["Saldo de vivos no plant", "Com quantos jogadores a mais (ou a menos) o time planta?", "plants"],
-    "POS-13": ["Tempo até o 1º contato pós-plant", "Depois do plant, quanto tempo até a primeira kill?", "plants com contato"],
-    "POS-14": ["Plants em inferioridade numérica", "Em quantos plants o time tem menos jogadores vivos?", "plants"],
+    "POS-13": ["Tempo até o 1º duelo após o plant", "Depois do plant, quanto tempo até a primeira kill?", "plants com contato"],
+    "POS-14": ["Plants com menos jogadores vivos", "Em quantos plants o time tem menos jogadores vivos?", "plants"],
     "RET-11": ["Saldo de vivos no fim do retake", "Quantos vivos a mais (ou a menos) o time tem no fim do retake?", "plants sofridos"],
     "RET-12": ["Retakes abandonados", "A spike explodiu sem tentativa de retake ou com arma guardada?", "plants sofridos"],
-    "POS-07": ["1ª morte pós-plant sofrida", "Depois do plant, o primeiro a cair é do time?", "plants com morte depois"],
+    "POS-07": ["Time perde o 1º jogador após o plant", "Depois do plant, o primeiro a cair é do time?", "plants com morte depois"],
     "POS-08": ["Mortes logo após o plant", "Quantos atacantes morrem nos primeiros segundos após plantar?", "plants"],
     "POS-09": ["Trades pós-plant", "As mortes depois do plant são trocadas?", "mortes"],
     "POS-10": ["Colapso pós-plant", "O time perde dois jogadores em sequência depois de plantar?", "plants"],
     "POS-11": ["Espalhamento no plant", "Quão espalhados estão os atacantes no momento do plant?", "plants"],
     "POS-12": ["Planter sobrevive", "Quem plantou continua vivo até o fim do round?", "plants"],
-    "RET-01": ["Defuses no retake", "Quando o adversário planta, o time defusa?", "plants sofridos"],
-    "RET-04": ["Defuses em inferioridade numérica", "Com menos jogadores vivos no plant adversário, o time defusa?", "plants sofridos"],
+    "RET-01": ["Retakes com defuse", "Quando o adversário planta, o time defusa?", "plants sofridos"],
+    "RET-04": ["Retakes com defuse em menor número", "Com menos jogadores vivos no plant adversário, o time defusa?", "plants sofridos"],
     "RET-05": ["Tempo até o defuse", "Quanto tempo depois do plant sai o defuse?", "defuses"],
-    "RET-06": ["Tempo até o 1º contato no retake", "Após o plant adversário, quanto tempo até o 1º duelo?", "plants sofridos"],
+    "RET-06": ["Tempo até o 1º duelo no retake", "Após o plant adversário, quanto tempo até o 1º duelo?", "plants sofridos"],
     "RET-07": ["Mortes trocadas no retake", "Depois do plant adversário, as mortes do time são trocadas?", "mortes"],
     "RET-08": ["Agrupamento no plant", "Quão juntos estão os defensores no momento do plant?", "plants sofridos"],
     "RET-09": ["Distância até a spike", "Quão longe da spike estão os defensores no plant?", "plants sofridos"],
-    "RET-10": ["Defuses sem kill", "Em quantos defuses o time não fez nenhuma kill depois do plant?", "defuses"],
+    "RET-10": ["Defuses sem nenhuma kill", "Em quantos defuses o time não fez nenhuma kill depois do plant?", "defuses"],
     "ECO-01": ["Valor do equipamento", "Σ do loadout dos 5 jogadores no round.", "rounds"],
     "ECO-02": ["Gasto por round", "Quanto o time gasta por round.", "rounds"],
     "ECO-03": ["Créditos guardados", "Quanto sobra no banco depois da compra.", "rounds"],
@@ -92,7 +92,7 @@
     "KEY-14": ["Prorrogação", "Taxa de vitória nos rounds de prorrogação.", "rounds"],
     "DYN-01": ["Converte vantagem numérica", "Quando fica com mais jogadores, o time vence?", "rounds"],
     "DYN-02": ["Vira em desvantagem", "Quando fica com menos jogadores, o time ainda vence?", "rounds"],
-    "DYN-03": ["Duração da vantagem numérica", "Por quanto tempo o time segura uma vantagem numérica?", "vantagens"],
+    "DYN-03": ["Quanto tempo segura a vantagem numérica", "Por quanto tempo o time segura uma vantagem numérica?", "vantagens"],
     "DYN-04": ["Rounds com colapso", "O time perde dois jogadores em poucos segundos?", "rounds"],
     "DYN-05": ["Mortes sem resposta", "Maior sequência de mortes do time sem abater ninguém.", "rounds"],
     "DYN-06": ["Dano por round", "Dano total causado pelo time por round.", "rounds"],
@@ -148,17 +148,17 @@
     "HAL-17": ["Reação ao upset no round 2", "Venceu o pistol e perdeu o round 2: vence o round 3?", "halves"],
     "HAL-18": ["Diferença entre os halves", "Taxa de vitória nos 3 primeiros rounds: 2º half − 1º half.", "rounds"],
     // complementares pedidos pelo time (21/10/2026)
-    "DYN-09": ["Vitória com vantagem numérica", "Com mais jogadores vivos, o time vence? Em que situação começa?", "rounds"],
-    "DYN-10": ["Vitória em desvantagem numérica", "Com menos jogadores vivos, o time vira? Em que situação começa?", "rounds"],
-    "DYN-11": ["Tempo até sair da desvantagem numérica", "Quanto tempo o time leva para empatar ou virar a desvantagem?", "desvantagens"],
+    "DYN-09": ["Vitória com mais jogadores vivos", "Com mais jogadores vivos, o time vence? Em que situação começa?", "rounds"],
+    "DYN-10": ["Virada com menos jogadores vivos", "Com menos jogadores vivos, o time vira? Em que situação começa?", "rounds"],
+    "DYN-11": ["Tempo para sair da desvantagem numérica", "Quanto tempo o time leva para empatar ou virar a desvantagem?", "desvantagens"],
     "DYN-12": ["Vitória pelo tempo de vantagem", "O time vence mais quando segura a vantagem por mais tempo antes de ela ser anulada?", "vantagens"],
     "DYN-13": ["Vitória pelo tempo de reação", "O time vence mais quando sai rápido da desvantagem?", "desvantagens"],
-    "OPN-13": ["First blood a favor devolvido", "Quando o time faz o first blood, o adversário troca em seguida?", "first bloods a favor"],
-    "OPN-14": ["First blood a favor com assistência", "Em quantos first bloods do time algum companheiro ajudou?", "first bloods a favor"],
-    "OPN-15": ["1º duelo sem cobertura", "No 1º duelo do round, o jogador do time estava sem aliado perto?", "primeiros duelos"],
-    "ECO-13": ["Vitória por armamento", "Com equipamento melhor, parecido ou pior, o time vence o round?", "rounds"],
-    "TRD-13": ["Kills trocadas pelo adversário", "Quando o time mata, o adversário mata o autor em seguida?", "kills"],
-    "TRD-14": ["Mortes sem trade isoladas", "Das mortes sem trade, quantas não tinham nenhum aliado por perto?", "mortes sem trade"],
+    "OPN-13": ["First blood do time devolvido", "Quando o time faz o first blood, o adversário troca em seguida?", "first bloods a favor"],
+    "OPN-14": ["First blood do time com assistência", "Em quantos first bloods do time algum companheiro ajudou?", "first bloods a favor"],
+    "OPN-15": ["1º duelo sem aliado por perto", "No 1º duelo do round, o jogador do time estava sem aliado perto?", "primeiros duelos"],
+    "ECO-13": ["Vitória por nível de equipamento", "Com equipamento melhor, parecido ou pior, o time vence o round?", "rounds"],
+    "TRD-13": ["Kills do time devolvidas pelo adversário", "Quando o time mata, o adversário mata o autor em seguida?", "kills"],
+    "TRD-14": ["Mortes sem trade e sem aliado por perto", "Das mortes sem trade, quantas não tinham nenhum aliado por perto?", "mortes sem trade"],
     // pressão e Leverage Index (22/10/2026): LI = quanto o resultado do round pode mudar a chance de vencer o mapa, ÷ média da liga
     "LEV-04": ["Pressão média dos rounds", "Os rounds deste time valem mais ou menos para o mapa que um round típico (LI = 1)?", "rounds"],
     "LEV-08": ["Vence nos rounds que mais valem", "Pesando cada round pelo quanto vale para o mapa, o time vence mais ou menos que na taxa sem peso?", "rounds"],
@@ -226,21 +226,21 @@
   const CUTS = {
     "DYN-09": [["Situação", seq("DYN-09", ADV_STATES), "nom"]],
     "DYN-10": [["Situação", seq("DYN-10", DIS_STATES), "nom"]],
-    "DYN-11": [["Desfecho", seq("DYN-11", ["revertida", "não revertida"]), "nom"]],
+    "DYN-11": [["Saiu da desvantagem?", seq("DYN-11", ["revertida", "não revertida"]), "nom"]],
     "DYN-12": [["Quanto a vantagem durou", seq("DYN-12", [...EBK, "mantida até o fim"]), "ord"]],
     "DYN-13": [["Quanto levou para sair", seq("DYN-13", [...EBK, "não revertida"]), "ord"]],
-    "ECO-13": [["Armamento", seq("ECO-13", ["inferior", "equilibrado", "superior"]), "ord"]],
-    "OPN-15": [["No duelo, o time", seq("OPN-15", ["fez", "sofreu"]), "nom"]],
-    "RET-11": [["Desfecho", seq("RET-11", ["defusou", "não defusou"]), "nom"]],
-    "RET-12": [["Tentativa", seq("RET-12", ["sem combate", "abandono parcial"]), "nom"], ["Desfecho", seq("RET-12", ["guardou arma", "morreu para a spike"]), "nom"]],
-    "OPN-01": [["Economia relativa", seq("OPN-06", ["muito_inferior", "moderado", "equilibrado", "muito_superior"]), "ord"]],
+    "ECO-13": [["Equipamento contra o adversário", seq("ECO-13", ["inferior", "equilibrado", "superior"]), "ord"]],
+    "OPN-15": [["Resultado do 1º duelo", seq("OPN-15", ["fez", "sofreu"]), "nom"]],
+    "RET-11": [["Defusou?", seq("RET-11", ["defusou", "não defusou"]), "nom"]],
+    "RET-12": [["Tipo de abandono", seq("RET-12", ["sem combate", "abandono parcial"]), "nom"], ["Como terminou", seq("RET-12", ["guardou arma", "morreu para a spike"]), "nom"]],
+    "OPN-01": [["Equipamento contra o adversário", seq("OPN-06", ["muito_inferior", "moderado", "equilibrado", "muito_superior"]), "ord"]],
     "TRD-01": [["Fase do round", seq("TRD-12", ["abertura", "pre_plant", "pos_plant"]), "nom"], ["Distância ao aliado", seq("TRD-06", ["0-10m", "10-20m", "20-30m", "30-50m", ">50m"]), "ord"]],
     "TRD-03": [["Fase do round", seq("TRD-12", ["abertura", "pre_plant", "pos_plant"]), "nom"]],
     "POS-01": [["Saldo de vivos no plant", seq("POS-06", ["-3", "-2", "-1"]).concat(seq("POS-05", ["+1", "+2", "+3", "+4"])), "ord"], ["Site", seq("POS-02", ["A", "B", "C"]).map((x) => ({ ...x, label: "site " + x.s })), "nom"]],
     "RET-01": [["Saldo de vivos no plant", seq("RET-03", ["-3", "-2", "-1", "+0", "+1", "+2", "+3"]), "ord"], ["Site", seq("RET-02", ["A", "B", "C"]).map((x) => ({ ...x, label: "site " + x.s })), "nom"]],
     "KEY-11": [["Situação", seq("KEY-11", ["1v2", "1v3", "1v4", "1v5"]), "nom"]],
-    "KEY-13": [["Sequência", seq("KEY-13", ["apos_2_derrotas", "apos_3_derrotas"]), "nom"]],
-    "KEY-09": [["Momento", seq("KEY-09", ["round_atual", "round_seguinte"]), "nom"]],
+    "KEY-13": [["Depois de quantas derrotas", seq("KEY-13", ["apos_2_derrotas", "apos_3_derrotas"]), "nom"]],
+    "KEY-09": [["Round do force ou o seguinte", seq("KEY-09", ["round_atual", "round_seguinte"]), "nom"]],
     "ECO-05": [["Compra do time", seq("ECO-05", ["eco", "half", "full", "pistol"]), "nom"]],
     // estratos que são medidas diferentes (não categorias) ou já têm visão própria: só Lado e Mapa
     "DYN-01": [], "DYN-02": [], "DYN-07": [], "ECO-11": [], "KEY-05": [], "ECO-08": [],
@@ -248,8 +248,8 @@
     "HAL-02": [["Half", seq("HAL-02", ["1º half", "2º half"]), "nom"]],
     "HAL-03": [["Half", seq("HAL-03", ["1º half", "2º half"]), "nom"]],
     "HAL-18": [["Half", seq("HAL-18", ["1º half", "2º half"]), "nom"]],
-    "HAL-04": [["Caminho r1–r2", seq("HAL-04", ["2-0", "1-1", "0-2"]), "nom"]],
-    "HAL-06": [["Medida", seq("HAL-06", ["gasto", "loadout"]), "nom"]],
+    "HAL-04": [["Placar após os rounds 1 e 2", seq("HAL-04", ["2-0", "1-1", "0-2"]), "nom"]],
+    "HAL-06": [["Gasto ou equipamento", seq("HAL-06", ["gasto", "loadout"]), "nom"]],
     "HAL-13": [["Round do half", seq("HAL-13", ["r1", "r2", "r3"]), "nom"]],
     "HAL-14": [["Round do half", seq("HAL-14", ["r1", "r2", "r3"]), "nom"]],
     "HAL-15": [["Round do half", seq("HAL-15", ["r1", "r2", "r3"]), "nom"]],
@@ -263,8 +263,8 @@
   for (const id of ["OPN-01", "OPN-02", "OPN-03", "OPN-04", "OPN-07", "OPN-10", "OPN-12", "OPN-13", "OPN-14", "OPN-15"])
     CUTS[id] = [...(CUTS[id] || []), ["Tipo de round", seq(id, ["rt_pistol", "rt_demais"]), "nom"]];
   // recorte aberto por padrão na aba Recortes
-  const DEFAULT_CUT = { "DYN-12": "Quanto a vantagem durou", "DYN-13": "Quanto levou para sair", "ECO-13": "Armamento", "OPN-15": "No duelo, o time",
-                        "DYN-11": "Desfecho", "RET-12": "Tentativa", "HAL-02": "Half", "HAL-03": "Half", "HAL-18": "Half", "HAL-04": "Caminho r1–r2", "HAL-13": "Round do half",
+  const DEFAULT_CUT = { "DYN-12": "Quanto a vantagem durou", "DYN-13": "Quanto levou para sair", "ECO-13": "Equipamento contra o adversário", "OPN-15": "Resultado do 1º duelo",
+                        "DYN-11": "Saiu da desvantagem?", "RET-12": "Tipo de abandono", "HAL-02": "Half", "HAL-03": "Half", "HAL-18": "Half", "HAL-04": "Placar após os rounds 1 e 2", "HAL-13": "Round do half",
                         "HAL-14": "Round do half", "HAL-15": "Round do half", "AGT-04": "Função repetida",
                         "LEV-11": "Fase do half", "LEV-18": "Faixa de pressão", "LEV-14": "Situação" };
   // Abas de cada métrica, na ordem em que aparecem (a primeira abre por padrão). Padrão: evolução + recortes.
@@ -288,10 +288,10 @@
     "HAL-04": ["cuts", "evo"], "HAL-13": ["cuts", "evo"], "HAL-14": ["cuts", "evo"], "HAL-15": ["cuts", "evo"], "HAL-18": ["cuts"],
     "AGT-04": ["cuts", "evo"],
   };
-  const VIEW_LBL = { evo: "Evolução", cuts: "Recortes", fbtime: "Quando acontece", fbplayers: "Quem abre", players: "Por jogador", tradetime: "Tempo do trade",
+  const VIEW_LBL = { evo: "Partida a partida", cuts: "Por situação", fbtime: "Quando acontece", fbplayers: "Quem abre", players: "Por jogador", tradetime: "Tempo até o trade",
                      deaths: "Mapa de mortes", plants: "Mapa de plants", planttime: "Quando planta", retmap: "Mapa de plants sofridos", loadout: "Round a round",
-                     buymatrix: "Matriz de compras", pistols: "Pistols", curve: "Curva de saldo", consistency: "Consistência", how: "Como é calculada",
-                     states: "Situações", mapresult: "Mapas vencidos × perdidos", pdeaths: "Por jogador", sites: "Por site", pistolsites: "Onde ganha", ecosites: "Onde ganha", antiecosites: "Onde ganha", forcesites: "Onde ganha", armadosites: "Onde ganha" };
+                     buymatrix: "Matriz de compras", pistols: "Pistols", curve: "Vitória por saldo de vivos", consistency: "Consistência", how: "Como é calculada",
+                     states: "Situações", mapresult: "Mapas vencidos × perdidos", pdeaths: "Por jogador", sites: "Por mapa e site", pistolsites: "Por mapa e site", ecosites: "Por mapa e site", antiecosites: "Por mapa e site", forcesites: "Por mapa e site", armadosites: "Por mapa e site" };
   const OVERVIEW = [["OPN-01"], ["OPN-02"], ["TRD-01"], ["POS-01"], ["RET-01"], ["KEY-01"]];
   // seções do painel: lista explícita de métricas (6 categorias do time); cada métrica está em uma seção só
   const SEC_IDS = Object.fromEntries(D.sections.filter((s) => s.ids).map((s) => [s.id, s.ids]));
@@ -653,9 +653,11 @@
     const hi = pct ? pctTop(vals) : mx > 0 ? mx * 1.1 : mn < 0 ? 0 : 1;
     return [lo, hi];
   }
-  function stripSvg(f, marks) {
-    const W = 132, H = 18, X = (v) => 5 + Math.max(0, Math.min(1, f(v))) * (W - 10);
-    let out = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><line x1="5" x2="${W - 5}" y1="9" y2="9" style="stroke:var(--line)" stroke-width="2" stroke-linecap="round"/>`;
+  // régua observado × referência; nas taxas a escala é sempre 0–100% (marcas em 25, 50 e 75%)
+  function stripSvg(f, marks, grid = true) {
+    const W = 260, H = 18, X = (v) => 5 + Math.max(0, Math.min(1, f(v))) * (W - 10);
+    let out = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><line x1="5" x2="${W - 5}" y1="9" y2="9" style="stroke:var(--line)" stroke-width="2" stroke-linecap="round"/>`;
+    if (grid) for (const g of [0.25, 0.5, 0.75]) out += `<line x1="${5 + g * (W - 10)}" x2="${5 + g * (W - 10)}" y1="5" y2="13" style="stroke:var(--line)" stroke-width="1"/>`;
     for (const k of marks) {
       if (k.v == null) continue;
       const x = X(k.v);
@@ -664,10 +666,11 @@
     }
     return out + "</svg>";
   }
+  const stripHead = () => h("th", { class: "strip" }, h("span", { class: "strip-ax" }, h("span", null, "0%"), h("span", null, "50%"), h("span", null, "100%")));
   function cutsTable(rows) {
     const m0 = rows[0].m, rs = refs();
     const vals = rows.flatMap((r) => [r.st.match.v, ...rs.map((x) => r.st[x.key]?.v)]).filter((v) => v != null);
-    const [lo, hi] = domainOf(m0, vals), f = (v) => (v - lo) / ((hi - lo) || 1);
+    const [lo, hi] = kind(m0) === "pct" ? [0, 1] : domainOf(m0, vals), f = (v) => (v - lo) / ((hi - lo) || 1);
     const cell = (o, withN = true) => (o && o.v != null
       ? h("td", { class: "num" }, fmt(m0, o.v), withN ? h("span", { class: "n" }, " " + absShort(m0, o)) : null)
       : h("td", { class: "num mut" }, "—"));
@@ -680,9 +683,9 @@
       h("div", { class: "tbl-wrap" }, h("table", { class: "mt cuts" },
         h("thead", null, h("tr", null, h("th", null, ""), h("th", { class: "num" }, h("i", { class: "sw", style: "background:var(--accent);border-radius:50%" }), "Esta partida"),
           rs.map((x) => h("th", { class: "num" }, h("i", { class: "sw", style: `background:var(${x.color})` }), x.key === "team" ? "Time" : "Liga")),
-          h("th", { class: "strip" }, `${fmt(m0, lo)} → ${fmt(m0, hi)}`))),
+          kind(m0) === "pct" ? stripHead() : h("th", { class: "strip" }, `${fmt(m0, lo)} → ${fmt(m0, hi)}`))),
         h("tbody", null, body))),
-      h("p", { class: "note" }, kind(m0) === "pct" ? "Números pequenos ao lado = eventos (ex.: 7/9). Na faixa: ● esta partida, traço grosso = média do time, traço fino = liga." : "n = nº de eventos. Na faixa: ● esta partida, traço grosso = média do time, traço fino = liga."));
+      h("p", { class: "note" }, kind(m0) === "pct" ? "7/9 = casos. Na faixa: ● esta partida, traço grosso = média do time, traço fino = liga." : "n = casos. Na faixa: ● esta partida, traço grosso = média do time, traço fino = liga."));
   }
   function ordinalChart(rows, o = {}) {
     const m0 = rows[0].m, rs = refs();
@@ -719,7 +722,7 @@
       });
     });
     return h("div", null, legendRow([[`esta partida (maior = mais ${unit})`, "--accent"], ...rs.map((k) => [k.label, k.color, k.key === "league" ? "dash" : "line"])]), box,
-      h("p", { class: "note" }, "n = eventos da equipe em cada ponto (todas as partidas). Passe o mouse para ver os números."));
+      h("p", { class: "note" }, "n = casos do time em cada ponto. Passe o mouse para ver os números."));
   }
 
   // ------------------------------------------------------------------ evolução partida a partida (pontos: tamanho = nº de eventos)
@@ -898,7 +901,7 @@
       draw(bg, css("--accent"), 0); draw(bl, css("--bad"), 1);
     });
     return h("div", null, scopeBar(), legendRow([[`first bloods feitos (${got.length})`, "--accent"], [`sofridos (${lost.length})`, "--bad"]]), body,
-      h("p", { class: "note" }, "Segundos de jogo no round, como o JSON registra (timeSinceRoundStartMillis)" + sideNote() + "."));
+      h("p", { class: "note" }, "Segundos desde o início do round" + sideNote() + "."));
   }
   // quem faz e quem sofre o first blood (tabela por jogador com barra divergente)
   function viewFbPlayers() {
@@ -930,7 +933,7 @@
         })),
         h("tfoot", null, h("tr", null, h("td", null, "Time"), h("td", { class: "num" }, totM, h("span", { class: "n" }, ` de ${rounds} rounds`)),
           h("td", { class: "num" }, totL), h("td", { class: "num " + (totM >= totL ? "d-good" : "d-bad") }, (totM - totL > 0 ? "+" : totM - totL < 0 ? "−" : "") + Math.abs(totM - totL)), h("td", null))))),
-      h("p", { class: "note" }, "% = participação do jogador nos first bloods do time. Ajuda a ver quem está sendo usado (ou exposto) na abertura" + sideNote() + "."));
+      h("p", { class: "note" }, "% = parte de cada jogador nos first bloods do time" + sideNote() + "."));
   }
   // histograma simples: bins de largura fixa, séries empilhadas
   function stackedHist(series, o) {
@@ -970,7 +973,7 @@
     return h("div", null, scopeBar(), h("div", { class: "map-grid" },
       h("div", null, stackedHist([{ label: "trades", color: "--accent", values: vals }], { min: 0, max: D.cfg.trade_window_s, step: 0.5 })),
       h("div", null, statList([["Trades", String(vals.length)], ["Mediana", NF1.format(d3.median(vals)) + " s"], ["Em até 2 s", `${NF0.format((100 * fast) / vals.length)}% · ${fast} de ${vals.length}`]]),
-        h("p", { class: "note" }, `Tempo entre a morte do companheiro e a kill de troca (janela de ${NF1.format(D.cfg.trade_window_s)} s)${sideNote()}.`))));
+        h("p", { class: "note" }, `Segundos entre a morte e a kill de troca (até ${NF0.format(D.cfg.trade_window_s)} s)${sideNote()}.`))));
   }
   function viewPlantTime() {
     const t = state.team, won = [], lost = [];
@@ -983,7 +986,7 @@
       h("div", null, stackedHist([{ label: "convertidos", color: "--good", values: won }, { label: "perdidos", color: "--bad", values: lost }], { min: 0, max: Math.max(100, Math.ceil((d3.max(all) + 1) / 5) * 5), step: 5 })),
       h("div", null, statList([["Plants", String(all.length)], ["Mediana do plant", NF1.format(med) + " s"],
         [`Converte plant cedo (≤ ${NF0.format(med)} s)`, rate((v) => v <= med)], [`Converte plant tarde (> ${NF0.format(med)} s)`, rate((v) => v > med)]]),
-        h("p", { class: "note" }, "Segundos de jogo no round, como o JSON registra (plantRoundTime). Plants são sempre do ataque."))));
+        h("p", { class: "note" }, "Segundos desde o início do round até o plant (sempre no ataque)."))));
   }
   // pistols e os dois rounds seguintes, partida a partida
   function viewPistols() {
@@ -1013,7 +1016,7 @@
         h("thead", null, h("tr", null, h("th", null, "Partida"), h("th", null, "Mapa"), h("th", null, "Adversário"), h("th", null, "1º half: pistol → 2 → 3"), h("th", null, "2º half: pistol → 14 → 15"))),
         h("tbody", null, rows))),
       list.length > 10 ? h("button", { class: "more-btn", type: "button", onclick: () => { state.pistAll = !state.pistAll; render(); } }, state.pistAll ? "Mostrar só as 10 mais recentes" : `Mostrar todas as ${list.length} partidas`) : null,
-      h("p", { class: "note" }, "Os totais acima contam todas as partidas do recorte. V/D = resultado do round (passe o mouse para ver a compra). Clique numa linha para abrir a partida." + (state.side !== "all" ? " Halves do outro lado ficam apagados." : "")));
+      h("p", { class: "note" }, "V/D = resultado do round (passe o mouse para ver a compra). Clique numa linha para abrir a partida." + (state.side !== "all" ? " Halves do outro lado ficam apagados." : "")));
   }
   function viewPlayers() {
     const t = state.team;
@@ -1044,7 +1047,7 @@
     const rec = AG.get(state.team + "|" + MI["TRD-05"] + "|" + (SI[""] ?? -1));
     return h("div", null, scopeBar(), h("div", { class: "grid" },
       h("div", { class: "tbl-wrap" }, h("h3", null, "Cobertura de cada jogador"), per, h("p", { class: "note" }, `Isolada = sem aliado vivo a ≤ ${NF0.format(D.cfg.near_radius / 100)} m na hora da morte.`)),
-      h("div", { class: "tbl-wrap" }, h("h3", null, "Quem troca quem"), mat, h("p", { class: "note" }, "Linha = quem fez a kill de troca; coluna = quem foi trocado." + (rec ? ` Reciprocidade das duplas (base inteira): ${NF2.format(rec.v)} (1 = equilibrada).` : "")))));
+      h("div", { class: "tbl-wrap" }, h("h3", null, "Quem troca quem"), mat, h("p", { class: "note" }, "Linha = quem trocou; coluna = quem foi trocado." + (rec ? ` Reciprocidade das duplas (base inteira): ${NF2.format(rec.v)} (1 = equilibrada).` : "")))));
   }
   // por jogador (sem a matriz de quem troca quem): TRD-14 = isoladas entre as mortes sem trade; TRD-08 = trade possível não feito
   function viewPlayerDeaths(id) {
@@ -1313,7 +1316,7 @@
     return h("div", null, h("div", { class: "tbl-wrap" }, h("table", { class: "mt cuts" },
       h("thead", null, h("tr", null, h("th", null, ""), h("th", { class: "num" }, `Mapas vencidos (${won.length})`), h("th", { class: "num" }, `Mapas perdidos (${lost.length})`),
         h("th", { class: "num" }, "Vencidos − perdidos"))), h("tbody", null, body))),
-      h("p", { class: "note" }, `Mesma métrica separada pelo resultado do mapa${state.sameMap ? " (só " + curMap() + ")" : ""}${sideNote()}. É uma comparação descritiva: vencer rounds e vencer o mapa andam juntos por construção, então a diferença mostra o quanto essa situação acompanha o resultado, não que ela o causou. Com poucos mapas de um lado, leia junto com a liga.`));
+      h("p", { class: "note" }, `A mesma métrica nos mapas vencidos e nos perdidos${state.sameMap ? " (só " + curMap() + ")" : ""}${sideNote()}. Mostra o que acompanha o resultado, não o que o causou.`));
   }
   function viewConsistency() {
     const rows = [];
@@ -1325,7 +1328,7 @@
     }
     if (!rows.length) return h("div", { class: "empty" }, "A equipe precisa de pelo menos 3 partidas.");
     return h("div", { class: "tbl-wrap" }, h("table", { class: "mt compact" }, h("thead", null, h("tr", null, h("th", null, "Métrica"), h("th", { class: "num" }, "Variação entre partidas (desvio-padrão)"), h("th", { class: "num" }, "Partidas"))), h("tbody", null, rows)),
-      h("p", { class: "note" }, "Base inteira, sem filtros. Quanto menor, mais estável o time de uma partida para outra."));
+      h("p", { class: "note" }, "Base inteira. Quanto menor, mais estável o time de uma partida para outra."));
   }
   function viewHow(m) {
     return h("div", { class: "def" }, h("div", null, m.rule), m.params ? h("div", null, h("b", null, "Parâmetros: "), m.params) : null,
@@ -1581,7 +1584,7 @@
       h("p", { class: "hint" }, "Escolha a partida: do mais recente (à esquerda) ao mais antigo."),
       h("h2", { class: "sec-sub" }, "Visão geral"), matchCard(), D.SB ? scoreboard(m, t) : null,
       h("h2", { class: "sec-sub" }, "Análise"), filterBar(), kpiCards(),
-      panel("O que mudou nesta partida", `Comparado à média do time${state.sameMap ? " em " + curMap() : ""}${sideNote()}; só diferenças maiores do que o acaso explicaria para o nº de rounds. Clique para abrir.`, highlights()),
+      panel("O que mudou nesta partida", `Contra a média do time${state.sameMap ? " em " + curMap() : ""}${sideNote()}; só diferenças que o acaso não explica. Clique para abrir.`, highlights()),
       ...revSection());
   }
 
@@ -1710,7 +1713,7 @@
           h("td", { class: "mut" }, ctxTags(o.i) || "—"), h("td", { class: "num" }, NF2.format(o.li) + "×"), h("td", { class: "num" }, NF0p(o.pre)),
           h("td", null, h("span", { class: "rc " + (o.won ? "w" : "l") }, o.won ? "V" : "D"), o.won ? " venceu" : " perdeu"),
           h("td", { class: "num " + (o.wpa >= 0 ? "d-good" : "d-bad") }, ppS(o.wpa))))))),
-      h("p", { class: "note" }, "Δ além do esperado = chance de vencer o mapa depois do round − chance esperada antes dele (com a economia daquele round). É a fila de VOD: os rounds que mais mudaram o mapa."
+      h("p", { class: "note" }, "Δ = quanto o round mudou a chance de vencer o mapa, além do esperado para a economia dele."
         + (all ? " Clique numa linha para abrir a partida." : "")));
   }
 
@@ -1786,9 +1789,8 @@
       h("div", { class: "tbl-wrap" }, h("table", { class: "mt cuts lev-sit" }, head,
         h("tbody", null, neg.length ? grp("Perde mais mapas que a liga: o que treinar", "bad", neg.length) : null, neg.map(row),
           pos.length ? grp("Ganha mais mapas que a liga", "good", pos.length) : null, pos.map(row)))),
-      h("p", { class: "note" }, "Time e liga = mapas ganhos (+) ou perdidos (−) a cada 10 jogados nos rounds daquela situação, além do esperado para a economia do round. "
-        + `Diferença −0,30 = a cada 10 mapas, nessa situação, o time perde 0,3 mapa a mais que ${cmpMap ? "a liga nos mesmos mapas" : "a liga"}. `
-        + "Uma situação pode pesar porque acontece muito ou porque o time converte pouco. Passe o mouse para ver a margem de erro. As situações se sobrepõem: não some as linhas."));
+      h("p", { class: "note" }, "Valores = mapas ganhos (+) ou perdidos (−) a cada 10 jogados, naquela situação, além do esperado. "
+        + `−0,30 = 0,3 mapa a menos que ${cmpMap ? "a liga nos mesmos mapas" : "a liga"} a cada 10. As situações se sobrepõem: não some as linhas.`));
   }
 
   // ---- bloco 3: fechar e reagir — mapas entregues, viradas e rounds decisivos na frente / atrás
@@ -1854,7 +1856,7 @@
           h("thead", null, h("tr", null, h("th", null, ""), h("th", null, "Partida"), h("th", { class: "num" }, "Placar"), h("th", null, "Ponto de partida"), h("th", null, "Round que mais mudou o mapa depois disso"))),
           h("tbody", null, list.map(li)))),
         h("p", { class: "note" }, "Clique numa linha para abrir a partida: a curva do mapa mostra onde a chance virou."))
-        : h("p", { class: "note" }, "Nenhum mapa entregue ou virado nas partidas selecionadas."));
+        : h("p", { class: "note keep" }, "Nenhum mapa entregue ou virado nas partidas selecionadas."));
   }
   function levHelp() {
     const rep = D.LEVREP || [];
@@ -1900,8 +1902,8 @@
       ...(state.levEx ? [levExplain()] : []),
       ...(an ? [...an, h("h2", { class: "sec-sub" }, "Mapas e rounds")] : []),
       filterBar(false),
-      panel("Onde o time ganha e perde mapas", "Por situação, quanto de chance de vencer o mapa o time ganhou ou perdeu além do esperado, comparado com a liga. Responde: qual fundamento custa mais mapas?" + sideNote(), levSituations()),
-      panel("Fechar e reagir", "O time fecha os mapas que tem na mão e busca os que estão perdidos? Mapas entregues, viradas e os rounds decisivos na frente e atrás.", levPressure()),
+      panel("Onde o time ganha e perde mapas", "Em que situações o time ganha ou perde mais mapas que a liga." + sideNote(), levSituations()),
+      panel("Fechar e reagir", "Mapas entregues, viradas e rounds decisivos com o time na frente e atrás.", levPressure()),
       h("div", { class: "lev-curve" }, panel("Curva do mapa", `${M.map[m]} · vs ${prettyTeam(D.teams[opp(m, state.team)])} · ${a}–${b}`, levCurve())));
   }
 
@@ -1924,7 +1926,7 @@
     return [
       h("div", { class: "sec-sub-row" }, h("div", null, h("h2", { class: "sec-sub" }, "Análise"), h("p", { class: "sub" }, U.q())), methodHelp()),
       h("div", { class: "ctl-row an-ctl" }, FB_KEYS.includes(fk) && FB_KEYS.length > 1 ? fbToggle(team) : null, diagControls(team, fk === "trade")),
-      panel("Padrões recorrentes", "O time comparado com outros times nas mesmas situações; um padrão só aparece quando se repete entre partidas.",
+      panel("Padrões recorrentes", "O time contra outros times nas mesmas situações. Padrão = diferença que se repete entre partidas.",
         h("div", { class: "bigstats" },
           h("div", null, h("span", { class: "k" }, "Observado"), h("b", null, pct(a.obs)), h("small", null, `${a.y} de ${a.n} ${U.noun} em ${nm} partidas`)),
           h("div", null, h("span", { class: "k" }, "Esperado em situações parecidas"), h("b", { class: "mut" }, pct(a.exp)), h("small", null, "outros times, mesmo contexto")),
@@ -1939,8 +1941,8 @@
           h("div", { class: "pat-main" }, h("span", { class: "pat-lbl" }, FD.label[i]),
             h("span", { class: "pat-sub" }, `${pct(FD.obs[i])} ${U.did} · esperado ${pct(FD.exp[i])} · ${FD.n[i]} ${U.noun} · em ${Math.round(FD.rec[i] * FD.nrec[i])} de ${FD.nrec[i]} partidas`)),
           h("div", { class: "pat-num" }, h("b", { class: FD.gap[i] < 0 ? "d-bad" : "d-good" }, pp(FD.gap[i])), h("span", null, unitsVs(fk, FD.vs[i]))))))
-          : h("p", { class: "note" }, isDef ? "Nenhum recorte com diferença recorrente entre partidas neste período." : `Padrões recorrentes usam a janela de ${F.meta.window} s.`)),
-      panel("Onde aparece mais", "O mesmo indicador quebrado por uma dimensão: onde o time fica acima ou abaixo de outros times.",
+          : h("p", { class: "note keep" }, isDef ? "Nenhum recorte com diferença recorrente entre partidas neste período." : `Padrões recorrentes usam a janela de ${F.meta.window} s.`)),
+      panel("Onde aparece mais", "O mesmo indicador separado por situação.",
         h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Quebrar por"), seg(dims.map((d) => [d, dimName(fk, d)]), dim, (v) => { state.adim[fk] = v; render(); })),
         breakdownTable(fk, ev, dim)),
     ];
@@ -2271,7 +2273,7 @@
         s.n ? h("div", { class: "hc-sw mut" }, `Com o time: ${pctOrDash(s.mapOk)} quando vence (${s.nOk}) · ${pctOrDash(s.mapKo)} quando perde (${s.nKo}).`) : null);
     });
     return h("div", null, h("div", { class: "hal-cards" }, cards),
-      h("p", { class: "note" }, "Abaixo/Acima do esperado = 10 pp ou mais de diferença para a liga, com pelo menos 5 halves. Os pp em cada cartão mostram quanto aquele round costuma pesar no resultado do mapa: ajuda a decidir o que treinar primeiro."));
+      h("p", { class: "note" }, "Abaixo/acima = 10 pp ou mais de diferença para a liga (mínimo de 5 halves). O peso mostra quanto aquele round costuma decidir o mapa."));
   }
 
   // árvore de caminhos: half → pistol → round 2 → round 3 → % de mapas ganhos
@@ -2347,7 +2349,7 @@
       }
     });
     return h("div", null, legendRow([["round vencido", "--good"], ["round perdido", "--bad"], ["mapas ganhos pelo time", "--accent"], ["liga", "--ref"]]), box,
-      h("p", { class: "note" }, "Cada caminho é a sequência dos 3 primeiros rounds de um half (V = venceu, D = perdeu). Nas linhas: quantos halves seguiram por ali e a % a partir do round anterior (em vermelho quando o time fica 10 pp ou mais abaixo da liga). À direita: % de mapas ganhos depois de cada caminho (traço roxo = liga) e % dos rounds do half que o time venceu."));
+      h("p", { class: "note" }, "Cada caminho = os 3 primeiros rounds do half (V/D). Vermelho = 10 pp ou mais abaixo da liga. À direita: mapas ganhos depois de cada caminho (traço = liga)."));
   }
 
   // grade por mapa × lado com as aberturas de cada partida
@@ -2374,7 +2376,7 @@
     return h("div", null, h("div", { class: "tbl-wrap" }, h("table", { class: "mt hal-grid" },
       h("thead", null, h("tr", null, h("th", null, "Mapa"), sides.map((sd) => h("th", null, sd === 0 ? "Half no ataque" : "Half na defesa")))),
       h("tbody", null, maps.map((mp) => h("tr", null, h("td", null, h("b", null, mp)), sides.map((sd) => cell(mp, sd))))))),
-      h("p", { class: "note" }, "Cada bloco é uma abertura de half: 3 quadrados = rounds 1–3 (ou 13–15), verde venceu e vermelho perdeu; a letra ao lado é o resultado do mapa. Clique para abrir a partida. Em vermelho: anti-eco abaixo de 60% ou 1º armado abaixo de 40% com 3+ casos (na liga: 86% e 57%)."));
+      h("p", { class: "note" }, "Cada bloco = rounds 1–3 de um half (verde venceu, vermelho perdeu); a letra é o resultado do mapa. Clique para abrir a partida."));
   }
 
   function renderHAL(main) {
@@ -2391,9 +2393,9 @@
     main.append(h("div", { class: "sec-head" }, h("h1", null, "Início de half")),
       ...(an ? [...an, h("h2", { class: "sec-sub" }, "Aberturas")] : []),
       ctl,
-      panel("Os momentos da abertura", "Em cada passo do pistol ao 3º round, quanto o time converte, comparado com a liga, e quanto esse round pesa no mapa. " + scopeTxt, halMoments(team, lg)),
-      panel("Caminhos da abertura e o resultado do mapa", "Para onde vão os halves do time depois do pistol, e com que resultado.", halTree(team, lg)),
-      panel("Por mapa e lado", "Onde a abertura falha: pistol, anti-eco e 1º armado por mapa e pelo lado do half.", halGrid(team)));
+      panel("Os momentos da abertura", "Do pistol ao 3º round: quanto o time converte contra a liga e quanto cada round pesa no mapa. " + scopeTxt, halMoments(team, lg)),
+      panel("Caminhos da abertura e o resultado do mapa", "Para onde vão os halves depois do pistol e com que resultado.", halTree(team, lg)),
+      panel("Por mapa e lado", "Pistol, anti-eco e 1º armado por mapa e lado.", halGrid(team)));
   }
   // ================================================================== DIAGNÓSTICO: fundamentos coletivos
   // Tudo aqui vem de outputs/fundamentals (eventos com contexto, esperado leave-one-team-out, padrões e evidências).
@@ -2699,10 +2701,10 @@
           h("div", null, h("span", { class: "k" }, "Diferença"), h("b", { class: Math.abs(a.gap) < 0.5 ? "" : a.gap < 0 ? "d-bad" : "d-good" }, pp(a.gap)), h("small", null, Math.abs(a.gap) < 0.5 ? "igual ao esperado" : a.gap > 0 ? "melhor que o esperado" : "pior que o esperado")),
           h("div", null, h("span", { class: "k" }, "Recorrência"), h("b", null, recTxt), h("small", null, "partidas na mesma direção"))),
         h("p", { class: "interp" }, interp)),
-      panel("Onde aparece mais", `O mesmo recorte quebrado por outra dimensão. Com poucos ${U.noun}, a linha serve para localizar, não para concluir.`,
+      panel("Onde aparece mais", `O mesmo recorte separado por outra situação. Com poucos ${U.noun}, a linha serve para localizar, não para concluir.`,
         h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Quebrar por"), seg(dimsAvail.map((d) => [d, dimName(fk, d)]), bd, (v) => { state.pdim = v; render(); })),
         breakdownTable(fk, ev, bd)),
-      panel("Partida a partida", `${U.unit[0].toUpperCase() + U.unit.slice(1)} a mais (verde) ou a menos (vermelho) do que o esperado em cada partida, nesse recorte.`, perMatchChart(fk, ev, team)),
+      panel("Partida a partida", `${U.unit[0].toUpperCase() + U.unit.slice(1)} a mais (verde) ou a menos (vermelho) que o esperado em cada partida.`, perMatchChart(fk, ev, team)),
       evidencePanel(fk, fi),
       h("section", { class: "panel limits" }, h("h3", null, "Limites desta leitura"),
         h("ul", null,
@@ -2729,10 +2731,10 @@
     rows.sort(ord ? (x, y) => (ord.indexOf(x.v) + 99 * (ord.indexOf(x.v) < 0)) - (ord.indexOf(y.v) + 99 * (ord.indexOf(y.v) < 0)) : (x, y) => x.a.vs - y.a.vs);
     if (!ord && rows.length > 12) rows = rows.filter((r) => r.a.n >= 5);
     const all = rows.flatMap((r) => [r.a.obs, r.a.exp]).filter((v) => v != null);
-    const hi = pctTop(all), f = (v) => v / hi, U = FUI[fk];
+    const f = (v) => v, U = FUI[fk];
     return h("div", null, mapPick, h("div", { class: "tbl-wrap" }, h("table", { class: "mt cuts" },
       h("thead", null, h("tr", null, h("th", null, dim === "site" ? `Site em ${M.map[Fd(fk).E.m[ev[0]]] ?? ""}` : dimName(fk, dim)), h("th", { class: "num" }, U.noun[0].toUpperCase() + U.noun.slice(1)), h("th", { class: "num" }, U.did[0].toUpperCase() + U.did.slice(1)),
-        h("th", { class: "num" }, "Esperado"), h("th", { class: "num" }, "Diferença"), h("th", { class: "num" }, "vs. esperado"), h("th", { class: "strip" }, `0% → ${NF0.format(100 * hi)}%`))),
+        h("th", { class: "num" }, "Esperado"), h("th", { class: "num" }, "Diferença"), h("th", { class: "num" }, "vs. esperado"), stripHead())),
       h("tbody", null, rows.map((r) => {
         const strip = h("td", { class: "strip" });
         strip.innerHTML = stripSvg(f, [{ v: r.a.exp, color: "--ref", type: "tick" }, { v: r.a.obs, color: Math.abs(r.a.gap) < 0.5 ? "--neutral" : r.a.gap < 0 ? "--bad" : "--good", type: "dot" }]);
@@ -3121,7 +3123,7 @@
           h("div", { class: "lp-ex" },
             h("div", { class: "lp-ex-nums" }, h("b", { class: "fl-obs t-bad" }, "18%"), h("span", { class: "fl-exp" }, "esperado ", h("b", null, "22%"))),
             ruler({ obs: 0.18, exp: 0.22, tone: "bad", band: false, aria: "Exemplo: 18% observado, 22% esperado" }),
-            h("p", { class: "note" }, "Ponto = o time. Traço = o esperado.")),
+            h("p", { class: "note keep" }, "Ponto = o time. Traço = o esperado.")),
           h("ul", { class: "lp-rules" },
             h("li", null, h("b", null, "Esperado"), " é o que outros times fazem nas mesmas situações (lado, economia, momento do round, mapa). O próprio time nunca entra nessa conta."),
             h("li", null, h("span", { class: "lp-chips" }, statusChip("dentro"), statusChip("abaixo", true), statusChip("muito_acima")),
@@ -3171,6 +3173,31 @@
 
   if (FU && FU.F.trade) state.dwin = FU.F.trade.meta.window;
 
+  // descrições de tabelas e gráficos: escondidas numa caixa discreta "Saiba mais" (lupa), abertas só quando pedidas
+  function moreBox(kind, items) {
+    const d = h("details", { class: "more" }, h("summary", null, icon("search"), `Saiba mais sobre ${kind}`));
+    const body = h("div", { class: "more-body" }); items.forEach((n) => { n.classList.remove("sub"); body.append(n); });
+    d.append(body); return d;
+  }
+  function kindOf(el) {
+    const tbl = !!el.querySelector("table"), chart = !!el.querySelector(".chart, .map-wrap") || [...el.querySelectorAll("svg:not(.ic)")].some((g) => !g.closest("table"));
+    return tbl && !chart ? "esta tabela" : chart && !tbl ? "este gráfico" : tbl ? "esta tabela e gráfico" : "este bloco";
+  }
+  function collapseNotes(root) {
+    const skip = (n) => n.classList.contains("keep") || n.closest("details.more, .lp-read, .lp-hero");
+    root.querySelectorAll("section.panel:not(.list)").forEach((sec) => {
+      const notes = [...sec.querySelectorAll("p.note")].filter((n) => !skip(n) && n.closest("section.panel") === sec);
+      const sub = sec.querySelector(":scope > .panel-head .sub");
+      const items = [sub, ...notes].filter(Boolean);
+      if (!items.length) return;
+      const head = sec.querySelector(":scope > .panel-head"), box = moreBox(kindOf(sec), items);
+      if (head) head.after(box); else sec.append(box);
+    });
+    // notas fora de um painel (detalhe de métrica, recortes): uma caixa por bloco
+    const groups = new Map();
+    root.querySelectorAll("p.note").forEach((n) => { if (skip(n) || n.closest("section.panel:not(.list)")) return; const p = n.closest(".mitem") || n.parentElement; (groups.get(p) || groups.set(p, []).get(p)).push(n); });
+    groups.forEach((ns, p) => { const box = moreBox(kindOf(p), []); ns[0].before(box); ns.forEach((n) => box.querySelector(".more-body").append(n)); });
+  }
   function render() {
     drawers.length = 0; hideTip();
     renderFilters(); renderSide();
@@ -3189,6 +3216,7 @@
     else renderLens(main, state.section);
     const sec = D.sections.find((x) => x.id === state.section);
     if (sec && !["Início", "Diagnóstico", "Analisar resultados"].includes(sec.group) && sec.group !== sec.label) main.prepend(h("div", { class: "crumb" }, sec.group, h("span", null, "›"), sec.label));
+    collapseNotes(main);
     drawers.forEach((f) => f());
     writeHash();
   }

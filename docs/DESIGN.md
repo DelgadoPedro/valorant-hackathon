@@ -20,6 +20,11 @@ Versão 1 (21/10/2026); paleta revista em 22/10/2026 (verde = melhor, roxo = mar
 
 O que já funciona e fica: denominadores sempre visíveis, comparação com outros times em situações parecidas, linguagem de revisão (nunca "erro"), evidências até o round, filtros lembrados, layout responsivo e tema escuro.
 
+**Descrições (22/10/2026):** o texto que explica uma tabela ou um gráfico (subtítulo do painel e notas de rodapé) fica
+fechado numa caixa discreta "🔍 Saiba mais sobre esta tabela / este gráfico", logo abaixo do título (no detalhe de uma
+métrica, no fim do detalhe). Só mensagens de estado ("nenhum padrão neste período") ficam sempre visíveis. Os textos
+são curtos: o que o número é e como ler a régua, sem método.
+
 ## 2. Arquitetura de informação (progressive disclosure)
 
 ```

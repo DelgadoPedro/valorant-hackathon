@@ -196,6 +196,9 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
   anterior, funções por mapa, métricas de variação de picks e uma tabela de composições da equipe (resultados, por
   economia e sites de plant), além de duplas/trios, trade por dupla, first blood com assistência e "quem faz o quê".
 - **Aba Início de half**: pistol → round 2 → round 3 de cada half por partida, mais as métricas HAL.
+- **Descrições e nomes (22/10/2026)**: as explicações de cada tabela e gráfico ficam numa caixa fechada "Saiba mais"
+  (ícone de lupa); nomes de métricas, recortes e abas foram revistos para quem não conhece a ferramenta (ex.: "Mortes
+  sem trade e sem aliado por perto", "Retakes com defuse", recortes "Por situação" e "Por mapa e site").
 - **Partida**: no topo, a linha de partidas para escolher (mais recente à esquerda; só o que cabe na largura, seta "+N"
   abre o resto). Três subseções:
   - **Visão geral**: cabeçalho da partida e o bloco **Placar**: round a round e, abaixo, o placar por jogador dos dois
