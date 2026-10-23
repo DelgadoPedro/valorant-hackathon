@@ -77,7 +77,7 @@ def phrase(dim: str, v: str) -> str:
 
 def label(ctx: dict) -> str:
     if not ctx:
-        return "Todas as mortes com aliado vivo"
+        return "Mortes com aliado vivo"
     order = ["victim_name", "nearest_ally_name", "side", "map_name", "phase", "numbers", "fb_context", "economy", "allies_near_b", "ally_dist"]
     return "Mortes " + " ".join(phrase(k, ctx[k]) for k in order if k in ctx)
 
@@ -101,7 +101,7 @@ def adv_phrase(dim: str, v: str) -> str:
 
 def adv_label(ctx: dict) -> str:
     if not ctx:
-        return "Todas as vantagens numéricas"
+        return "Vantagens numéricas"
     order = ["state", "margin", "side", "map_name", "spike", "origin", "when", "economy"]
     return "Vantagens " + " ".join(adv_phrase(k, ctx[k]) for k in order if k in ctx)
 
@@ -156,7 +156,7 @@ def _fb_rest(ctx: dict) -> list[str]:
 def fbo_label(ctx: dict) -> str:
     """Ex.: "Duelos de abertura de duelistas na defesa nos primeiros 15 s"."""
     if not ctx:
-        return "Todos os duelos de abertura"
+        return "Duelos de abertura"
     head = "Duelos de abertura"
     if "duel_name" in ctx:
         head += f" de {ctx['duel_name']}"
@@ -168,7 +168,7 @@ def fbo_label(ctx: dict) -> str:
 def fbr_label(ctx: dict) -> str:
     """Ex.: "Rounds depois de sofrer o first blood nos primeiros 15 s, em Ascent"."""
     if not ctx:
-        return "Todos os rounds depois de sofrer o first blood"
+        return "Rounds depois de sofrer o first blood"
     head = "Rounds depois de sofrer o first blood"
     if "when" in ctx:
         head += " " + FB_WHEN.get(ctx["when"], ctx["when"])
@@ -419,11 +419,11 @@ def _plant_rest(ctx: dict, retake: bool) -> list[str]:
 
 
 def post_label(ctx: dict) -> str:
-    return "Todos os rounds em que o time plantou" if not ctx else " ".join(["Pós-plant"] + _plant_rest(ctx, False))
+    return "Rounds em que o time plantou" if not ctx else " ".join(["Pós-plant"] + _plant_rest(ctx, False))
 
 
 def ret_label(ctx: dict) -> str:
-    return "Todos os rounds com a spike adversária plantada" if not ctx else " ".join(["Retakes"] + _plant_rest(ctx, True))
+    return "Rounds com a spike adversária plantada" if not ctx else " ".join(["Retakes"] + _plant_rest(ctx, True))
 
 
 KEYR_DIMS = {"round_type": "tipo de round", "side": "lado", "map_name": "mapa", "half": "half"}
@@ -433,7 +433,7 @@ RTYPE = {"pistol": "Pistols", "eco": "Rounds em eco", "anti-eco": "Anti-ecos", "
 
 def key_label(ctx: dict) -> str:
     if not ctx:
-        return "Todos os rounds-chave"
+        return "Rounds-chave"
     head = RTYPE.get(ctx.get("round_type"), "Rounds-chave")
     rest = [phrase(k, ctx[k]) for k in ("side", "map_name") if k in ctx]
     if "half" in ctx:
@@ -447,7 +447,7 @@ HALF_PAIR_DIMS = ["moment", "side", "map_name"]
 
 def half_label(ctx: dict) -> str:
     if not ctx:
-        return "Todos os rounds 2 e 3 de cada half"
+        return "Rounds 2 e 3 de cada half"
     head = ctx["moment"][0].upper() + ctx["moment"][1:] if "moment" in ctx else "Rounds 2 e 3 do half"
     rest = [phrase(k, ctx[k]) for k in ("side", "map_name") if k in ctx]
     if "half" in ctx:
@@ -477,7 +477,7 @@ PRESS_PAIR_DIMS = ["lead", "phase", "side", "map_name"]
 
 def press_label(ctx: dict) -> str:
     if not ctx:
-        return "Todos os rounds decisivos"
+        return "Rounds decisivos"
     head = "Rounds decisivos" + ({"na frente": " com o time na frente", "atrás": " com o time atrás", "empatado": " com o placar empatado"}.get(ctx.get("lead"), ""))
     rest = []
     if "phase" in ctx:

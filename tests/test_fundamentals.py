@@ -77,7 +77,7 @@ def test_fb_contract(synthetic_fb):
 
 def test_fb_labels():
     from roundrx.fundamentals.patterns import fbo_label, fbr_label
-    assert fbo_label({}) == "Todos os duelos de abertura"
+    assert fbo_label({}) == "Duelos de abertura"
     assert fbo_label({"duel_role": "Duelista", "side": "def"}) == "Duelos de abertura de duelistas na defesa"
     assert fbr_label({"when": "até 15 s", "map_name": "Ascent"}) == "Rounds depois de sofrer o first blood nos primeiros 15 s, em Ascent"
 
@@ -208,7 +208,7 @@ def test_detector_finds_planted_deficit_and_not_others(cfg):
 
 
 def test_labels_are_review_language():
-    assert label({}) == "Todas as mortes com aliado vivo"
+    assert label({}) == "Mortes com aliado vivo"
     assert label({"side": "def", "ally_dist": "5–10 m"}) == "Mortes na defesa com o aliado mais próximo a 5–10 m"
 
 

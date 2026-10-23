@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -390,7 +391,8 @@ FUND_TARGET = {"advantage": "converteu (venceu o round)", "fb_open": "fez o firs
 
 def _fd(show, tix):
     return {"id": show["pattern_id"].tolist(), "scope": show["scope"].tolist(), "t": [tix.get(x) for x in show["team"]],
-            "dims": [json.loads(x) for x in show["dims"]], "level": _i(show["level"]), "label": show["label"].tolist(),
+            "dims": [json.loads(x) for x in show["dims"]], "level": _i(show["level"]),
+            "label": [re.sub(r"^(?:Todos os|Todas as) (.)", lambda m: m[1].upper(), label) for label in show["label"]],
             "dir": show["direction"].tolist(), "obs": _r(show["observed"]), "exp": _r(show["expected"]), "gap": _r(show["gap_pp"], 2),
             "lo": _r(show["ci_lo_pp"], 2), "hi": _r(show["ci_hi_pp"], 2), "vs": _r(show["events_vs_expected"], 2),
             "n": _i(show["n_events"]), "nm": _i(show["n_matches"]), "rec": _r(show["recurrence"], 3), "nrec": _i(show["n_rec_matches"]),
@@ -508,6 +510,8 @@ def build_html(out: Path, cfg, *, payload: dict | None = None) -> Path:
                .replace("/*__MISSION_CSS__*/", (HERE / "mission.css").read_text(encoding="utf-8"))
                .replace("/*__D3__*/", (HERE / "vendor" / "d3.min.js").read_text(encoding="utf-8"))
                .replace("/*__DATA__*/", "window.RRX=" + data + ";")
+               .replace("/*__TRAINING_JS__*/", (HERE / "mission-training.js").read_text(encoding="utf-8"))
+               .replace("/*__MISSION_PDF_JS__*/", (HERE / "mission-pdf.js").read_text(encoding="utf-8"))
                .replace("/*__MISSION_JS__*/", (HERE / "mission.js").read_text(encoding="utf-8"))
                .replace("/*__APP__*/", (HERE / "app.js").read_text(encoding="utf-8")))
     dest = out / "dashboard" / "roundrx_painel.html"

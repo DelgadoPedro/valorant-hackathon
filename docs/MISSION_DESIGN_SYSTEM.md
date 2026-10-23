@@ -82,8 +82,10 @@ Diferença, denominador e quantidade de partidas acompanham a comparação.
 |---|---|
 | Briefing | Título curto + contexto em uma linha + SurfacePanel com minimapa e ObjectiveRows. |
 | Evidência | Orientação prática + SurfacePanel com condição, diferença, ComparisonBars e detalhes expansíveis. |
-| Plano | SurfacePanel + PanelHeader + ObjectiveRows selecionáveis + download + nota. |
-| Resumo de treino | SurfacePanel compacto + ícone + nome + hipótese de treino; acompanhamento completo no download. |
+| Plano | SurfacePanel + PanelHeader + ObjectiveRows selecionáveis + prévia e download em PDF + nota. |
+| Resumo de treino | SurfacePanel compacto + ícone + nome + exercício contextualizado + duração e etapas. |
+| Ficha de treino | Expansão dentro da orientação prática com preparação, funções, etapas e critérios de execução. |
+| Prévia do PDF | Modal próprio com documento real, abertura em nova aba e download do mesmo arquivo. |
 
 O conteúdo varia; a box e as moléculas permanecem as mesmas.
 
@@ -107,6 +109,12 @@ do time e do recorte. Nenhuma etapa define um novo estilo de superfície.
 - `.rx-details` usa `details`/`summary` nativos para “Como interpretar”, fechado inicialmente.
   Metodologia e recorrência ficam nessa expansão; condição, valores, denominador e partidas continuam visíveis.
 - Seleção de treino usa marca e `aria-pressed`, sem repetir uma instrução sob cada objetivo.
+- A expansão “Como executar” fica apenas na área do treino. A escolha dos focos, os painéis de métricas,
+  o briefing e a navegação permanecem iguais. A duração se refere à sessão sugerida, não ao briefing.
+- O PDF usa A4 com fundo branco, títulos azul-escuro e detalhes em coral, capa com visão da sessão,
+  fichas com instruções, rounds reais de referência e espaço para anotações. Prévia e download usam
+  o mesmo documento gerado no navegador; uma nova seleção invalida a versão anterior.
+- Esc fecha primeiro a prévia e devolve o foco à ação que a abriu; outro Esc fecha a missão.
 
 ## 6. Regras de evolução
 
