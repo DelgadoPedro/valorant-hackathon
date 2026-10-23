@@ -538,6 +538,8 @@
     const q = new URLSearchParams(location.hash.slice(1));
     const t = D.teams.indexOf(q.get("t"));
     if (t >= 0) state.team = t;
+    const LOCKED = D.LOCK == null ? null : [].concat(D.LOCK);   // build privado: só estas equipes
+    if (LOCKED && !LOCKED.includes(state.team)) state.team = LOCKED[0];
     T = buildTeam(state.team);
     const m = M.id.indexOf(q.get("m"));
     state.pos = m >= 0 && T.pos.has(m) ? T.pos.get(m) : T.ms.length - 1;
@@ -552,7 +554,9 @@
   // ------------------------------------------------------------------ cabeçalho e filtros
   const selTeam = $("#sel-team"), selMatch = $("#sel-match");
   function fillTeams() {
-    const order = D.teams.map((n, i) => i).sort((a, b) => D.teams[a].localeCompare(D.teams[b]));
+    const locked = D.LOCK == null ? null : [].concat(D.LOCK);
+    const order = (locked || D.teams.map((n, i) => i)).slice().sort((a, b) => D.teams[a].localeCompare(D.teams[b]));
+    selTeam.disabled = !!locked && locked.length === 1;
     selTeam.replaceChildren(...order.map((i) => h("option", { value: String(i) }, `${prettyTeam(D.teams[i])} (${teamMatches[i].length})`)));
     selTeam.value = String(state.team);
   }
@@ -3198,7 +3202,7 @@
   // ================================================================== COMO USAR (tela de abertura)
   function renderAbout(main) {
     const go = (id, extra) => () => { Object.assign(state, extra || {}); state.section = id; state.pat = null; state.rv = null; state.rvr = null; fillMatches(); render(); window.scrollTo({ top: 0 }); focusPageHeading(); };
-    const dates = M.date.slice().sort(), r = D.run;
+    const dates = D.PERIOD || M.date.filter(Boolean).sort(), r = D.run;
     const team = prettyTeam(D.teams[state.team]), ms = teamMatches[state.team], last = ms[ms.length - 1];
     const wins = ms.filter((m) => { const [a, b] = scoreOf(m, state.team); return a > b; }).length;
     const rounds = ms.reduce((n, m) => n + M.rs[m] + M.bs[m], 0);
@@ -3239,7 +3243,7 @@
       h("dl", { class: "lp-facts", "aria-label": "Base analisada" },
         h("div", null, h("dt", null, "Partidas na base"), h("dd", null, NF0.format(r.n_matches))),
         h("div", null, h("dt", null, "Rounds analisados"), h("dd", null, NF0.format(r.n_rounds))),
-        h("div", null, h("dt", null, "Times"), h("dd", null, D.teams.length)),
+        h("div", null, h("dt", null, "Times"), h("dd", null, D.run?.n_teams ?? D.teams.length)),
         h("div", null, h("dt", null, "Período da base"), h("dd", { class: "sm" }, `${fmtDate(dates[0])} a ${fmtDate(dates[dates.length - 1])}`))),
       h("section", { class: "lp-block" }, h("h2", null, "Depois de cada partida"),
         h("ol", { class: "lp-steps four" },

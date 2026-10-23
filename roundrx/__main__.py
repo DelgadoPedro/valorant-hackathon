@@ -5,6 +5,7 @@
     python -m roundrx selftest            # só o cenário sintético (rápido)
     python -m roundrx fundamentals        # só a camada de diagnóstico (usa outputs/ já gerado) + painel
     python -m roundrx viz                 # só o painel
+    python -m roundrx private             # painéis privados por time, com código de acesso (../valostrat-times)
 """
 from __future__ import annotations
 
@@ -17,10 +18,11 @@ from .config import load_config
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="roundrx")
-    ap.add_argument("command", choices=["run", "selftest", "viz", "fundamentals"])
+    ap.add_argument("command", choices=["run", "selftest", "viz", "fundamentals", "private"])
     ap.add_argument("--config", default=None)
     ap.add_argument("--data-dir", default=None)
     ap.add_argument("--skip-selftest", action="store_true")
+    ap.add_argument("--dest", default=None, help="private: pasta de saída (padrão: ../valostrat-times, fora do repositório)")
     a = ap.parse_args(argv)
     try:  # consoles Windows antigos: evita erro de encoding ao imprimir acentos
         sys.stdout.reconfigure(errors="replace")
@@ -41,6 +43,17 @@ def main(argv=None) -> int:
         out = write_fund(run_fund(load_context(cfg), cfg), cfg)
         print(f"[roundrx] diagnóstico: {out}")
         print(f"[roundrx] painel: {build_html(cfg.output_dir, cfg)}")
+        return 0
+
+    if a.command == "private":
+        from pathlib import Path
+        from .viz.private import build_private_site
+        dest = Path(a.dest) if a.dest else Path(cfg.root).resolve().parent / "valostrat-times"
+        codes = build_private_site(cfg.output_dir, cfg, dest)
+        print(f"[roundrx] site privado: {dest / 'site'}  (publique só esta pasta)")
+        print(f"[roundrx] códigos de acesso: {dest / 'CODIGOS.txt'}  (não publique)")
+        for t, c in codes.items():
+            print(f"  {t:<18} {c}")
         return 0
 
     if a.command == "viz":

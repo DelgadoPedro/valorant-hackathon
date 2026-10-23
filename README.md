@@ -45,6 +45,15 @@ Só a camada de diagnóstico (usa `outputs/` já gerado): `python -m roundrx fun
   Artes dos mapas em alta: `roundrx/viz/vendor/mission/<mapa>.jpg` (qualquer mapa; ex. `abyss.jpg`), usadas no cartão
   "Última partida" e na missão. Depois de trocar arquivos: `python -m roundrx viz`.
 
+- **Painéis privados por time (23/10/2026):** `python -m roundrx private` gera, fora do repositório (`../valostrat-times`),
+  um site com tela de código de acesso para os times convidados (axis_anteaters, caap_auroras, caap_hellhounds, usp_stars,
+  usp_stars_gc, fei_darkowls, fei_whiteowls; lista em `roundrx/viz/private.py`). Cada time recebe um payload próprio,
+  cifrado (AES-GCM, chave = PBKDF2 do código): partidas do time completas; partidas entre outros times anonimizadas (times
+  "Outro time NN" em ordem aleatória, jogadores sem nome, sem data/arquivo/competição/série; o adversário ganha outra
+  identidade anônima fora dos jogos com o time); padrões só do próprio time. O painel trava o seletor de equipe
+  (`D.LOCK`). Conferido: todas as seções exibem os mesmos números do painel completo para os 7 times. Os códigos ficam em
+  `../valostrat-times/CODIGOS.txt` (não publicar).
+
 ## Como rodar (Windows)
 
 ```bat
