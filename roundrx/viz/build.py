@@ -52,9 +52,9 @@ G2, G3, G4 = ("Trade kill", "Pós-plant", "Retake")
 # HAL-01..18 (22/10/2026: a página de início de half é feita das sequências de rounds), DYN-06..08 (dano e consistência, 22/10/2026), as métricas LEV-01..18 (22/10/2026: a página de pressão usa os campos li/wp/wm/pp/lq de R;
 # as médias de pressão não são estáveis por time e as ponderadas repetem a taxa de vitória) e toda a composição de agentes (AGT).
 SECTIONS = [
-    ("about", "Como usar", None, "Início"),   # tela de abertura: o que é a ferramenta e como navegar
-    ("home", "Panorama", None, "Início"),
-    ("overview", "Partida", None, "Início"),
+    ("about", "Home", None, "Início"),                       # tela de abertura: o que é a ferramenta e como usar
+    ("home", "Panorama", None, "Analisar resultados"),       # panorama do time
+    ("overview", "Partida", None, "Analisar resultados"),
     ("diag", "Fundamentos", None, "Diagnóstico"),   # rota das telas de padrão e de round (fora da barra lateral)
     ("ADV", "Vantagem", _ids("DYN", [9, 10, 3, 11]) + ["ECO-13"], "Vantagem"),
     ("FB", "First blood", _ids("OPN", [1, 2, 3, 4, 7, 13, 14, 15, 10, 12, 5, 6]), "First blood"),
@@ -500,6 +500,8 @@ def build_html(out: Path, cfg) -> Path:
     fonts = ('@font-face { font-family: "Archivo"; font-style: normal; font-display: swap; font-weight: 100 900; '
              f'font-stretch: 62% 125%; src: url(data:font/woff2;base64,{font}) format("woff2"); }}')
     icons = (HERE / "vendor" / "icons.json").read_text(encoding="utf-8")
+    logo = (HERE / "vendor" / "logo" / "valostrat-mark.svg").read_text(encoding="utf-8").strip()
+    tpl = tpl.replace("<!--__LOGO__-->", logo).replace("__FAVICON__", "data:image/svg+xml;base64," + base64.b64encode(logo.encode()).decode())
     html = (tpl.replace("/*__FONTS__*/", fonts).replace("/*__ICONS__*/", "window.RRX_ICONS=" + icons + ";")
                .replace("/*__CSS__*/", (HERE / "app.css").read_text(encoding="utf-8"))
                .replace("/*__D3__*/", (HERE / "vendor" / "d3.min.js").read_text(encoding="utf-8"))

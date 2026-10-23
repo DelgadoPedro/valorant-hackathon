@@ -1,4 +1,4 @@
-/* RoundRx — painel por equipe. Todos os valores vêm de window.RRX (gerado por roundrx/viz/build.py).
+/* ValoStrat.gg (pacote roundrx) — painel por equipe. Todos os valores vêm de window.RRX (gerado por roundrx/viz/build.py).
    Regra única de agregação (a mesma do pipeline): valor = Σnum / Σden sobre o recorte (lado, partidas, mapa).
    Desenho: cada seção é uma lista limpa de métricas (valor + números absolutos + referências). Gráficos só
    aparecem ao clicar numa métrica, em abas: evolução, recortes (uma dimensão por vez), visão própria e definição. */
@@ -590,13 +590,17 @@
                        "Rounds-chave": "pistol, eco, anti-eco, force e armados", Clutches: "clutches, perfeitos, bonus e thrifty", "Início de half": "os 3 primeiros rounds de cada half",
                        "Pressão": "quanto cada round vale para o mapa", "Rounds para revisar": "os rounds que mais mudaram o mapa, com o motivo" };
   const GROUP_ICON = { Fundamentos: "fund", Vantagem: "adv", "First blood": "fb", "Trade kill": "trade", "Pós-plant": "post", Retake: "retake", "Rounds-chave": "key", Clutches: "trophy", "Início de half": "calendar", "Pressão": "gauge", "Rounds para revisar": "film" };
-  const ITEM_ICON = { about: "info", home: "home", overview: "match" };
+  const ITEM_ICON = { about: "home", home: "fund", overview: "match" };
   function renderSide() {
     const groups = d3.groups(D.sections.filter((s) => s.group !== "Diagnóstico"), (s) => s.group);
     const go = (id) => () => { state.section = id; state.pat = null; state.rv = null; state.rvr = null; state.rvrFrom = null; render(); window.scrollTo({ top: 0 }); };
     const cur = state.section === "diag" ? (state.patFrom || "home") : state.section;
     let firstCat = true;
     $("#side").replaceChildren(...groups.flatMap(([g, items]) => {
+      const item = (s) => h("button", { class: "side-item", type: "button", "aria-current": cur === s.id ? "page" : null, onclick: go(s.id) },
+        ITEM_ICON[s.id] ? icon(ITEM_ICON[s.id]) : null, s.label);
+      // blocos fixos: Home (abertura) no topo; "Analisar resultados" com Panorama e Partida
+      if (g === "Analisar resultados") return [h("div", { class: "side-super" }, g), h("div", { class: "side-group start" }, items.map(item))];
       const isStart = g === "Início";
       const head = isStart ? null : h("div", { class: "side-h", title: GROUP_NOTE[g] || null }, GROUP_ICON[g] ? icon(GROUP_ICON[g]) : null, h("span", null, g));
       const sup = !isStart && g !== "Fundamentos" && firstCat ? (firstCat = false, h("div", { class: "side-super" }, "Explorar métricas")) : null;
@@ -604,9 +608,7 @@
       if (!isStart && items.length === 1 && items[0].label === g)
         return [sup, h("div", { class: "side-group solo" }, h("button", { class: "side-item", type: "button", title: GROUP_NOTE[g] || null,
           "aria-current": cur === items[0].id ? "page" : null, onclick: go(items[0].id) }, icon(GROUP_ICON[g]), g))];
-      return [sup, h("div", { class: "side-group" + (isStart ? " start" : g === "Fundamentos" ? " fund" : "") }, head,
-        items.map((s) => h("button", { class: "side-item", type: "button", "aria-current": cur === s.id ? "page" : null, onclick: go(s.id) },
-          ITEM_ICON[s.id] ? icon(ITEM_ICON[s.id]) : null, s.label)))];
+      return [sup, h("div", { class: "side-group" + (isStart ? " start" : g === "Fundamentos" ? " fund" : "") }, head, items.map(item))];
     }).filter(Boolean));
     const side = $("#side"), curEl = side.querySelector('[aria-current="page"]');
     if (curEl && side.scrollWidth > side.clientWidth + 4) {
@@ -3033,8 +3035,10 @@
     // quantos ficaram fora da 1ª linha: medido depois do layout e de novo quando a largura muda
     const measure = () => {
       const k = [...tiles.children], top = k.length ? k[0].offsetTop : 0, hiddenN = k.filter((e) => e.offsetTop > top + 2).length;
+      // fechado: os quadrados fora da 1ª linha ficam invisíveis (sem a ponta aparecendo embaixo)
+      k.forEach((e) => e.classList.toggle("mt-off", !open && e.offsetTop > top + 2));
       more.hidden = !hiddenN;
-      lbl.textContent = open ? "menos" : `+${hiddenN}`;
+      lbl.textContent = open ? "" : `+${hiddenN}`;
       more.title = open ? "Mostrar só a última linha" : `Mostrar mais ${hiddenN} ${hiddenN === 1 ? "mapa" : "mapas"}`;
     };
     requestAnimationFrame(measure);
@@ -3071,10 +3075,10 @@
       ["retake", "Retake", "RET"], ["key", "Rounds-chave", "KEY"], ["calendar", "Início de half", "HAL"], ["gauge", "Pressão", "LEV"]];
     main.append(
       h("section", { class: "lp-hero" },
-        h("h1", null, "RoundRx"),
+        h("h1", null, "ValoStrat", h("span", { class: "lp-gg" }, ".gg")),
         h("p", { class: "lp-lead" }, "Revisão pós-partida para times de VALORANT: onde o time fica acima ou abaixo do que outros times fazem nas mesmas situações, e quais rounds rever no VOD."),
         h("div", { class: "lp-cta" },
-          h("button", { class: "btn", type: "button", onclick: go("home") }, `Abrir o panorama de ${team}`, icon("next")),
+          h("button", { class: "btn", type: "button", onclick: go("home") }, `Abrir o Panorama de ${team}`, icon("next")),
           h("button", { class: "btn ghost", type: "button", onclick: go("overview") }, "Ver a última partida")),
         h("p", { class: "lp-hint" }, "Troque o time a qualquer momento no seletor ", h("b", null, "Equipe"), " no topo da página."),
         h("dl", { class: "lp-facts" },
@@ -3162,7 +3166,7 @@
     else if (state.section === "HAL") renderHAL(main);
     else renderLens(main, state.section);
     const sec = D.sections.find((x) => x.id === state.section);
-    if (sec && sec.group !== "Início" && sec.group !== "Diagnóstico" && sec.group !== sec.label) main.prepend(h("div", { class: "crumb" }, sec.group, h("span", null, "›"), sec.label));
+    if (sec && !["Início", "Diagnóstico", "Analisar resultados"].includes(sec.group) && sec.group !== sec.label) main.prepend(h("div", { class: "crumb" }, sec.group, h("span", null, "›"), sec.label));
     drawers.forEach((f) => f());
     writeHash();
   }
@@ -3170,7 +3174,7 @@
   window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => drawers.forEach((f) => f()), 120); });
 
   const r = D.run;
-  $("#foot").textContent = `RoundRx · base ${r.data_fingerprint} (${r.n_matches} partidas, ${r.n_rounds} rounds) · config v${r.config_version} (${r.config_fingerprint}) · trade ≤ ${D.cfg.trade_window_s} s · gerado ${r.run_at_utc}`;
+  $("#foot").textContent = `ValoStrat.gg · base ${r.data_fingerprint} (${r.n_matches} partidas, ${r.n_rounds} rounds) · config v${r.config_version} (${r.config_fingerprint}) · trade ≤ ${D.cfg.trade_window_s} s · gerado ${r.run_at_utc}`;
   // altura do cabeçalho fixo -> a barra lateral gruda logo abaixo dele
   const topEl = $("#top");
   const setTopH = () => document.documentElement.style.setProperty("--top-h", (getComputedStyle(topEl).position === "sticky" ? topEl.offsetHeight : 0) + "px");

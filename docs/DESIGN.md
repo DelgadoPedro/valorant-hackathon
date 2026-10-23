@@ -1,4 +1,6 @@
-# RoundRx — design system e arquitetura de informação
+# ValoStrat.gg — design system e arquitetura de informação
+
+**Marca (22/10/2026):** ValoStrat.gg. Símbolo: quadrado arredondado roxo (`--accent` #6D3FC0) com uma jogada de playbook em branco: um X (posição de saída), a rota tracejada e o alvo. Assinatura: símbolo + "ValoStrat" em Archivo 700 (largura 85) + ".gg" em `--accent`. Arquivos em `roundrx/viz/vendor/logo/` (valostrat-mark.svg, valostrat-mark-512.png, valostrat-wordmark-light.png, valostrat-wordmark-dark.png); o SVG também é o favicon do painel. O símbolo é original e não usa elementos da marca VALORANT.
 
 Versão 1 (21/10/2026); paleta revista em 22/10/2026 (verde = melhor, roxo = marca). Vale para o painel offline (`roundrx/viz/`: template.html, app.css, app.js; d3 v7).
 
@@ -21,7 +23,7 @@ O que já funciona e fica: denominadores sempre visíveis, comparação com outr
 ## 2. Arquitetura de informação (progressive disclosure)
 
 ```
-Nível 0  Como usar (abertura): o que é, 3 passos, os 8 fundamentos (nome e ícone) e como ler
+Nível 0  Home (abertura): o que é, 3 passos, os 8 fundamentos (nome e ícone) e como ler
 Nível 1  Panorama do time (home)
          ├─ quem é o time: mapas, vitórias, rounds, período; um cartão por mapa (foto, V–D, saldo, histórico V/D)
          ├─ pontos de atenção: até 4 padrões abaixo do esperado (só quando há)
@@ -37,7 +39,8 @@ Nível 3  Profundidade
 ```
 
 Navegação lateral:
-- **Início:** Panorama e Partida. A Partida abre com a linha de partidas para escolher (mais recente à esquerda, seta "+N")
+- **Barra lateral (22/10/2026):** Home (a tela de abertura: o que é e como usar) no topo; linha; "Analisar resultados"
+  com Panorama e Partida; linha; "Explorar métricas" com as categorias. O painel abre na Home. A Partida abre com a linha de partidas para escolher (mais recente à esquerda, seta "+N")
   e tem três subseções: Visão geral (cabeçalho e o bloco Placar: round a round + placar por jogador com retrato do agente,
   números em células cinza, +/− em verde/vermelho e filtro Todos/Ataque/Defesa), Análise e Rounds para revisar.
 - **As 6 categorias de métricas definidas pelo time.**

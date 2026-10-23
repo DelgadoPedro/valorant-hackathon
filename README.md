@@ -1,4 +1,7 @@
-# RoundRx — pipeline de métricas coletivas (VALORANT / UNIVAVÁ)
+# ValoStrat.gg — pipeline de métricas coletivas (VALORANT / UNIVAVÁ)
+
+> Nome do produto: **ValoStrat.gg** (antes RoundRx). O pacote Python, os comandos (`python -m roundrx …`) e os nomes
+> de arquivo continuam `roundrx`. Logo em `roundrx/viz/vendor/logo/` (marca em SVG e PNG 512 px, assinatura clara e escura).
 
 Este pipeline transforma os JSONs de partidas fornecidos pelo hackathon em **métricas coletivas observáveis**, seguindo o
 dicionário `reference/metrics_dictionary.csv` (180 métricas: as 103 da v1.0, as 60 do complemento v1.1 — composição de
@@ -77,10 +80,10 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
 - **Mapas oficiais**: os mapas do painel usam as imagens oficiais (displayIcon de valorant-api.com, uso autorizado pela
   organização do hackathon) e a transformação oficial de coordenadas, com os nomes oficiais das regiões. Os PNGs e os
   parâmetros ficam em `roundrx/viz/vendor/maps/` e são embutidos no HTML (o painel continua funcionando offline).
-- **Como usar** (tela de abertura, 1º item da barra lateral): o que é o RoundRx, botões para o Panorama do time
+- **Home** (tela de abertura e 1º item da barra lateral, que segue Home · Analisar resultados: Panorama e Partida · Explorar métricas): o que é o RoundRx, botões para o Panorama do time
   e a última partida, a base (partidas, rounds, times, período), os 3 passos de uso, os 8 fundamentos (só nome e
   ícone; cada um abre a seção) e "Como ler" com a régua e os rótulos de verdade do painel.
-- **Panorama**: estado do time (mapas, vitórias, rounds, período); um cartão por mapa com a tela de
+- **Panorama** (o panorama do time): estado do time (mapas, vitórias, rounds, período); um cartão por mapa com a tela de
   carregamento, a campanha (V–D), o saldo, os rounds e o histórico naquele mapa (quadrados V/D, mais recente à esquerda,
   cada um abre a partida); "Pontos de atenção" (padrões abaixo do
   esperado, com denominador e recorrência) e "Pontos fortes", que só aparecem quando há algum padrão naquela direção;
