@@ -20,6 +20,7 @@
   const join = (...parts) => parts.filter(Boolean).join(" ");
 
   function analyzedContext(f, dims) {
+    if (!Object.keys(dims).length && text(f.name)) return text(f.name);
     if (text(f.label)) return text(f.label);
     const values = Object.entries(dims).filter(([, value]) => known(value));
     return values.length ? values.map(([dim, value]) => `${DIM_NAMES[dim] || dim}: ${side(value) || value}`).join(" · ")
@@ -251,10 +252,139 @@
     };
   }
 
+  const percent = (value) => Number.isFinite(value) ? `${Math.round(value * 100)}%` : "—";
+  const reportPlace = (d) => join(sidePhrase(d.side), known(d.map_name) ? `em ${d.map_name}` : "");
+  function reportTitle(key, d) {
+    const place = reportPlace(d), site = known(d.site) ? `no ${d.site}` : "";
+    const titles = {
+      trade: join(d.phase === "pós-plant" ? "Cobertura e trades no pós-plant" : "Cobertura e troca de kills", place),
+      advantage: join("Fechar a vantagem numérica", d.spike === "plantada" ? d.side === "def" ? "no retake" : d.side === "atk" ? "no pós-plant" : "com spike plantada" : "", place),
+      fb_open: join("Preparar o primeiro contato", place), fb_rec: join("Reagir à primeira baixa", place),
+      post: join("Defender o pós-plant", site, known(d.map_name) ? `em ${d.map_name}` : ""),
+      retake: join("Sincronizar o retake", site, known(d.map_name) ? `em ${d.map_name}` : ""),
+      keyrounds: join("Plano coletivo", known(d.round_type) ? `de ${d.round_type}` : "por tipo de compra", place),
+      halfopen: join("Compra e plano", known(d.moment) ? `no ${d.moment}` : "no início do half", place),
+      pressure: join("Decidir juntos nos rounds decisivos", place),
+    };
+    const qualifiers = [
+      known(d.economy) ? d.economy === "pistol" ? "no pistol" : `com ${d.economy}` : "",
+      state(d.state || d.pstate) ? `em ${d.state || d.pstate}` : "",
+      known(d.numbers) && !d.state && !d.pstate ? d.numbers === "igualdade" ? "em igualdade numérica" : d.numbers : "",
+      known(d.when) ? `com início ${d.when}` : "",
+      known(d.pwhen) ? `com plant ${d.pwhen}` : "",
+      known(d.ally_dist) ? `com aliado a ${d.ally_dist}` : "",
+      known(d.allies_near_b) ? `com ${d.allies_near_b === "0" ? "nenhum" : d.allies_near_b === "2+" ? "dois ou mais" : d.allies_near_b} ${d.allies_near_b === "1" ? "aliado" : "aliados"} a até 15 m` : "",
+      known(d.lead) ? d.lead === "empatado" ? "com placar empatado" : `com o time ${d.lead} no placar` : "",
+      known(d.duel_role) ? `com ${d.duel_role.toLowerCase()} no duelo` : "",
+      known(d.half) ? `${d.half === "prorrogação" ? "na" : "no"} ${d.half}` : "",
+      known(d.fb_context) ? `(${d.fb_context})` : "",
+      key === "pressure" && known(d.phase) ? `na fase ${d.phase} do half` : "",
+      key === "trade" && d.phase === "1ª morte do round" ? "na abertura" : "",
+      key === "trade" && d.phase === "pré-plant" ? "antes do plant" : "",
+    ];
+    return join(Object.prototype.hasOwnProperty.call(titles, key) ? titles[key] : "Revisão do plano coletivo", ...qualifiers);
+  }
+
+  function scrimAction(key, d, f) {
+    const alive = state(d.state || d.pstate), place = reportPlace(d), site = known(d.site) ? `no ${d.site}` : "no site dos rounds revisados";
+    const window = Number.isFinite(f.tradeWindow) && f.tradeWindow > 0 ? `em até ${f.tradeWindow} s, a mesma janela do diagnóstico` : "na janela de tempo indicada no diagnóstico";
+    const shortWindow = Number.isFinite(f.tradeWindow) && f.tradeWindow > 0 ? `em até ${f.tradeWindow} s` : "na janela do diagnóstico";
+    const actions = {
+      trade: {
+        text: join(`Recriem os contatos ${d.phase === "pós-plant" ? "após o plant" : "dos rounds revisados"}${place ? ` (${place})` : ""}.`, `Treinem duplas com cobertura do mesmo ângulo e chamada de contato. Invertam as funções após cinco tentativas; registrem se a troca era possível e se aconteceu ${window}.`),
+        short: `Revejam a cobertura das duplas e ensaiem a resposta ${shortWindow}.`,
+      },
+      advantage: {
+        text: join(`Recriem vantagens ${alive ? `em ${alive}` : "com o efetivo dos rounds revisados"}`, d.spike === "plantada" ? "com spike plantada e relógio real." : "na mesma condição de spike da revisão.", "Antes do próximo contato, confirmem a chamada, a cobertura e o objetivo; repitam o cenário mudando apenas a resposta adversária."),
+        short: d.spike === "plantada" && d.side === "def" ? "Revejam os retakes e ensaiem entrada com cobertura e responsável pelo defuse." : "Revejam os contatos após abrir vantagem e ensaiem uma decisão coletiva com cobertura.",
+      },
+      fb_open: {
+        text: join("Preparem duas rotas de abertura", place ? `(${place}).` : "nos mapas da revisão.", "Definam informação ou utilitário antes da exposição, apoio para o primeiro contato e condição de recuo. Alternem a posição adversária para testar a decisão, sem obrigar o duelo."),
+        short: "Revejam o primeiro duelo e ensaiem aberturas com informação e apoio antes da exposição.",
+      },
+      fb_rec: {
+        text: join(`Simulem a primeira baixa em 4v5${place ? ` (${place})` : ""}.`, "Os sobreviventes comunicam informação, espaço perdido e próxima ação antes de buscar um contato com apoio. Alternem a informação disponível e mantenham as mesmas funções."),
+        short: "Revejam a reação à primeira baixa e ensaiem a reorganização antes do próximo contato.",
+      },
+      post: {
+        text: join(`Recriem pós-plants ${site}${alive ? ` em ${alive}` : ""}, com plant e relógio reais.`, "Definam quem observa os acessos, quem inicia o contato e como responder ao defuse. Variem a retomada e confiram se as posições continuam se cobrindo."),
+        short: "Revejam as posições após o plant e ensaiem cobertura e resposta ao defuse.",
+      },
+      retake: {
+        text: join(`Recriem retakes ${site}${alive ? ` em ${alive}` : ""}, com spike plantada e relógio real.`, "Confirmem ponto de encontro, chamada de entrada, ângulos e cobertura do defuse. Alternem as posições dos atacantes e registrem onde a sequência se quebra."),
+        short: "Revejam o tempo de entrada e ensaiem uma retomada conjunta com cobertura do defuse.",
+      },
+      keyrounds: {
+        text: join(`Reproduzam a compra ${known(d.round_type) ? `de ${d.round_type}` : "dos rounds revisados"} dos dois times.`, "Cada jogador confirma seu recurso, função e primeiro objetivo. Ensaiem a execução contra duas respostas adversárias, mantendo a compra para comparar as decisões."),
+        short: "Revejam as compras e ensaiem um plano coletivo compatível com os recursos disponíveis.",
+      },
+      halfopen: {
+        text: join(`Recriem ${known(d.moment) || "os caminhos após vencer e perder o pistol"}.`, "Confiram créditos e armas preservadas antes de combinar compra, primeiro objetivo e ajuste para o round seguinte. Mudem um recurso por tentativa; o placar sozinho não define a compra."),
+        short: "Revejam os recursos entre rounds e ensaiem compra e plano para o próximo passo do half.",
+      },
+      pressure: {
+        text: join("Recriem o contexto de placar, lado e compra dos rounds decisivos.", "Definam uma chamada principal e um gatilho para reavaliar o plano quando surgir informação nova. Alternem a resposta adversária e confiram a confirmação dos envolvidos."),
+        short: "Revejam as decisões coletivas e ensaiem uma chamada principal com ponto de reavaliação.",
+      },
+    };
+    return Object.prototype.hasOwnProperty.call(actions, key) ? actions[key] : actions.keyrounds;
+  }
+
+  function buildReport(f, recipe, analysis, d, evidence) {
+    const raw = analysis?.primary || {};
+    const observed = Number.isFinite(raw.observed) ? raw.observed : f.observed;
+    const expected = Number.isFinite(raw.expected) ? raw.expected : f.expected;
+    const events = Number.isFinite(raw.events) ? raw.events : f.events;
+    const successes = Number.isFinite(raw.successes) ? raw.successes : Number.isFinite(observed) && Number.isFinite(events) ? Math.round(observed * events) : null;
+    const primary = { label: raw.label || text(f.label) || text(f.name) || "Recorte do fundamento", observed, expected, events, successes, league: raw.league };
+    const title = reportTitle(f.key, d), action = scrimAction(f.key, d, f);
+    const delta = Number.isFinite(raw.deltaEvents) ? raw.deltaEvents : Number.isFinite(expected) && Number.isFinite(observed) && Number.isFinite(events) ? (expected - observed) * events : null;
+    const units = f.key === "trade" ? "trades" : "rounds";
+    const results = {
+      trade: `trocou ${successes} de ${events} mortes`, advantage: `converteu ${successes} de ${events} vantagens`,
+      fb_open: `venceu ${successes} de ${events} duelos de abertura`, fb_rec: `venceu ${successes} de ${events} rounds após sofrer o first blood`,
+      post: `venceu ${successes} de ${events} rounds após plantar`, retake: `venceu ${successes} de ${events} retakes`,
+    };
+    const result = Object.prototype.hasOwnProperty.call(results, f.key) ? results[f.key] : `venceu ${successes} de ${events} rounds`;
+    const comparison = Number.isFinite(delta) && Math.abs(delta) >= 0.5 ? ` A diferença equivale a cerca de ${Math.round(Math.abs(delta))} ${units} a ${delta > 0 ? "menos" : "mais"} que a referência nesse recorte.` : "";
+    const narrative = Number.isFinite(observed) && Number.isFinite(expected) && Number.isFinite(events)
+      ? `No recorte “${primary.label}”, o time ${result} (${percent(observed)}). O esperado em situações parecidas é ${percent(expected)}.${comparison}`
+      : "Separem os rounds do recorte para revisão antes de definir o ajuste de treino; ainda não há dados completos para a comparação.";
+    const fmtIndicator = (row) => ({ label: row.label, team: Number.isFinite(row.observed) ? `${percent(row.observed)}${Number.isFinite(row.successes) && Number.isFinite(row.events) ? ` (${row.successes} de ${row.events})` : ""}` : "—", expected: percent(row.expected), league: percent(row.league) });
+    const indicators = (analysis?.indicators?.length ? analysis.indicators : [primary]).map(fmtIndicator);
+    const target = !Number.isFinite(expected) ? "Coletar novas situações comparáveis antes de definir uma meta."
+      : observed < expected ? `Aproximar-se da referência de ${percent(expected)}, validando o processo no VOD.` : `Manter a execução e acompanhar a referência de ${percent(expected)}.`;
+    return {
+      title, summary: `${primary.label}: ${percent(observed)}; esperado ${percent(expected)}. ${action.short}`,
+      evidence: narrative, indicators,
+      context: analysis?.context?.length ? analysis.context.filter((fact) => !/^(Recorte descritivo|O recorte mantém o padrão|Amostra em formação)/.test(fact)) : [analyzedContext(f, d)],
+      rounds: evidence,
+      actions: [
+        { label: "Scrim", text: join(action.text, known(d.economy) ? `Mantenham a economia do recorte: ${d.economy}.` : "") },
+        { label: "VOD", text: recipe.review },
+        { label: "Referências", text: `Busquem VODs profissionais ${known(d.map_name) ? `em ${d.map_name}` : "nos mesmos mapas"}${sidePhrase(d.side) ? `, ${sidePhrase(d.side)}` : ""}, pela página de partidas do VLR.gg. Comparem ${f.key === "trade" ? "a cobertura entre jogadores e o timing da resposta" : f.key === "post" || f.key === "retake" || f.key === "advantage" ? "a sequência dos contatos, o uso do tempo e a condição da spike" : "a preparação do primeiro contato e as chamadas que mudam o plano"}.` },
+      ],
+      measurement: [{ point: title, today: `${percent(observed)}${Number.isFinite(successes) && Number.isFinite(events) ? ` (${successes} de ${events})` : ""}`, target }],
+      caveat: f.confirmed ? "Padrão recorrente no recorte do diagnóstico. A revisão do VOD deve validar a causa e o ajuste." : f.enough === false ? "Amostra em formação: este recorte serve para observação, sem conclusão de fragilidade." : "Recorte exploratório, sem padrão recorrente confirmado. Comecem pela revisão do VOD.",
+    };
+  }
+
+  function plan(model, focuses) {
+    const count = focuses.length, confirmed = focuses.filter((f) => f.confirmed).length;
+    const record = Number.isFinite(model.wins) && Number.isFinite(model.matches) ? ` venceu ${model.wins} de ${model.matches} mapas no período analisado.` : ` tem ${model.matches || 0} mapas no período analisado.`;
+    return {
+      intro: `${model.team || "O time"}${record} Este plano reúne ${count} ${count === 1 ? "foco escolhido" : "focos escolhidos"} para revisão e treino. ${confirmed === count && count > 0 ? "Os focos têm padrão recorrente confirmado; a causa precisa ser validada no VOD." : confirmed ? `${confirmed} ${confirmed === 1 ? "tem padrão recorrente confirmado" : "têm padrões recorrentes confirmados"}; os demais recortes são exploratórios.` : "Nenhum tem padrão recorrente confirmado; comecem pela revisão do VOD."}`,
+      howToRead: "Observado é o resultado do time; esperado é a referência ajustada de outros times em situações parecidas. Liga é a taxa bruta da base no mesmo recorte, incluindo o time analisado. A diferença em rounds ou trades é descritiva, não uma previsão de ganho. Rounds numerados como no jogo (R1 = pistol); — indica referência indisponível.",
+      caveats: ["Somem situações comparáveis de 3 a 4 novos mapas antes de concluir se houve evolução; mostrem sempre o número de casos.", "O alvo de acompanhamento usa o esperado como referência, sem prometer que será atingido no próximo scrim. O treinador ajusta a meta após revisar o VOD.", "Os recortes descritivos ajudam a investigar; resultados e proximidade no snapshot não comprovam posicionamento incorreto, intenção ou comunicação."],
+    };
+  }
+
   function create(focus) {
     const f = focus && typeof focus === "object" ? focus : {};
-    const dims = f.dims && typeof f.dims === "object" && !Array.isArray(f.dims) ? f.dims : {};
-    const evidence = Array.isArray(f.evidence) ? f.evidence.filter((ev) => ev && typeof ev === "object") : [];
+    const analysis = typeof f.analyze === "function" ? f.analyze() : f.analysis;
+    const dims = analysis?.primary?.dims || (f.dims && typeof f.dims === "object" && !Array.isArray(f.dims) ? f.dims : {});
+    const rawEvidence = analysis?.evidence || f.evidence;
+    const evidence = Array.isArray(rawEvidence) ? rawEvidence.filter((ev) => ev && typeof ev === "object") : [];
     const recipes = {
       trade: () => trade(dims, f), advantage: () => advantage(dims), fb_open: () => firstBlood(dims, false),
       fb_rec: () => firstBlood(dims, true), post: () => planted(dims, false), retake: () => planted(dims, true),
@@ -262,8 +392,9 @@
     };
     const recipe = (Object.prototype.hasOwnProperty.call(recipes, f.key) ? recipes[f.key] : () => keyrounds(dims))();
     const economy = known(dims.economy) ? `Reproduzam a condição de economia do recorte: ${dims.economy}; confiram armas e utilitários na revisão.` : "Confiram as compras na revisão e mantenham os recursos iguais entre as séries.";
+    const report = buildReport(f, recipe, analysis, dims, evidence);
     return {
-      title: recipe.title, summary: recipe.summary, minutes: 25,
+      title: recipe.title, summary: report.summary, minutes: 25, report,
       objective: join(recipe.objective, uncertainty(f)), context: analyzedContext(f, dims),
       setup: join(practiceLocation(dims, evidence), recipe.setup, participants(f.key, dims), economy), roles: recipe.roles,
       steps: [
@@ -275,5 +406,5 @@
     };
   }
 
-  window.RoundRxTraining = { create };
+  window.RoundRxTraining = { create, plan };
 })();

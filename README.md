@@ -74,17 +74,21 @@ ou via `python -m roundrx run --data-dir "C:\...\Dados .Json"`). Requer Python �
 
 O botão **Iniciar missão**, no início do Panorama, abre um briefing imersivo de evolução: até três focos do time,
 comparação observado × esperado, acesso às evidências e objetivos selecionáveis para o próximo treino. O cenário
-de Ascent tem movimentos de câmera e paralaxe; é ilustrativo e não representa as posições das partidas analisadas.
+ilustrativo tem movimentos de câmera e paralaxe. Ascent, Haven, Lotus ou Sunset é escolhido pelo hash do nome
+do time e permanece igual entre sessões, independentemente do filtro de partidas. O fundo não representa
+as partidas analisadas; o briefing não exibe minimapa nem nome do cenário.
 Os focos priorizam padrões recorrentes abaixo do esperado. Quando não há padrões confirmados, o briefing sinaliza
 explicitamente que a leitura é exploratória ou que a amostra ainda está em formação. A seleção de objetivos é salva
-apenas no navegador, por time, recorte e versão da base. Os treinos usam o contexto do padrão e trazem preparação,
-funções, etapas cronometradas, repetições e critérios de execução. O plano tem prévia e download em PDF, com rounds
-reais para revisão e espaço para anotações; funciona offline. Setas navegam e Esc fecha; a experiência respeita a
-preferência de movimento reduzido. Interface em `viz/mission.js` e `mission.css`, exercícios em `mission-training.js`
-e documento em `mission-pdf.js`. A janela do exercício de trade acompanha a janela do diagnóstico.
+apenas no navegador, por time, recorte e versão da base. O PDF segue o formato de um plano analítico: resumo do time,
+indicadores Time × Esperado × Liga, contexto, rounds para VOD, ações de Scrim/VOD/Referências e acompanhamento.
+Os números vêm dos eventos elegíveis; recortes adicionais são exploratórios e não alteram os três fundamentos
+selecionados. A coluna de focos mostra apenas um resumo do mesmo plano, sem expansão de execução.
+Prévia e download usam o mesmo PDF e funcionam offline. Setas navegam e Esc fecha; a experiência respeita movimento
+reduzido. Interface em `viz/mission.js` e `mission.css`, recortes em `mission-report.js`, recomendações em
+`mission-training.js` e documento em `mission-pdf.js`. A janela de trade acompanha a do diagnóstico.
 O [design system atômico](docs/MISSION_DESIGN_SYSTEM.md) define os tokens, átomos, moléculas e organismos;
 a box original de métricas é reutilizada em todas as etapas pelo componente `panel()`.
-Os testes de seleção, exercícios e PDF podem ser executados com `node --test tests/mission*.test.cjs`
+Os testes de seleção, recortes, recomendações e PDF podem ser executados com `node --test tests/mission*.test.cjs`
 (sem dependências npm).
 
 `python -m roundrx run` também gera **`outputs/dashboard/roundrx_painel.html`**: um único arquivo que abre no navegador e

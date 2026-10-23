@@ -32,7 +32,8 @@ test('trade changes from first-contact training to post-plant and uses the diagn
   assert.notEqual(opening.title, post.title);
   assert.match(opening.setup, /rota de primeiro contato/);
   assert.match(post.setup, /retake após o plant/);
-  assert.match(post.summary, /7 s, a mesma janela do diagnóstico/);
+  assert.match(post.summary, /7 s/);
+  assert.match(post.report.actions[0].text, /7 s, a mesma janela do diagnóstico/);
   assert.match(post.steps[1].instruction, /7 s/);
   assert.match(post.success, /7 s/);
   assert.match(post.watch, /7 s/);
@@ -198,4 +199,48 @@ test('missing inputs produce usable exploratory instructions and do not mutate s
   const result = create(input);
   assert.equal(JSON.stringify(input), before);
   assert.notEqual(result.evidence, input.evidence);
+});
+
+test('analytical report and popup summary use the same detailed context and real counts', () => {
+  const result = create(focus('advantage', {}, {
+    confirmed: false, noun: 'vantagens', did: 'convertidas', observed: .7, expected: .68,
+    analysis: {
+      primary: { label: 'Vantagem na defesa com spike plantada', dims: { side: 'def', spike: 'plantada', state: '2v1' }, observed: .375, expected: .661, events: 24, successes: 9, league: .561, deltaEvents: 6.864 },
+      indicators: [{ label: 'Vantagem na defesa com spike plantada', observed: .375, expected: .661, events: 24, successes: 9, league: .561 }],
+      context: ['12 das 15 derrotas vieram das duas últimas séries.'],
+      evidence: [{ map: 'Haven', round: 18, opponent: 'Time B', why: '2v1, perdeu o round' }],
+    },
+  }));
+  assert.equal(result.summary, result.report.summary);
+  assert.match(result.summary, /38%; esperado 66%/);
+  assert.match(result.report.title, /no retake/);
+  assert.match(result.report.evidence, /converteu 9 de 24 vantagens/);
+  assert.match(result.report.evidence, /7 rounds a menos/);
+  assert.equal(result.report.indicators[0].team, '38% (9 de 24)');
+  assert.equal(result.report.indicators[0].league, '56%');
+  assert.equal(result.report.rounds[0].round, 18);
+  assert.match(result.report.actions[0].text, /2v1/);
+  assert.match(result.report.actions[1].text, /kill que abriu a vantagem/);
+  assert.match(result.report.caveat, /sem padrão recorrente confirmado/);
+  assert.deepEqual(Array.from(result.report.actions, (a) => a.label), ['Scrim', 'VOD', 'Referências']);
+});
+
+test('trade differences remain trades and missing league is not fabricated', () => {
+  const result = create(focus('trade', { map_name: 'Lotus', side: 'def' }, { events: 56, observed: 6 / 56, expected: .244, tradeWindow: 4 }));
+  assert.match(result.report.evidence, /8 trades a menos/);
+  assert.doesNotMatch(result.report.evidence, /8 rounds/);
+  assert.equal(result.report.indicators[0].league, '—');
+  assert.match(result.report.actions[0].text, /4 s, a mesma janela do diagnóstico/);
+  assert.match(result.report.measurement[0].target, /referência de 24%/);
+  assert.doesNotMatch(result.report.measurement[0].target, /garant|próximo scrim/);
+});
+
+test('plan introduction follows the selected team and explains the analytical reference', () => {
+  const plan = context.window.RoundRxTraining.plan({ team: 'Outro time', wins: 4, matches: 9 }, [focus('trade', {}, { confirmed: false })]);
+  assert.match(plan.intro, /^Outro time venceu 4 de 9 mapas/);
+  assert.match(plan.intro, /Nenhum tem padrão recorrente confirmado/);
+  assert.match(plan.howToRead, /incluindo o time analisado/);
+  assert.match(plan.howToRead, /R1 = pistol/);
+  assert.ok(plan.caveats.some((value) => /3 a 4 novos mapas/.test(value)));
+  assert.doesNotMatch(plan.intro, /caap|Pedro|13 de 18/);
 });

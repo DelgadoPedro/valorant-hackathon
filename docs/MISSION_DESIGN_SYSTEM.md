@@ -34,7 +34,7 @@ tipografia, em vez de criar uma nova box para uma etapa.
 | Botão | `button()`; `.rx-cta`, `.rx-prev`, `.rx-close` | Semântica nativa, foco visível, ação e estado desabilitado. |
 | Número | `.rx-objective-num`, `.rx-gap`, `.rx-gap-unit` | Identificador de objetivo ou medida com unidade. |
 | Tag | `.rx-tag` | Situação do dado, fundamento ou recorte. |
-| Indicador | `.rx-bar-fill`, `.rx-map-marker` | Valor comparado ou posição na rota ilustrativa. |
+| Indicador | `.rx-bar-fill` | Valor comparado ao esperado. |
 | Divisor | `--rx-rule` | Separação discreta, sem criar outra superfície. |
 
 ## 3. Moléculas
@@ -80,11 +80,11 @@ Diferença, denominador e quantidade de partidas acompanham a comparação.
 
 | Organismo | Composição |
 |---|---|
-| Briefing | Título curto + contexto em uma linha + SurfacePanel com minimapa e ObjectiveRows. |
+| Briefing | Título curto + contexto em uma linha + SurfacePanel com condição dos dados e ObjectiveRows. |
 | Evidência | Orientação prática + SurfacePanel com condição, diferença, ComparisonBars e detalhes expansíveis. |
 | Plano | SurfacePanel + PanelHeader + ObjectiveRows selecionáveis + prévia e download em PDF + nota. |
-| Resumo de treino | SurfacePanel compacto + ícone + nome + exercício contextualizado + duração e etapas. |
-| Ficha de treino | Expansão dentro da orientação prática com preparação, funções, etapas e critérios de execução. |
+| Resumo de treino | SurfacePanel compacto + ícone + nome + resumo do diagnóstico e da ação proposta no PDF. |
+| Plano analítico | Introdução, indicadores Time/Esperado/Liga, contexto, rounds para VOD, ações e acompanhamento. |
 | Prévia do PDF | Modal próprio com documento real, abertura em nova aba e download do mesmo arquivo. |
 
 O conteúdo varia; a box e as moléculas permanecem as mesmas.
@@ -98,22 +98,29 @@ do time e do recorte. Nenhuma etapa define um novo estilo de superfície.
 ### Hierarquia e divulgação progressiva
 
 - Cada etapa tem um título de até 72 px no desktop, uma orientação curta e uma ação principal no rodapé.
-- Nas etapas de foco, o título nomeia a habilidade a treinar, em vez de usar um slogan. O exercício sugerido
+- Nas etapas de foco, o título usa o nome convencional do fundamento (Trade kill, Retake, Pós-plant etc.). O exercício sugerido
   aparece em `.rx-training-goal`, com texto maior e traço coral lateral, sem adicionar uma nova box.
-  A mesma habilidade identifica os objetivos no briefing e no plano; a métrica funciona como evidência de apoio.
+  O mesmo nome identifica os objetivos no briefing e no plano; no PDF, o título descreve o recorte específico.
+  O texto curto vem do mesmo objeto analítico que gera o documento. A métrica funciona como evidência de apoio.
 - O cabeçalho mantém marca, time, contador e fechamento. Segmentos pequenos substituem nomes repetidos de etapas;
   cada segmento mantém nome acessível, tooltip e estado atual. Setas e Esc continuam funcionando sem uma legenda fixa.
 - O briefing usa uma linha de contexto, em vez de tags separadas, e informa a condição dos focos uma única vez.
-  O minimapa é decorativo, identificado como cenário ilustrativo na descrição acessível, sem coordenadas.
+  O painel de focos não inclui minimapa nem nome do cenário. O fundo é apenas ilustrativo e é escolhido
+  pelo hash do nome canônico do time entre Ascent, Haven, Lotus e Sunset. A ordem desse catálogo e o hash
+  são fixos para manter o mesmo cenário entre sessões, sem depender de armazenamento no navegador.
 - Evidências e detalhes são ações secundárias. `.rx-secondary` preserva foco visível e usa texto com sublinhado discreto.
 - `.rx-details` usa `details`/`summary` nativos para “Como interpretar”, fechado inicialmente.
   Metodologia e recorrência ficam nessa expansão; condição, valores, denominador e partidas continuam visíveis.
 - Seleção de treino usa marca e `aria-pressed`, sem repetir uma instrução sob cada objetivo.
-- A expansão “Como executar” fica apenas na área do treino. A escolha dos focos, os painéis de métricas,
-  o briefing e a navegação permanecem iguais. A duração se refere à sessão sugerida, não ao briefing.
-- O PDF usa A4 com fundo branco, títulos azul-escuro e detalhes em coral, capa com visão da sessão,
-  fichas com instruções, rounds reais de referência e espaço para anotações. Prévia e download usam
-  o mesmo documento gerado no navegador; uma nova seleção invalida a versão anterior.
+- A coluna dos focos não inclui “Como executar” nem outra expansão de exercício. A escolha dos focos,
+  os painéis de métricas, o briefing e a navegação permanecem iguais.
+- O PDF usa A4 com fundo branco, títulos azul-escuro e detalhes em coral. Segue o plano analítico de referência:
+  apresentação do time e “Como ler”; focos numerados com diagnóstico, tabela Indicador/Time/Esperado/Liga,
+  Contexto, Rounds para o VOD e O que fazer (Scrim, VOD e Referências); ao final, Como medir no próximo scrim.
+  Prévia e download usam o mesmo documento gerado no navegador; uma nova seleção invalida a versão anterior.
+- Recortes adicionais são apresentados como exploração. A liga é a taxa bruta dos eventos da base no mesmo recorte,
+  incluindo o próprio time, e não substitui a referência ajustada. Diferenças de trade são expressas em trades;
+  nos fundamentos de round, em rounds. O esperado orienta o acompanhamento, sem prometer melhora no próximo scrim.
 - Esc fecha primeiro a prévia e devolve o foco à ação que a abriu; outro Esc fecha a missão.
 
 ## 6. Regras de evolução

@@ -498,8 +498,12 @@ def build_html(out: Path, cfg, *, payload: dict | None = None) -> Path:
     # A prepared payload also lets visual-only rebuilds reuse an existing snapshot.
     if payload is None:
         payload = build_payload(out, cfg)
-    scene = HERE / "vendor" / "mission" / "ascent.jpg"
-    payload["MISSIONIMG"] = {"Ascent": base64.b64encode(scene.read_bytes()).decode()} if scene.exists() else {}
+    scene_dir = HERE / "vendor" / "mission"
+    payload["MISSIONIMG"] = {
+        name: base64.b64encode((scene_dir / f"{name.lower()}.jpg").read_bytes()).decode()
+        for name in ("Ascent", "Haven", "Lotus", "Sunset")
+        if (scene_dir / f"{name.lower()}.jpg").is_file()
+    }
     data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     tpl = (HERE / "template.html").read_text(encoding="utf-8")
     font = base64.b64encode((HERE / "vendor" / "fonts" / "archivo-latin-wdth-normal.woff2").read_bytes()).decode()
@@ -513,6 +517,7 @@ def build_html(out: Path, cfg, *, payload: dict | None = None) -> Path:
                .replace("/*__MISSION_CSS__*/", (HERE / "mission.css").read_text(encoding="utf-8"))
                .replace("/*__D3__*/", (HERE / "vendor" / "d3.min.js").read_text(encoding="utf-8"))
                .replace("/*__DATA__*/", "window.RRX=" + data + ";")
+               .replace("/*__MISSION_REPORT_JS__*/", (HERE / "mission-report.js").read_text(encoding="utf-8"))
                .replace("/*__TRAINING_JS__*/", (HERE / "mission-training.js").read_text(encoding="utf-8"))
                .replace("/*__MISSION_PDF_JS__*/", (HERE / "mission-pdf.js").read_text(encoding="utf-8"))
                .replace("/*__MISSION_JS__*/", (HERE / "mission.js").read_text(encoding="utf-8"))

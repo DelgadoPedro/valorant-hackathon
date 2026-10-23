@@ -2461,7 +2461,7 @@
                limit: "O duelo de abertura é registrado pelo abate; quem estava em posição de risco sem morrer, utilitários e informação prévia não aparecem nos dados.",
                mapTitle: "Posições no first blood", tag: "first blood",
                mapNote: "Snapshot do jogo no first blood. A linha liga quem morreu a quem matou." },
-    fb_rec: { title: "First blood", tab: "Depois de sofrer", noun: "rounds", nounSing: "round", unit: "rounds", unitSing: "round", did: "vencidos",
+    fb_rec: { title: "First blood", tab: "Recuperação", noun: "rounds", nounSing: "round", unit: "rounds", unitSing: "round", did: "vencidos",
               q: () => "Depois de sofrer o first blood (4v5), o time ainda vence o round como times parecidos?",
               none: "Rounds depois de sofrer o first blood", expWord: "vencem",
               dims: ["side", "when", "map_name", "economy", "duel_name", "duel_role"], dimNames: { duel_name: "Quem morreu primeiro", duel_role: "Função de quem morreu primeiro", when: "Quando saiu o FB" },
@@ -3158,21 +3158,89 @@
             h("li", null, "Tudo é ", h("b", null, "pista para revisar no VOD"), ", não prova: habilidade, comunicação e intenção não estão nos dados.")))),
       h("div", { class: "lp-end" }, h("button", { class: "btn", type: "button", onclick: go("home") }, "Começar pelo Panorama", icon("next"))));
   }
-  // The immersive briefing uses the same scoped patterns and evidence as the dashboard.
-  // No new performance score is invented for the presentation.
+  // Decode the complete eligible event base only when a Mission report is opened.
+  // The league is the raw loaded-base rate (including the team), distinct from
+  // each event's model expectation. Both use the detector's fixed trade window.
+  const missionReportCache = new Map();
+  function missionReportData(fk) {
+    if (missionReportCache.has(fk)) return missionReportCache.get(fk);
+    const F = Fd(fk), E = F.E, trade = fk === "trade", windowIndex = trade ? F.meta.windows.indexOf(F.meta.window) : -1;
+    const expected = trade ? E["p" + F.meta.window] : E.p;
+    const dimensions = [...new Set([...(FUI[fk].dims || []), ...Object.keys(F.cats || {}), "map_name"])];
+    const records = new Array(E.t.length), league = [];
+    for (let i = 0; i < E.t.length; i++) {
+      const outcome = trade ? windowIndex < 0 || !E.yb ? null : (E.yb[i] >> windowIndex) & 1 : E.y && E.y[i];
+      if ((outcome !== 0 && outcome !== 1) || !expected || expected[i] == null || !Number.isFinite(expected[i])) continue;
+      const context = {};
+      for (const dim of dimensions) {
+        const available = dim === "map_name" || (F.cats && F.cats[dim] && E[dim]) ||
+          ((dim === "victim_name" || dim === "duel_name") && E.v) || (dim === "nearest_ally_name" && E.a);
+        if (!available) continue;
+        const value = dval(fk, dim, i);
+        if (value != null && value !== "" && value !== "nan") context[dim] = value;
+      }
+      if (fk === "post") context.side = "atk";
+      if (fk === "retake") context.side = "def";
+      records[i] = { outcome, expected: expected[i] / 1000, context, m: E.m[i], r: E.r[i], ts: E.ts && E.ts[i] };
+      league.push({ outcome, context });
+    }
+    const data = { records, league };
+    missionReportCache.set(fk, data);
+    return data;
+  }
+  function missionEventWhy(fk, event) {
+    const d = event.context, parts = [];
+    if (d.state || d.pstate) parts.push(d.state || d.pstate);
+    if (d.side) parts.push(d.side === "atk" ? "ataque" : d.side === "def" ? "defesa" : d.side);
+    if (d.spike) parts.push("spike " + d.spike);
+    if (d.site) parts.push("site " + d.site);
+    if (d.phase) parts.push(d.phase);
+    if (Number.isFinite(event.ts)) parts.push("aos " + NF1.format(event.ts) + " s");
+    else if (d.when || d.pwhen) parts.push(d.when || d.pwhen);
+    for (const dim of ["moment", "round_type", "half", "lead", "economy"]) if (d[dim]) parts.push(d[dim]);
+    if (d.numbers && !d.state && !d.pstate) parts.push(d.numbers);
+    if (d.victim_name) parts.push("morte de " + d.victim_name);
+    if (d.duel_name) parts.push("duelo de " + d.duel_name + (d.duel_role ? " (" + d.duel_role + ")" : ""));
+    if (d.nearest_ally_name) parts.push("aliado mais próximo: " + d.nearest_ally_name);
+    if (d.ally_dist) parts.push("distância do aliado: " + d.ally_dist);
+    const result = fk === "trade" ? (event.outcome ? "trocada" : "sem troca") + " em até " + Fd(fk).meta.window + " s"
+      : fk === "fb_open" ? event.outcome ? "venceu a abertura" : "perdeu a abertura"
+        : event.outcome ? "venceu o round" : "perdeu o round";
+    return parts.concat(result + " (esperado " + pct(event.expected) + ")").join(" · ");
+  }
+  // The selected fundamentals and scene stay tied to the existing dashboard.
   function missionBanner(team, ms) {
     if (!window.RoundRxMission || !FU) return null;
-    const candidates = [];
+    const candidates = [], scope = state.dscope, min = FU.meta.criteria;
     for (const fk of FK) {
       const F = Fd(fk), FD = F.FD;
-      for (const i of fdRows(fk, team, state.dscope)) {
+      for (const i of fdRows(fk, team, scope)) {
         if (!(FD.n[i] > 0) || !Number.isFinite(FD.obs[i]) || !Number.isFinite(FD.exp[i])) continue;
         if (!FD.sel[i] && FD.level[i] !== 0) continue;
+        const dims = { ...(FD.dims[i] || {}) }, name = fundName(fk), enough = FD.n[i] >= min.min_events && FD.nm[i] >= min.min_matches;
+        let analysis;
         candidates.push({ id: FD.id[i], key: fk, label: FD.label[i], name: fundName(fk),
           selected: !!FD.sel[i], observed: FD.obs[i], expected: FD.exp[i], gap: FD.gap[i],
           events: FD.n[i], matches: FD.nm[i], recurrence: FD.rec[i], recurrenceMatches: FD.nrec[i],
           noun: FUI[fk].noun, did: FUI[fk].did, scope: FD.scope[i],
           dims: FD.dims[i], tradeWindow: fk === "trade" ? F.meta.window : null,
+          analyze: () => {
+            if (!window.RoundRxReport) return null;
+            if (!analysis) {
+              const data = missionReportData(fk);
+              const events = scopeEvents(fk, team, scope).flatMap((e) => {
+                const event = data.records[e];
+                if (!event) return [];
+                return [{ matchId: M.id[event.m], map: M.map[event.m], date: fmtDate(M.date[event.m]),
+                  opponent: prettyTeam(D.teams[opp(event.m, team)]), round: event.r + 1,
+                  outcome: event.outcome, expected: event.expected, context: event.context, why: missionEventWhy(fk, event) }];
+              });
+              analysis = window.RoundRxReport.analyze({ key: fk, name, label: FD.label[i], dims,
+                confirmed: !!FD.sel[i] && FD.gap[i] < 0 && enough, enough,
+                minEvents: 8, minMatches: 2, events, league: data.league });
+            }
+            return analysis;
+          },
           evidence: (FX[fk].ev.get(i) || []).slice(0, 3).map((e) => {
             const m = F.EV.m[e];
             return { map: M.map[m], round: F.EV.r[e] + 1,
@@ -3182,14 +3250,15 @@
         });
       }
     }
-    const min = FU.meta.criteria;
+    const sceneName = window.RoundRxMission.sceneForTeam(D.teams[team]);
     return window.RoundRxMission.banner({
-      team: prettyTeam(D.teams[team]), scope: state.dscope === "todas" ? "Todas as partidas" : "Últimas 10 partidas",
+      team: prettyTeam(D.teams[team]), scope: scope === "todas" ? "Todas as partidas" : "Últimas 10 partidas",
       matches: ms.length, rounds: ms.reduce((n, m) => n + M.rs[m] + M.bs[m], 0),
-      storageKey: [D.run.data_fingerprint, D.teams[team], state.dscope].join("|"),
+      wins: ms.filter((m) => { const [a, b] = scoreOf(m, team); return a > b; }).length,
+      period: ms.length ? `${fmtDate(M.date[ms[0]])} a ${fmtDate(M.date[ms[ms.length - 1]])}` : "",
+      storageKey: [D.run.data_fingerprint, D.teams[team], scope].join("|"),
       minEvents: min.min_events, minMatches: min.min_matches, candidates,
-      scene: D.MISSIONIMG?.Ascent ? `data:image/jpeg;base64,${D.MISSIONIMG.Ascent}` : null,
-      minimap: D.MAPIMG?.Ascent ? `data:image/png;base64,${D.MAPIMG.Ascent.png}` : null,
+      scene: D.MISSIONIMG?.[sceneName] ? `data:image/jpeg;base64,${D.MISSIONIMG[sceneName]}` : null,
     });
   }
   function renderHome(main) {
