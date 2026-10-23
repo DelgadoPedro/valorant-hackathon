@@ -39,6 +39,12 @@ padrão real, por isso não são exibidas.
 
 Só a camada de diagnóstico (usa `outputs/` já gerado): `python -m roundrx fundamentals`.
 
+- **Logos dos times e artes dos mapas (23/10/2026):** logos em `roundrx/viz/vendor/teams/<time>.png|webp|jpg|svg`
+  (nome do time na base; um arquivo com o prefixo da organização, ex. `azure_bears.png`, vale para todos os times dela; sem
+  arquivo, aparece um selo com as iniciais). Aparecem no cartão do time na Home e nas duas tabelas do Placar da Partida.
+  Artes dos mapas em alta: `roundrx/viz/vendor/mission/<mapa>.jpg` (qualquer mapa; ex. `abyss.jpg`), usadas no cartão
+  "Última partida" e na missão. Depois de trocar arquivos: `python -m roundrx viz`.
+
 ## Como rodar (Windows)
 
 ```bat

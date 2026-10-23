@@ -499,11 +499,12 @@ def build_html(out: Path, cfg, *, payload: dict | None = None) -> Path:
     if payload is None:
         payload = build_payload(out, cfg)
     scene_dir = HERE / "vendor" / "mission"
+    # qualquer <mapa>.jpg em vendor/mission vira arte de fundo (ex.: abyss.jpg -> "Abyss")
     payload["MISSIONIMG"] = {
-        name: base64.b64encode((scene_dir / f"{name.lower()}.jpg").read_bytes()).decode()
-        for name in ("Ascent", "Haven", "Lotus", "Sunset")
-        if (scene_dir / f"{name.lower()}.jpg").is_file()
+        f.stem.capitalize(): base64.b64encode(f.read_bytes()).decode()
+        for f in sorted(scene_dir.glob("*.jpg"))
     }
+    payload["TEAMLOGO"] = _team_logos(payload["teams"], HERE / "vendor" / "teams")
     data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     tpl = (HERE / "template.html").read_text(encoding="utf-8")
     font = base64.b64encode((HERE / "vendor" / "fonts" / "archivo-latin-wdth-normal.woff2").read_bytes()).decode()
@@ -536,3 +537,47 @@ def build_html(out: Path, cfg, *, payload: dict | None = None) -> Path:
     site.mkdir(exist_ok=True)
     (site / "index.html").write_text(html, encoding="utf-8")
     return dest
+
+def _team_logos(teams, logo_dir):
+    """Logo de cada time (data URI ou None), na ordem de `teams`.
+    Arquivo = nome do time na base (ex.: a2e_uff.png). Um arquivo com o prefixo da organização
+    (ex.: azure_bears.png) vale para todos os times que começam com ele (azure_bears_black, ...).
+    PNG/JPG/WebP são reduzidos para 128 px se o Pillow estiver instalado; SVG entra como está."""
+    if not logo_dir.is_dir():
+        return [None] * len(teams)
+    files = {}
+    for f in sorted(logo_dir.iterdir()):
+        if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".svg"):
+            files.setdefault(f.stem.lower(), f)
+    cache = {}
+
+    def encode(f):
+        if f in cache:
+            return cache[f]
+        if f.suffix.lower() == ".svg":
+            uri = "data:image/svg+xml;base64," + base64.b64encode(f.read_bytes()).decode()
+        else:
+            raw, mime = f.read_bytes(), "image/" + ("jpeg" if f.suffix.lower() in (".jpg", ".jpeg") else f.suffix.lower()[1:])
+            try:
+                import io
+                from PIL import Image
+                im = Image.open(f).convert("RGBA")
+                im.thumbnail((128, 128))
+                buf = io.BytesIO()
+                im.save(buf, "WEBP", quality=90)
+                raw, mime = buf.getvalue(), "image/webp"
+            except Exception:
+                pass
+            uri = f"data:{mime};base64," + base64.b64encode(raw).decode()
+        cache[f] = uri
+        return uri
+
+    out = []
+    for t in teams:
+        key = t.lower()
+        f = files.get(key)
+        if f is None:
+            pre = [k for k in files if key.startswith(k + "_")]
+            f = files[max(pre, key=len)] if pre else None
+        out.append(encode(f) if f is not None else None)
+    return out

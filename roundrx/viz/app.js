@@ -334,6 +334,13 @@
   const NF2 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const NF3 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   const prettyTeam = (n) => n.replace(/_/g, " ");
+  // logo do time (vendor/teams via build); sem arquivo, um selo com as iniciais
+  const teamLogo = (ti, size) => {
+    const src = D.TEAMLOGO?.[ti], name = prettyTeam(D.teams[ti] || "");
+    if (src) return h("span", { class: `tlogo ${size || "sm"}` }, h("img", { src, alt: "", loading: "lazy" }));
+    const ini = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    return h("span", { class: `tlogo ph ${size || "sm"}`, "aria-hidden": "true" }, ini);
+  };
   const fmtDate = (s) => s ? s.slice(8, 10) + "/" + s.slice(5, 7) + "/" + s.slice(2, 4) : "";
   const range = (a, b) => { const r = []; for (let i = a; i < b; i++) r.push(i); return r; };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -580,7 +587,7 @@
         seg([["all", "Todos"], ["atk", "Ataque"], ["def", "Defesa"]], state.side, (v) => setPref("side", v), "Lado")),
       withCompare ? h("div", { class: "fgroup" }, h("span", { class: "flbl" }, "Comparar com"),
         check("ck-team", "média do time", state.show.team, (v) => setPref("show", { ...state.show, team: v }), "--teamavg"),
-        check("ck-league", "liga", state.show.league, (v) => setPref("show", { ...state.show, league: v }), "--ref"),
+        check("ck-league", "média da liga", state.show.league, (v) => setPref("show", { ...state.show, league: v }), "--ref"),
         check("ck-map", "só no mapa desta partida", state.sameMap, (v) => setPref("sameMap", v))) : null);
   }
   function renderFilters() { const f = $("#filters"); f.replaceChildren(); f.hidden = true; }
@@ -1619,7 +1626,7 @@
       return h("table", { class: "mt sb" + (us ? " us" : "") },
         h("colgroup", null, h("col", { class: "c-pl" }), h("col", { class: "c-ag" }), COLS.map(([lb], k) => h("col", { class: k === 1 ? "c-kda" : k === 0 || k === 3 ? "c-w" : "c-n" }))),
         h("thead", null, h("tr", null,
-          h("th", { class: "sb-team", colspan: 2 }, h("span", { class: "sb-name" }, prettyTeam(D.teams[tm])), h("span", { class: "sb-score " + (won ? "w" : "l") }, sc)),
+          h("th", { class: "sb-team", colspan: 2 }, teamLogo(tm, "sm"), h("span", { class: "sb-name" }, prettyTeam(D.teams[tm])), h("span", { class: "sb-score " + (won ? "w" : "l") }, sc)),
           COLS.map(([lb, tip]) => h("th", { class: "num", title: tip }, lb)))),
         h("tbody", null, rows.map(([i, x]) => {
           const ag = D.SB.ag[i] != null ? D.agents[D.SB.ag[i]] : null, img = D.SB.ag[i] != null && D.AGIMG ? D.AGIMG[D.SB.ag[i]] : null;
@@ -3202,15 +3209,18 @@
     main.append(
       h("section", { class: "lp-hero" },
         h("div", { class: "lp-copy" },
+          h("div", { class: "lp-brand" },
+            h("span", { class: "lp-brand-mark", "aria-hidden": "true" }, document.querySelector(".brand-mark svg")?.cloneNode(true) || ""),
+            h("span", { class: "lp-brand-name" }, "ValoStrat", h("span", { class: "lp-gg" }, ".gg"))),
           h("p", { class: "lp-kicker" }, "Inteligência coletiva · VALORANT"),
-          h("h1", null, "DO ROUND ", h("span", null, "AO PRÓXIMO "), h("em", null, "TREINO.")),
+          h("h1", null, "REVISE O QUE ", h("span", null, "DECIDE ", h("em", null, "ROUNDS."))),
           h("p", { class: "lp-lead" }, "Entenda o que os dados dizem sobre o seu time. Encontre padrões, reveja os rounds e leve um foco claro para o próximo treino."),
           h("div", { class: "lp-cta" },
             h("button", { class: "btn", type: "button", onclick: go("home") }, "Abrir Panorama", icon("next")),
             h("button", { class: "lnk lp-last-link", type: "button", disabled: last == null, onclick: latest }, "Última partida", icon("next")))),
         h("article", { class: "lp-preview", "aria-labelledby": "lp-preview-team" },
           h("div", { class: "lp-preview-head" }, h("span", { class: "lp-preview-kicker" }, "Seu time em campo"), h("span", null, "Todas as partidas")),
-          h("h2", { class: "lp-preview-team", id: "lp-preview-team" }, team),
+          h("h2", { class: "lp-preview-team", id: "lp-preview-team" }, teamLogo(state.team, "lg"), h("span", null, team)),
           h("dl", { class: "lp-preview-stats" },
             h("div", null, h("dt", null, "Mapas"), h("dd", null, ms.length)),
             h("div", null, h("dt", null, "Vitórias · derrotas"), h("dd", null, `${wins}–${ms.length - wins}`)),
@@ -3253,8 +3263,7 @@
             h("li", null, h("span", { class: "lp-chips" }, statusChip("dentro"), statusChip("abaixo", true), statusChip("muito_acima")),
               "Dentro, acima ou abaixo do esperado pela diferença em pontos percentuais. Rótulo tracejado = sinal fraco ou variado; cheio = sinal forte."),
             h("li", null, h("b", null, "Padrão recorrente"), " é uma diferença que se repete entre partidas, e não um acaso de um mapa só."),
-            h("li", null, h("b", null, "Denominadores visíveis:"), " toda taxa mostra de quantos casos ela vem (\"192 de 1064 mortes\")."),
-            h("li", null, "Tudo é ", h("b", null, "pista para revisar no VOD"), ", não prova: habilidade, comunicação e intenção não estão nos dados.")))),
+            h("li", null, h("b", null, "Denominadores visíveis:"), " toda taxa mostra de quantos casos ela vem (\"192 de 1064 mortes\").")))),
       h("div", { class: "lp-end" }, h("button", { class: "btn", type: "button", onclick: go("home") }, "Começar pelo Panorama", icon("next"))));
   }
   // Decode the complete eligible event base only when a Mission report is opened.

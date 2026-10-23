@@ -33,8 +33,8 @@ e no favicon aplica coral e marfim. PNGs legados do diretório de marca não sã
 
 ### Home
 
-A página inicial continua sendo uma apresentação. A abertura assimétrica combina “DO ROUND AO
-PRÓXIMO TREINO”, uma explicação curta e o acesso ao Panorama com uma prévia real do time selecionado:
+A página inicial continua sendo uma apresentação. A abertura assimétrica traz o logo em destaque
+(marca de 68–104 px com o nome ValoStrat.gg), a frase “REVISE O QUE DECIDE ROUNDS.”, uma explicação curta e o acesso ao Panorama com uma prévia real do time selecionado:
 campanha e última partida. Imagens locais ocupam áreas de identidade, com recortes diagonais.
 A dimensão da base, os quatro passos de revisão, os oito fundamentos e a orientação “Como ler”
 continuam disponíveis abaixo da abertura. O exemplo de leitura é identificado como exemplo.

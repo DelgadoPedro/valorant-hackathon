@@ -488,6 +488,14 @@ table.sb { margin-bottom: 14px; table-layout: fixed; width: auto; border-collaps
 .sb.us th.sb-team { color: var(--accent); }
 .sb th.sb-team { vertical-align: bottom; }
 .sb-name { margin-right: 10px; }
+.tlogo { display: inline-flex; align-items: center; justify-content: center; flex: none; overflow: hidden; vertical-align: middle; border-radius: 8px; }
+.tlogo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tlogo.ph { background: var(--panel-2); border: 1px solid var(--line); color: var(--mut); font: 800 11px/1 var(--f-display); letter-spacing: .02em; }
+.tlogo.sm { width: 32px; height: 32px; margin-right: 8px; }
+.tlogo.lg { width: 56px; height: 56px; border-radius: 12px; }
+.tlogo.lg.ph { font-size: 20px; }
+.lp-preview-team { display: flex; align-items: center; gap: 14px; }
+.lp-hero h1 span em { display: inline; }
 .sb-score { display: inline-block; min-width: 34px; padding: 2px 8px; border-radius: var(--r-block); text-align: center; vertical-align: -2px;
   font: 700 20px/1.1 var(--f-display); font-variation-settings: "wdth" 80; font-variant-numeric: tabular-nums; }
 .sb-score.w { color: var(--good); background: color-mix(in srgb, var(--good) 13%, var(--panel)); }
@@ -760,7 +768,11 @@ body.diag-mode main:has(.lp-hero) { gap: 40px; padding-top: 34px; }
 @keyframes rx-editorial-in { from { transform: translateY(6px); } to { transform: translateY(0); } }
 .lp-kicker { display: flex; gap: 10px; align-items: center; margin: 0; color: var(--mut); font-size: 11px; font-weight: 650; letter-spacing: .15em; text-transform: uppercase; }
 .lp-kicker::before { content: ""; width: 7px; height: 7px; background: var(--accent); }
-.lp-hero h1 { margin: 0; max-width: 100%; font: 900 clamp(58px, 6.4vw, 96px)/.9 var(--f-display); font-variation-settings: "wdth" 73; letter-spacing: -.055em; text-transform: uppercase; text-wrap: balance; }
+.lp-brand { display: flex; align-items: center; gap: clamp(14px, 1.6vw, 22px); }
+.lp-brand-mark { display: inline-flex; width: clamp(68px, 7vw, 104px); height: clamp(68px, 7vw, 104px); flex: none; filter: drop-shadow(0 10px 24px color-mix(in srgb, var(--accent) 28%, transparent)); }
+.lp-brand-mark svg { width: 100%; height: 100%; display: block; }
+.lp-brand-name { font: 800 clamp(40px, 4.6vw, 68px)/1 var(--f-display); letter-spacing: -.04em; font-variation-settings: "wdth" 85; }
+.lp-hero h1 { margin: 0; max-width: 100%; font: 900 clamp(48px, 5.4vw, 84px)/.9 var(--f-display); font-variation-settings: "wdth" 73; letter-spacing: -.055em; text-transform: uppercase; text-wrap: balance; }
 .lp-hero h1 span, .lp-hero h1 em { display: block; }
 .lp-hero h1 em { color: var(--accent); font-style: normal; }
 .lp-lead { margin: 0; max-width: 52ch; font-size: 15px; line-height: 1.7; color: var(--mut); }
