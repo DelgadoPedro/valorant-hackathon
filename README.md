@@ -9,6 +9,9 @@ agentes, abertura de half e pressão/Leverage Index — e 17 complementares pedi
 OPN-13..15, ECO-13, TRD-13, TRD-14, POS-13, POS-14, RET-11, RET-12, KEY-15 e KEY-16). Ele é reprodutível: mesma base + mesmo
 `config.yaml` = mesmas saídas, com impressão digital (hash) das duas em `outputs/run_manifest.json`.
 
+Para uma leitura de apresentação — visão do produto, jornada do usuário, arquitetura, uso de machine learning e passo a passo
+para rodar apenas o site ou reconstruir a análise localmente — veja o [guia de visão geral do projeto](docs/PROJECT_OVERVIEW.md).
+
 **Situação atual:** 165/165 métricas no escopo coletadas, incluindo as 18 de pressão/Leverage Index (76 validadas de forma independente).
 Pressão/Leverage Index (LEV-01..18, classe M) já está implementado com modelo validado por série (ver "Pressão e
 Leverage Index" abaixo). As 15 de classe M restantes (probabilidade de vitória dentro do round e AGT-24) ficam para a etapa de modelos.
