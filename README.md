@@ -4,6 +4,8 @@ O ValoStrat.gg é uma ferramenta de análise para times universitários de VALOR
 
 O produto foi pensado para responder: **o que o time deve revisar no próximo treino para ganhar mais rounds?**
 
+Acesse a ferramenta agora em: [https://valorant-hackathon.vercel.app/](https://valorant-hackathon.vercel.app/)
+
 ## Visão geral
 
 O fluxo do usuário é simples:
