@@ -93,7 +93,7 @@
   align-items: center;
   gap: 9px;
   color: var(--rx-coral);
-  text-transform: uppercase;
+  text-transform: none;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .2em;

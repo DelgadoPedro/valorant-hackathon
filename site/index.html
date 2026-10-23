@@ -944,7 +944,7 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
   align-items: center;
   gap: 9px;
   color: var(--rx-coral);
-  text-transform: uppercase;
+  text-transform: none;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .2em;
@@ -2226,7 +2226,7 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
         text(header, WIDTH - MARGIN - textWidth(header, 8, false), 42, 8, false, COLOR.muted);
       }
       rule(MARGIN, 797, bodyWidth, COLOR.line);
-      text("ROUND RX  /  MISSÃO DE EVOLUÇÃO", MARGIN, 810, 7, true, COLOR.muted);
+      text("ValoStrat.gg  /  MISSÃO DE EVOLUÇÃO", MARGIN, 810, 7, true, COLOR.muted);
       const pageNumber = `${String(index + 1).padStart(2, "0")} / ${String(pages.length).padStart(2, "0")}`;
       text(pageNumber, WIDTH - MARGIN - textWidth(pageNumber, 8, true), 809, 8, true, COLOR.navy);
     });
@@ -2371,7 +2371,7 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
     const title = $el("h2", "rx-launch-title", "O próximo nível ", $el("em", "", "do seu time."));
     const launch = button("rx-launch-button", ["Iniciar missão ", ARROW].join(""), () => open(model, focuses));
     bannerEl.append(art, mark, $el("div", "rx-launch-copy",
-      $el("div", "rx-launch-kicker", "ROUND RX  /  MISSÃO DE EVOLUÇÃO"), title,
+      $el("div", "rx-launch-kicker", "ValoStrat.gg  /  MISSÃO DE EVOLUÇÃO"), title,
       $el("p", "rx-launch-sub", count ? `${count} ${count === 1 ? "foco de atenção" : "focos de atenção"}. Uma nova forma de preparar o próximo treino.` : "Conheça seus indicadores. Escolha o foco do próximo treino.")),
       launch, $el("span", "rx-launch-code", "BRIEFING INTERATIVO  //  ~2 MIN"));
     return bannerEl;
@@ -2539,7 +2539,7 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
         const iframe = $el("iframe", "rx-pdf-frame");
         iframe.title = `Plano de treino de ${model.team} em PDF`; iframe.src = doc.url;
         const viewer = $el("div", "rx-pdf-shell",
-          $el("header", "rx-pdf-header", $el("div", "", $el("p", "rx-eyebrow", "ROUND RX / MISSÃO DE EVOLUÇÃO"), title), close),
+          $el("header", "rx-pdf-header", $el("div", "", $el("p", "rx-eyebrow", "ValoStrat.gg / MISSÃO DE EVOLUÇÃO"), title), close),
           $el("div", "rx-pdf-toolbar", $el("p", "", "Diagnóstico, rounds para VOD e plano de scrim do seu time."), external, download),
           iframe, $el("p", "rx-pdf-hint", "Se a prévia não aparecer neste navegador, abra o PDF em nova aba ou faça o download."));
         preview.append(viewer); document.body.append(preview); pdfDialog = preview;

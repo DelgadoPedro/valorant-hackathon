@@ -296,7 +296,7 @@
         text(header, WIDTH - MARGIN - textWidth(header, 8, false), 42, 8, false, COLOR.muted);
       }
       rule(MARGIN, 797, bodyWidth, COLOR.line);
-      text("ROUND RX  /  MISSÃO DE EVOLUÇÃO", MARGIN, 810, 7, true, COLOR.muted);
+      text("ValoStrat.gg  /  MISSÃO DE EVOLUÇÃO", MARGIN, 810, 7, true, COLOR.muted);
       const pageNumber = `${String(index + 1).padStart(2, "0")} / ${String(pages.length).padStart(2, "0")}`;
       text(pageNumber, WIDTH - MARGIN - textWidth(pageNumber, 8, true), 809, 8, true, COLOR.navy);
     });

@@ -95,7 +95,7 @@
     const title = $el("h2", "rx-launch-title", "O próximo nível ", $el("em", "", "do seu time."));
     const launch = button("rx-launch-button", ["Iniciar missão ", ARROW].join(""), () => open(model, focuses));
     bannerEl.append(art, mark, $el("div", "rx-launch-copy",
-      $el("div", "rx-launch-kicker", "ROUND RX  /  MISSÃO DE EVOLUÇÃO"), title,
+      $el("div", "rx-launch-kicker", "ValoStrat.gg  /  MISSÃO DE EVOLUÇÃO"), title,
       $el("p", "rx-launch-sub", count ? `${count} ${count === 1 ? "foco de atenção" : "focos de atenção"}. Uma nova forma de preparar o próximo treino.` : "Conheça seus indicadores. Escolha o foco do próximo treino.")),
       launch, $el("span", "rx-launch-code", "BRIEFING INTERATIVO  //  ~2 MIN"));
     return bannerEl;
@@ -263,7 +263,7 @@
         const iframe = $el("iframe", "rx-pdf-frame");
         iframe.title = `Plano de treino de ${model.team} em PDF`; iframe.src = doc.url;
         const viewer = $el("div", "rx-pdf-shell",
-          $el("header", "rx-pdf-header", $el("div", "", $el("p", "rx-eyebrow", "ROUND RX / MISSÃO DE EVOLUÇÃO"), title), close),
+          $el("header", "rx-pdf-header", $el("div", "", $el("p", "rx-eyebrow", "ValoStrat.gg / MISSÃO DE EVOLUÇÃO"), title), close),
           $el("div", "rx-pdf-toolbar", $el("p", "", "Diagnóstico, rounds para VOD e plano de scrim do seu time."), external, download),
           iframe, $el("p", "rx-pdf-hint", "Se a prévia não aparecer neste navegador, abra o PDF em nova aba ou faça o download."));
         preview.append(viewer); document.body.append(preview); pdfDialog = preview;
