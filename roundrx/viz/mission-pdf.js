@@ -1,4 +1,4 @@
-/* RoundRx // Portable, local training briefs. No remote fonts or PDF services. */
+/* RoundRx // Analytical training reports. Local fonts, selectable text, no PDF service. */
 (function () {
   "use strict";
 
@@ -42,7 +42,6 @@
   const rgb = (color) => color.map(fmt).join(" ");
   const percent = (value) => Number.isFinite(value) ? `${Math.round(value * 100)}%` : "—";
   const count = (value) => Number.isFinite(value) ? value.toLocaleString("pt-BR") : "—";
-  const minutes = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? Math.round(Number(value)) : 0;
   function textWidth(value, size, bold) {
     return Array.from(clean(value)).reduce((sum, char) => {
       const base = char.normalize("NFD").replace(/[\u0300-\u036f]/g, "").charCodeAt(0);
@@ -77,6 +76,7 @@
     model = model || {};
     focuses = Array.isArray(focuses) ? focuses : [];
     const pages = [], bodyWidth = WIDTH - MARGIN * 2;
+    const documentReport = model.report || {};
     let page, y = 0, currentLabel = "PLANO DE TREINO";
     const rect = (x, top, width, height, fill) => page.ops.push(`${rgb(fill)} rg ${fmt(x)} ${fmt(HEIGHT - top - height)} ${fmt(width)} ${fmt(height)} re f`);
     const rule = (x, top, width, color, weight = 0.6) => page.ops.push(`${rgb(color)} RG ${fmt(weight)} w ${fmt(x)} ${fmt(HEIGHT - top)} m ${fmt(x + width)} ${fmt(HEIGHT - top)} l S`);
@@ -84,23 +84,26 @@
       if (!value) return;
       page.ops.push(`BT /${bold ? "F2" : "F1"} ${fmt(size)} Tf ${rgb(color)} rg 1 0 0 1 ${fmt(x)} ${fmt(HEIGHT - top - size * 0.82)} Tm <${hex(value)}> Tj ET`);
     };
-    const newPage = (cover = false) => {
-      page = { ops: [], label: currentLabel }; pages.push(page);
-      if (!cover) {
+    const newPage = (opening = false) => {
+      page = { ops: [], label: currentLabel, opening }; pages.push(page);
+      if (!opening) {
         rect(MARGIN, 37, 4, 18, COLOR.coral);
         text("ROUND", MARGIN + 12, 39, 12, true, COLOR.navy);
         text("RX", MARGIN + 61, 39, 12, true, COLOR.coral);
-        let header = currentLabel;
-        while (textWidth(header, 8, false) > bodyWidth - 128 && header.length > 8) header = header.slice(0, -4) + "...";
-        text(header, WIDTH - MARGIN - textWidth(header, 8, false), 42, 8, false, COLOR.muted);
         rule(MARGIN, 70, bodyWidth, COLOR.line);
       }
-      y = cover ? 0 : 91;
+      y = opening ? 0 : 91;
     };
     const ensure = (height) => { if (y + height > BOTTOM) newPage(); };
+    const startSection = (height, fresh = false) => {
+      if (fresh || y + height + 35 > BOTTOM) { newPage(); return; }
+      // Continue the report on a partially used page instead of leaving a short action page empty.
+      page.label = "PLANO DE TREINO";
+      y += 14; rule(MARGIN, y, bodyWidth, COLOR.line); y += 21;
+    };
     const paragraph = (value, options = {}) => {
       const size = options.size || 10.2, leading = options.leading || 14.5;
-      const x = options.x || MARGIN, width = options.width || bodyWidth;
+      const x = options.x == null ? MARGIN : options.x, width = options.width || bodyWidth;
       const lines = wrap(value, width, size, !!options.bold);
       for (const line of lines) {
         ensure(leading);
@@ -108,141 +111,190 @@
       }
       y += options.after == null ? 9 : options.after;
     };
-    const section = (label, value) => {
-      if (!content(value).trim()) return;
-      ensure(48);
-      text(label.toLocaleUpperCase("pt-BR"), MARGIN, y, 8.2, true, COLOR.muted); y += 17;
-      paragraph(value);
+    const sectionTitle = (label, requiredSpace = 70) => {
+      ensure(requiredSpace);
+      text(label, MARGIN, y, 11, true, COLOR.navy); y += 20;
     };
-    const labelFor = (focus) => content(focus.name || focus.label || focus.training?.title || focus.key || "Fundamento");
-    const totalMinutes = focuses.reduce((sum, focus) => sum + minutes(focus.training?.minutes), 0);
-
-    // Cover: a quiet, printable editorial layout with all priorities visible at a glance.
-    newPage(true);
-    const team = content(model.team || "Sua equipe");
-    let teamSize = 22, fullTeamLines = wrap(team, bodyWidth, teamSize, true);
-    while (fullTeamLines.length > 4 && teamSize > 15) { teamSize--; fullTeamLines = wrap(team, bodyWidth, teamSize, true); }
-    const truncatedTeam = fullTeamLines.length > 4;
-    const teamLines = fullTeamLines.slice(0, 4);
-    if (truncatedTeam) teamLines[3] = teamLines[3].slice(0, -3) + "...";
-    const teamLeading = teamSize + 5;
-    const coverBottom = 278 + Math.max(0, teamLines.length - 1) * teamLeading;
-    rect(0, 0, WIDTH, coverBottom, COLOR.navy);
-    rect(0, 0, 9, coverBottom, COLOR.coral);
-    text("ROUND", MARGIN, 39, 14, true, COLOR.white);
-    text("RX", MARGIN + 58, 39, 14, true, COLOR.coral);
-    text("MISSÃO DE EVOLUÇÃO", MARGIN, 83, 9, true, COLOR.soft);
-    text("O próximo treino", MARGIN, 109, 34, true, COLOR.white);
-    text("começa aqui.", MARGIN, 150, 34, true, COLOR.coral);
-    text("PREPARADO PARA", MARGIN, 211, 8, true, COLOR.soft);
-    teamLines.forEach((line, i) => text(line, MARGIN, 229 + i * teamLeading, teamSize, true, COLOR.white));
-    y = coverBottom + 24;
-    const scopeLines = wrap(model.scope || "Partidas analisadas", bodyWidth, 10, false);
-    for (const line of scopeLines) { text(line, MARGIN, y, 10, false, COLOR.muted); y += 14; }
-    y += 12;
-    if (truncatedTeam) section("Equipe", team);
-    ensure(76);
-    const metrics = [
-      { value: String(focuses.length).padStart(2, "0"), label: focuses.length === 1 ? "FOCO DE TREINO" : "FOCOS DE TREINO" },
-      { value: totalMinutes ? `${totalMinutes} min` : "—", label: "SESSÃO SUGERIDA" },
-      { value: count(model.matches), label: "PARTIDAS ANALISADAS" },
-      { value: count(model.rounds), label: "ROUNDS NO RECORTE" },
-    ];
-    const metricWidth = bodyWidth / 4;
-    metrics.forEach((metric, i) => {
-      const x = MARGIN + metricWidth * i;
-      rect(x, y, metricWidth - 5, 61, COLOR.pale);
-      text(metric.value, x + 10, y + 11, 19, true, COLOR.navy);
-      text(metric.label, x + 10, y + 40, 6.8, true, COLOR.muted);
-    });
-    y += 86;
-    text("A ROTA DA SESSÃO", MARGIN, y, 9, true, COLOR.muted); y += 24;
-    focuses.forEach((focus, index) => {
-      const training = focus.training || {};
-      const lines = wrap(training.title || labelFor(focus), bodyWidth - 93, 12, true);
-      const height = Math.max(62, lines.length * 16 + 27);
-      ensure(Math.min(height, 65));
-      text(String(index + 1).padStart(2, "0"), MARGIN, y, 19, true, COLOR.coral);
-      const duration = minutes(training.minutes);
-      const durationLabel = duration ? `${duration} min` : "";
-      text(durationLabel, WIDTH - MARGIN - textWidth(durationLabel, 10, true), y + 2, 10, true, COLOR.muted);
-      paragraph(training.title || labelFor(focus), { x: MARGIN + 38, width: bodyWidth - 93, size: 12, leading: 16, bold: true, color: COLOR.navy, after: 5 });
-      const state = focus.confirmed ? "Prioridade recorrente" : focus.enough === false ? "Amostra limitada · exploração" : "Exploração";
-      paragraph(`${state}  /  ${count(focus.events)} eventos analisados`, { x: MARGIN + 38, width: bodyWidth - 38, size: 8.6, leading: 12, color: COLOR.muted, after: 13 });
-      ensure(14); rule(MARGIN, y, bodyWidth, COLOR.line); y += 13;
-    });
-    y += 7;
-    paragraph("Revisem as evidências, executem os exercícios e anotem o ajuste combinado. Os indicadores apontam o que investigar; a causa deve ser confirmada no VOD.", { size: 10, color: COLOR.muted, after: 0 });
-
-    focuses.forEach((focus, index) => {
-      const training = focus.training || {};
-      currentLabel = `TREINO ${String(index + 1).padStart(2, "0")} / ${String(focuses.length).padStart(2, "0")}  ·  ${labelFor(focus).toLocaleUpperCase("pt-BR")}`;
-      newPage();
-      text(`FICHA ${String(index + 1).padStart(2, "0")}  /  ${minutes(training.minutes) || "—"} MINUTOS`, MARGIN, y, 8.5, true, COLOR.coral); y += 21;
-      paragraph(training.title || labelFor(focus), { size: 25, leading: 29, bold: true, color: COLOR.navy, after: 11 });
-      if (training.summary) paragraph(training.summary, { size: 10.5, leading: 15, color: COLOR.muted, after: 16 });
-      ensure(66);
-      const metricTop = y;
-      rect(MARGIN, metricTop, bodyWidth, 51, COLOR.pale);
-      [
-        { title: "OBSERVADO", value: percent(focus.observed) },
-        { title: "REFERÊNCIA", value: percent(focus.expected) },
-        { title: "EVENTOS", value: count(focus.events) },
-        { title: "PARTIDAS", value: count(focus.matches) },
-      ].forEach((metric, i) => {
-        const x = MARGIN + 12 + i * metricWidth;
-        text(metric.title, x, metricTop + 9, 6.9, true, COLOR.muted);
-        text(metric.value, x, metricTop + 25, 15, true, i === 0 ? COLOR.coral : COLOR.navy);
+    const bullets = (items) => {
+      for (const item of items || []) {
+        if (!content(item).trim()) continue;
+        ensure(30);
+        text("•", MARGIN + 1, y + 1, 10, true, COLOR.coral);
+        paragraph(item, { x: MARGIN + 14, width: bodyWidth - 14, after: 7 });
+      }
+    };
+    // Tables use measured rows and repeat their heading when a row continues on another page.
+    const table = (headers, rows, proportions) => {
+      if (!rows.length) return;
+      const widths = proportions.map((part) => part * bodyWidth), padding = 9;
+      const size = 9.1, leading = 12.5;
+      const headerLines = headers.map((cell, i) => wrap(cell, widths[i] - padding * 2, 8, true));
+      const headerHeight = Math.max(...headerLines.map((lines) => lines.length)) * 11 + 16;
+      const drawHeader = () => {
+        rect(MARGIN, y, bodyWidth, headerHeight, COLOR.navy);
+        let x = MARGIN;
+        headerLines.forEach((lines, column) => {
+          lines.forEach((line, index) => text(line, x + padding, y + 8 + index * 11, 8, true, COLOR.white));
+          x += widths[column];
+        });
+        y += headerHeight;
+      };
+      ensure(headerHeight + leading + 17); drawHeader();
+      rows.forEach((row, rowIndex) => {
+        const cells = headers.map((_, column) => wrap(content(row[column] == null || row[column] === "" ? "—" : row[column]), widths[column] - padding * 2, size, column === 0));
+        const lineCount = Math.max(...cells.map((lines) => lines.length));
+        let start = 0;
+        while (start < lineCount) {
+          const remainingHeight = (lineCount - start) * leading + 17;
+          // Keep ordinary rows together; split a row only when it exceeds a fresh page.
+          if (y + remainingHeight > BOTTOM && remainingHeight <= BOTTOM - 91 - headerHeight) {
+            newPage(); drawHeader();
+          }
+          let capacity = Math.floor((BOTTOM - y - 17) / leading);
+          if (capacity < 1) { newPage(); drawHeader(); capacity = Math.floor((BOTTOM - y - 17) / leading); }
+          const length = Math.min(lineCount - start, capacity), height = length * leading + 17;
+          rect(MARGIN, y, bodyWidth, height, rowIndex % 2 ? COLOR.white : COLOR.pale);
+          let x = MARGIN;
+          cells.forEach((lines, column) => {
+            lines.slice(start, start + length).forEach((line, index) => text(line, x + padding, y + 8 + index * leading, size, column === 0, column === 1 ? COLOR.coral : COLOR.ink));
+            x += widths[column];
+          });
+          y += height; rule(MARGIN, y, bodyWidth, COLOR.line, 0.4); start += length;
+          if (start < lineCount) { newPage(); drawHeader(); }
+        }
       });
-      y += 59;
-      const status = focus.confirmed ? "Sinal recorrente · confirme a causa no VOD."
-        : focus.enough === false ? "Amostra limitada · treino exploratório, sem conclusão de fragilidade."
-        : "Exploração · valide uma hipótese de melhoria no VOD.";
-      paragraph(status, { size: 8.6, leading: 12, color: COLOR.muted, after: 14 });
-      section("Objetivo", training.objective);
-      section("Contexto do exercício", training.context);
-      section("Preparação", training.setup);
-      section("Papéis do time", training.roles);
-      if (Array.isArray(training.steps) && training.steps.length) {
-        ensure(50);
-        text("ROTEIRO DA PRÁTICA", MARGIN, y, 8.2, true, COLOR.muted); y += 22;
-        training.steps.forEach((step, stepIndex) => {
-          const title = content(step.title || `Etapa ${stepIndex + 1}`);
-          const duration = minutes(step.minutes);
-          ensure(46);
-          rect(MARGIN, y - 3, 23, 23, COLOR.blush);
-          text(String(stepIndex + 1).padStart(2, "0"), MARGIN + 5, y + 3, 9, true, COLOR.coral);
-          if (duration) text(`${duration} min`, WIDTH - MARGIN - 37, y + 1, 9, true, COLOR.muted);
-          paragraph(title, { x: MARGIN + 34, width: bodyWidth - 92, size: 11, leading: 15, bold: true, color: COLOR.navy, after: 5 });
-          paragraph(step.instruction, { x: MARGIN + 34, width: bodyWidth - 34, size: 10.1, leading: 14.2, after: 12 });
+      y += 18;
+    };
+    const labelFor = (focus) => content(focus.name || focus.label || focus.key || "Fundamento");
+    const reportFor = (focus) => {
+      const training = focus.training || {};
+      if (training.report) return training.report;
+      // Compatibility for saved plans from before the analytical report format.
+      return {
+        title: training.title || labelFor(focus),
+        evidence: `${labelFor(focus)}: observado ${percent(focus.observed)}; esperado ${percent(focus.expected)}.`,
+        indicators: [{ label: labelFor(focus), team: percent(focus.observed), expected: percent(focus.expected), league: "—" }],
+        context: [training.context, focus.enough === false ? "Amostra limitada: sem conclusão de fragilidade." : focus.confirmed ? "Sinal recorrente; confirme a causa no VOD." : "Exploração: ainda não há fragilidade recorrente confirmada."].filter(Boolean),
+        rounds: training.evidence || [],
+        actions: [{ label: "Scrim", text: training.practice || training.objective }, { label: "VOD", text: training.review }].filter((item) => item.text),
+        measurement: [{ point: labelFor(focus), today: percent(focus.observed), target: training.watch || "Comparar o mesmo recorte após a revisão do VOD." }],
+      };
+    };
+    const reports = focuses.map(reportFor);
+
+    newPage(true);
+    rect(0, 0, WIDTH, 133, COLOR.navy);
+    rect(0, 0, 7, 133, COLOR.coral);
+    text("ROUND", MARGIN, 31, 12, true, COLOR.white);
+    text("RX", MARGIN + 50, 31, 12, true, COLOR.coral);
+    text("MISSÃO DE EVOLUÇÃO", WIDTH - MARGIN - textWidth("MISSÃO DE EVOLUÇÃO", 8, true), 34, 8, true, COLOR.soft);
+    text("Plano de treino", MARGIN, 68, 30, true, COLOR.white);
+    text(`${String(focuses.length).padStart(2, "0")} ${focuses.length === 1 ? "foco selecionado" : "focos selecionados"}  /  diagnóstico, revisão e prática`, MARGIN, 110, 9, false, COLOR.soft);
+    y = 157;
+    paragraph(model.team || "Sua equipe", { size: 23, leading: 28, bold: true, color: COLOR.navy, after: 8 });
+    const meta = [model.scope, model.period, documentReport.date || model.date].filter(Boolean).join("  ·  ");
+    if (meta) paragraph(meta, { size: 9, leading: 13, color: COLOR.muted, after: 10 });
+    const sample = [Number.isFinite(model.matches) ? `${count(model.matches)} partidas analisadas` : "", Number.isFinite(model.rounds) ? `${count(model.rounds)} rounds no recorte` : ""].filter(Boolean).join("  ·  ");
+    if (sample) paragraph(sample, { size: 8.6, leading: 13, color: COLOR.muted, after: 19 });
+    const intro = documentReport.intro || (focuses.length ? `Os ${focuses.length} focos selecionados abaixo conectam os resultados observados a uma revisão do VOD e a um ajuste para o próximo scrim. Os indicadores orientam a investigação; a causa precisa ser confirmada nas imagens.` : "Selecione os focos da missão para compor o plano de treino.");
+    paragraph(intro, { size: 11, leading: 16, after: 18 });
+    const howToRead = documentReport.howToRead || "Observado = o que o time fez; esperado = a referência de outros times em situações parecidas. Liga = o resultado geral da liga, quando disponível. A diferença indica o que revisar, sem comprovar uma causa. Rounds numerados como no jogo (R1 = pistol).";
+    const readLines = wrap(howToRead, bodyWidth - 26, 9.6, false);
+    const readHeight = 44 + readLines.length * 14;
+    if (readHeight < BOTTOM - 91) {
+      ensure(readHeight + 16);
+      rect(MARGIN, y, bodyWidth, readHeight, COLOR.pale);
+      rect(MARGIN, y, 3, readHeight, COLOR.coral);
+      text("Como ler", MARGIN + 13, y + 12, 10, true, COLOR.navy); y += 32;
+      paragraph(howToRead, { x: MARGIN + 13, width: bodyWidth - 26, size: 9.6, leading: 14, color: COLOR.muted, after: 28 });
+    } else {
+      sectionTitle("Como ler", 51);
+      paragraph(howToRead, { size: 9.6, leading: 14, color: COLOR.muted, after: 17 });
+    }
+    if (reports.length) {
+      sectionTitle("Os focos do plano", 70);
+      reports.forEach((report, index) => {
+        ensure(36);
+        paragraph(`${index + 1}. ${report.title || labelFor(focuses[index])}`, { size: 11, leading: 15, bold: true, after: 10 });
+      });
+    }
+
+    reports.forEach((report, index) => {
+      const focus = focuses[index];
+      currentLabel = `FOCO ${String(index + 1).padStart(2, "0")}  /  ${labelFor(focus).toLocaleUpperCase("pt-BR")}`;
+      const title = `${index + 1}. ${report.title || labelFor(focus)}`;
+      const startHeight = 21 + wrap(title, bodyWidth, 23, true).length * 28 + 13
+        + (report.evidence ? Math.min(4, wrap(report.evidence, bodyWidth, 10.8, false).length) * 15.6 + 13 : 0)
+        + (report.caveat ? Math.min(3, wrap(report.caveat, bodyWidth, 9, false).length) * 13 + 16 : 0) + 57;
+      startSection(Math.max(225, startHeight), index === 0);
+      text(`FOCO ${String(index + 1).padStart(2, "0")} / ${String(focuses.length).padStart(2, "0")}`, MARGIN, y, 8.5, true, COLOR.coral); y += 21;
+      paragraph(title, { size: 23, leading: 28, bold: true, color: COLOR.navy, after: 13 });
+      if (report.evidence) paragraph(report.evidence, { size: 10.8, leading: 15.6, after: 13 });
+      if (report.caveat) paragraph(report.caveat, { size: 9, leading: 13, color: COLOR.muted, after: 16 });
+      const indicators = Array.isArray(report.indicators) ? report.indicators : [];
+      table([report.indicatorLabel || "Indicador", "Time", "Esperado", "Liga"], indicators.map((row) => [row.label, row.team, row.expected, row.league]), [0.43, 0.21, 0.18, 0.18]);
+      const context = Array.isArray(report.context) ? report.context.filter(Boolean) : report.context ? [report.context] : [];
+      if (context.length) { sectionTitle("Contexto"); bullets(context); y += 6; }
+      const rounds = Array.isArray(report.rounds) ? report.rounds : [];
+      sectionTitle("Rounds para o VOD");
+      if (rounds.length) {
+        const evidenceLines = rounds.map((event) => {
+          if (typeof event === "string") return event;
+          const round = Number.isInteger(Number(event.round)) && Number(event.round) > 0 ? `R${event.round}` : "round a conferir";
+          const meta = [event.map, round, event.opponent ? `vs ${event.opponent}` : "", event.date ? `(${event.date})` : ""].filter(Boolean).join(" ");
+          return event.why ? `${meta}: ${event.why}` : meta;
+        });
+        bullets(evidenceLines);
+      } else {
+        paragraph("Abra Explorar evidências e selecione rounds do mesmo recorte para a revisão. Sem referência disponível, confirme o cenário antes de definir a correção.", { size: 9.6, leading: 14, color: COLOR.muted, after: 12 });
+      }
+      y += 5;
+      const actions = Array.isArray(report.actions) ? report.actions : [];
+      if (actions.length) {
+        sectionTitle("O que fazer");
+        actions.forEach((action) => {
+          if (typeof action === "string") { bullets([action]); return; }
+          if (!action.text) return;
+          const actionLabel = `${action.label || "Ajuste"}:`;
+          const labelHeight = wrap(actionLabel, bodyWidth - 14, 10, true).length * 14 + 3;
+          const firstLines = Math.min(2, wrap(action.text, bodyWidth - 14, 10.1, false).length);
+          ensure(labelHeight + firstLines * 14.5);
+          text("•", MARGIN + 1, y + 1, 10, true, COLOR.coral);
+          paragraph(actionLabel, { x: MARGIN + 14, width: bodyWidth - 14, size: 10, leading: 14, bold: true, after: 3 });
+          paragraph(action.text, { x: MARGIN + 14, width: bodyWidth - 14, size: 10.1, leading: 14.5, after: 11 });
         });
       }
-      section("Repetições", training.repetitions);
-      section("Critério de execução", training.success);
-      section("Progressão", training.progression);
-      section("Acompanhar no próximo scrim", training.watch);
-      const evidence = Array.isArray(training.evidence) ? training.evidence : [];
-      if (evidence.length) {
-        ensure(54);
-        text("ROUNDS PARA A REVISÃO", MARGIN, y, 8.2, true, COLOR.muted); y += 20;
-        evidence.forEach((event) => {
-          const round = Number.isFinite(Number(event.round)) && Number(event.round) > 0 ? `Round ${event.round}` : "Round a conferir";
-          const meta = [event.map || "Mapa a conferir", round, event.opponent ? `vs ${event.opponent}` : "", event.date || ""].filter(Boolean).join("  /  ");
-          ensure(44);
-          rect(MARGIN, y, 3, 15, COLOR.coral);
-          paragraph(meta, { x: MARGIN + 13, width: bodyWidth - 13, size: 9, leading: 13, bold: true, after: 4 });
-          if (event.why) paragraph(event.why, { x: MARGIN + 13, width: bodyWidth - 13, size: 9.5, leading: 13.5, color: COLOR.muted, after: 12 });
-        });
-      }
-      ensure(92);
-      text("REGISTRO DA EQUIPE", MARGIN, y, 8.2, true, COLOR.muted); y += 19;
-      text("O que funcionou? Qual ajuste levaremos para o próximo jogo?", MARGIN, y, 9, false, COLOR.muted); y += 26;
-      rule(MARGIN, y, bodyWidth, COLOR.line); y += 23;
-      rule(MARGIN, y, bodyWidth, COLOR.line);
     });
+
+    if (reports.length) {
+      currentLabel = "ACOMPANHAMENTO";
+      const introduction = "Registrem o mesmo indicador e o mesmo contexto do diagnóstico. Os alvos abaixo orientam o acompanhamento; confirmem a mudança no VOD e em uma nova amostra de partidas.";
+      const rows = reports.flatMap((report, index) => {
+        const measurement = Array.isArray(report.measurement) ? report.measurement : [];
+        return measurement.map((row) => [row.point || report.title || labelFor(focuses[index]), row.today, row.target]);
+      });
+      const caveats = Array.isArray(documentReport.caveats) ? documentReport.caveats.slice() : documentReport.caveats ? [documentReport.caveats] : ["Com poucos rounds por scrim, olhem a soma de 3 a 4 mapas antes de concluir algo. Comparem situações equivalentes e anotem o que a revisão confirmou antes de mudar o foco."];
+      reports.forEach((report) => { if (report.caveat) caveats.push(report.caveat); });
+      const uniqueCaveats = [...new Set(caveats.filter(Boolean))];
+      const rowHeight = rows.reduce((sum, row) => sum + Math.max(...row.map((cell, index) => wrap(cell || "—", [0.35, 0.18, 0.47][index] * bodyWidth - 18, 9.1, index === 0).length)) * 12.5 + 17, 0);
+      const closingHeight = 22 + 30 + 15 + wrap(introduction, bodyWidth, 10.5, false).length * 15 + 18
+        + (rows.length ? 27 + rowHeight + 18 : 0)
+        + uniqueCaveats.reduce((sum, value) => sum + wrap(value, bodyWidth, 9.7, false).length * 14 + 12, 0);
+      startSection(closingHeight <= BOTTOM - 91 ? closingHeight : 240);
+      text("PRÓXIMA SESSÃO", MARGIN, y, 8.5, true, COLOR.coral); y += 22;
+      paragraph("Como medir no próximo scrim", { size: 25, leading: 30, bold: true, color: COLOR.navy, after: 15 });
+      paragraph(introduction, { size: 10.5, leading: 15, after: 18 });
+      table(["Ponto", "Hoje", "Alvo de acompanhamento"], rows, [0.35, 0.18, 0.47]);
+      uniqueCaveats.forEach((value) => paragraph(value, { size: 9.7, leading: 14, color: COLOR.muted, after: 12 }));
+    }
 
     pages.forEach((item, index) => {
       page = item;
+      if (!item.opening) {
+        let header = item.label;
+        while (textWidth(header, 8, false) > bodyWidth - 128 && header.length > 8) header = header.slice(0, -4) + "...";
+        text(header, WIDTH - MARGIN - textWidth(header, 8, false), 42, 8, false, COLOR.muted);
+      }
       rule(MARGIN, 797, bodyWidth, COLOR.line);
       text("ROUND RX  /  MISSÃO DE EVOLUÇÃO", MARGIN, 810, 7, true, COLOR.muted);
       const pageNumber = `${String(index + 1).padStart(2, "0")} / ${String(pages.length).padStart(2, "0")}`;
@@ -277,7 +329,7 @@
     });
     objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R /PageLayout /SinglePage /ViewerPreferences << /DisplayDocTitle true >> >>`;
     objects[pagesId - 1] = `<< /Type /Pages /Count ${pageIds.length} /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] >>`;
-    const infoId = add(`<< /Title <${unicodeHex(`Missão de evolução - ${team || "RoundRx"}`)}> /Creator (RoundRx) /Producer (RoundRx Mission PDF) >>`);
+    const infoId = add(`<< /Title <${unicodeHex(`Plano de treino · ${team || "RoundRx"}`)}> /Creator (RoundRx) /Producer (RoundRx Mission PDF) >>`);
     let result = "%PDF-1.4\n%RoundRx\n";
     const offsets = [0];
     objects.forEach((object, index) => { offsets.push(result.length); result += `${index + 1} 0 obj\n${object}\nendobj\n`; });

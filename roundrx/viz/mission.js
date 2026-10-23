@@ -20,45 +20,55 @@
   const number = (value) => new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value);
   const pad = (n) => String(n).padStart(2, "0");
   const ARROW = "↗";
+  // Keep this order stable: a team's backdrop depends only on its canonical name.
+  const SCENES = Object.freeze(["Ascent", "Haven", "Lotus", "Sunset"]);
+  function sceneForTeam(teamName) {
+    const seed = String(teamName ?? "").normalize("NFC").trim().toLowerCase();
+    let hash = 2166136261;
+    for (let i = 0; i < seed.length; i++) {
+      hash = Math.imul(hash ^ seed.charCodeAt(i), 16777619) >>> 0;
+    }
+    return SCENES[hash % SCENES.length];
+  }
   const COPY = {
-    trade: { title: ["Trocar kills", "em dupla."], action: "Aproximar. Cobrir. Trocar.",
+    trade: { title: ["Trade", "kill"], action: "Aproximar. Cobrir. Trocar.",
       description: "A próxima jogada começa antes da primeira queda. Revejam como a dupla se posiciona para responder ao contato.",
       check: "Revisar distância, linha de visão e timing das duplas.",
       watch: "Acompanhar mortes trocadas no mesmo contexto e na mesma janela de tempo." },
-    advantage: { title: ["Preservar a", "vantagem numérica."], action: "Transformem vantagem em round.",
+    advantage: { title: ["Preservação", "de vantagem"], action: "Transformem vantagem em round.",
       description: "Ter um jogador a mais muda o round. O próximo passo é entender o que acontece entre abrir a vantagem e fechar a vitória.",
       check: "Revisar os contatos que aconteceram depois de abrir vantagem.",
       watch: "Acompanhar a conversão das vantagens em situações semelhantes." },
-    fb_open: { title: ["Preparar o", "primeiro contato."], action: "Preparem a abertura juntos.",
+    fb_open: { title: ["First blood:", "abertura"], action: "Preparem a abertura juntos.",
       description: "Uma abertura pode começar muito antes do duelo. Investiguem o apoio e a preparação de quem disputa o primeiro contato.",
       check: "Revisar apoio, informação e possibilidade de troca na abertura.",
       watch: "Acompanhar first blood a favor nos mesmos mapas, lados e compras." },
-    fb_rec: { title: ["Reagir à", "primeira baixa."], action: "Reorganizem antes de responder.",
+    fb_rec: { title: ["First blood:", "recuperação"], action: "Reorganizem antes de responder.",
       description: "Sofrer a primeira baixa não encerra o round. Revejam como o time se reorganiza para criar a próxima oportunidade.",
       check: "Revisar a reação coletiva imediatamente depois da primeira baixa.",
       watch: "Acompanhar vitórias depois de sofrer o first blood no mesmo contexto." },
-    post: { title: ["Defender o", "pós-plant."], action: "Plantem com o próximo passo pronto.",
+    post: { title: ["Pós-plant"], action: "Plantem com o próximo passo pronto.",
       description: "Depois do plant, espaço e tempo viram recursos do time. Revejam como as posições se complementam até o fim do round.",
       check: "Revisar posições, primeiro contato e resposta ao início do defuse.",
       watch: "Acompanhar conversão de plants com site e saldo de vivos semelhantes." },
-    retake: { title: ["Sincronizar", "o retake."], action: "Sincronizem a retomada.",
+    retake: { title: ["Retake"], action: "Sincronizem a retomada.",
       description: "Cada segundo importa, mas entrar separado pode custar a tentativa. Revejam como o time decide e executa o retake.",
       check: "Revisar o tempo disponível e a sequência de entrada na retomada.",
       watch: "Acompanhar vitórias no retake com condições de plant semelhantes." },
-    keyrounds: { title: ["Planejar cada", "tipo de compra."], action: "Comprem a mesma ideia.",
+    keyrounds: { title: ["Rounds-chave"], action: "Comprem a mesma ideia.",
       description: "Pistol, eco, force ou armado: revejam se o plano do round conversa com os recursos que o time tem.",
       check: "Revisar compras, recursos e plano coletivo nos rounds selecionados.",
       watch: "Acompanhar a conversão por tipo de round e economia." },
-    halfopen: { title: ["Planejar os", "primeiros rounds."], action: "Preparem a sequência, não só o pistol.",
+    halfopen: { title: ["Início", "de half"], action: "Preparem a sequência, não só o pistol.",
       description: "As primeiras decisões do half se conectam. Revejam como o resultado de um round muda a compra e o plano do próximo.",
       check: "Revisar compras e decisões dos três primeiros rounds de cada half.",
       watch: "Acompanhar os rounds 2 e 3 pelo caminho de abertura do half." },
-    pressure: { title: ["Decidir juntos", "nos rounds decisivos."], action: "Deixem a próxima decisão clara.",
+    pressure: { title: ["Pressão"], action: "Deixem a próxima decisão clara.",
       description: "Alguns rounds mudam mais a chance de vencer o mapa. Usem esses momentos para revisar decisões e comunicação em conjunto.",
       check: "Revisar as decisões coletivas nos rounds de maior impacto estimado.",
       watch: "Acompanhar decisões e resultados em contextos decisivos semelhantes." },
   };
-  const trainingName = (f) => f.copy.title.join(" ").replace(/\.$/, "");
+  const trainingName = (f) => f.name || f.copy.title.join(" ").replace(/\.$/, "");
 
   function selectFocus(model) {
     const valid = model.candidates.filter((c) => c.events > 0 && Number.isFinite(c.observed) && Number.isFinite(c.expected));
@@ -159,22 +169,8 @@
     }
     function go(n) { step = n; paint(); }
     function heading(lines) {
-      const title = $el("h2", "rx-title", $el("span", "", lines[0]), $el("em", "", lines[1]));
+      const title = $el("h2", "rx-title", ...lines.map((line, i) => $el(i === lines.length - 1 ? "em" : "span", "", line)));
       title.id = "rx-mission-title"; title.tabIndex = -1; return title;
-    }
-    function mapHud() {
-      const frameEl = $el("div", "rx-map-frame");
-      if (model.minimap) { const img = $el("img", ""); img.src = model.minimap; img.alt = ""; frameEl.append(img); }
-      // Decorative route through the map, never presented as match/player positions.
-      for (let i = 0; i < 4; i++) {
-        const pin = $el("span", "rx-map-marker" + (Math.min(step, 3) === i ? " is-active" : ""), pad(i + 1));
-        pin.style.left = [34, 47, 66, 72][i] + "%"; pin.style.top = [69, 49, 34, 59][i] + "%"; frameEl.append(pin);
-      }
-      frameEl.setAttribute("aria-hidden", "true");
-      const hud = $el("div", "rx-map-hud", $el("div", "rx-map-caption", "Ascent"), frameEl);
-      hud.setAttribute("role", "img");
-      hud.setAttribute("aria-label", "Cenário ilustrativo de Ascent; o minimapa não representa posições das partidas analisadas.");
-      return hud;
     }
     function objective(f, i, toggle) {
       const el = button("rx-objective" + (checked.has(f.id) ? " is-checked" : ""), "", () => {
@@ -202,7 +198,7 @@
       const copy = $el("div", "rx-copy", heading(["Prepare o", "próximo treino."]),
         $el("p", "rx-description", description),
         $el("p", "rx-context", `${model.matches} mapas · ${number(model.rounds)} rounds · ${model.scope}`));
-      const aside = panel("aside", "rx-aside rx-panel--stack", mapHud(), panelLabel(condition, `${focuses.length} ${focuses.length === 1 ? "foco" : "focos"}`),
+      const aside = panel("aside", "rx-aside rx-panel--stack", panelLabel(condition, `${focuses.length} ${focuses.length === 1 ? "foco" : "focos"}`),
         ...focuses.map((f, i) => objective(f, i, false)));
       if (!focuses.length) aside.append($el("p", "rx-empty", "Ainda não há eventos suficientes para montar os focos. Explore mais partidas no Panorama."));
       body.append(copy, aside);
@@ -210,7 +206,7 @@
     function focusChapter(f, idx) {
       const status = f.confirmed ? "PADRÃO RECORRENTE" : f.enough ? "PONTO PARA INVESTIGAR" : "AMOSTRA EM FORMAÇÃO";
       const copy = $el("div", "rx-copy", $el("p", "rx-eyebrow", `Foco de treino ${idx + 1} de ${focuses.length}`), heading(f.copy.title),
-        $el("p", "rx-training-goal", f.training.summary), trainingDetails(f),
+        $el("p", "rx-training-goal", f.training.report.summary),
         button("rx-secondary rx-evidence", "Explorar evidências " + ARROW, () => { dialog.close(); f.review(); }));
       const delta = f.gap;
       const gap = $el("div", "rx-gap", `${delta < 0 ? "−" : delta > 0 ? "+" : ""}${number(Math.abs(delta))}`, $el("span", "rx-gap-unit", "pp"));
@@ -220,7 +216,7 @@
         f.confirmed && f.recurrenceMatches > 0 ? $el("p", "", `Mesma direção em ${Math.round(f.recurrence * f.recurrenceMatches)} de ${f.recurrenceMatches} partidas com amostra no recorte.`) : null,
         $el("p", "", f.confirmed ? "Uma pista consistente para revisar; os dados não comprovam a causa." : f.enough ? "Diferença descritiva, sem padrão recorrente confirmado." : "Poucas partidas para sustentar uma conclusão; use como ponto de observação."));
       const intel = panel("section", "rx-intel", panelLabel(status),
-        $el("h3", "rx-focus-name", f.label), gap, $el("p", "rx-metric-label", "diferença para o esperado em situações parecidas"),
+        $el("h3", "rx-focus-name", trainingName(f)), gap, $el("p", "rx-metric-label", "diferença para o esperado em situações parecidas"),
         $el("div", "rx-bars", ...[["Seu time", f.observed, "observed"], ["Esperado", f.expected, "expected"]].map(([label, value, cls]) => {
           const fill = $el("span", "rx-bar-fill " + cls); fill.style.width = `${Math.max(0, Math.min(100, value * 100))}%`;
           return $el("div", "rx-bar-row", $el("div", "rx-bar-label", label, $el("b", "", pct(value))), $el("div", "rx-bar-track", fill));
@@ -229,23 +225,11 @@
         interpretation);
       body.append(copy, $el("aside", "rx-aside", intel));
     }
-    function trainingDetails(f) {
-      const t = f.training;
-      return $el("details", "rx-training-details", $el("summary", "", `Como executar · ${t.minutes} min`),
-        $el("h3", "", t.title), $el("p", "", t.context),
-        $el("dl", "", ...[["Objetivo", t.objective], ["Preparação", t.setup], ["Funções", t.roles]].map(([label, value]) =>
-          [$el("dt", "", label), $el("dd", "", value)])),
-        $el("ol", "rx-training-steps", ...t.steps.map((s) => $el("li", "", $el("b", "", `${s.title} · ${s.minutes} min`), $el("p", "", s.instruction)))),
-        $el("p", "", $el("b", "", "Repetições: "), t.repetitions),
-        $el("p", "", $el("b", "", "Critério do exercício: "), t.success),
-        $el("p", "", $el("b", "", "Progressão: "), t.progression),
-        $el("p", "", $el("b", "", "Acompanhar: "), t.watch));
-    }
     function getPlanDocument() {
       const selected = focuses.filter((f) => checked.has(f.id));
       if (!selected.length) return null;
       if (!pdfDocument) {
-        const blob = window.RoundRxMissionPDF.create(model, selected);
+        const blob = window.RoundRxMissionPDF.create({ ...model, report: window.RoundRxTraining.plan(model, selected) }, selected);
         pdfDocument = { url: URL.createObjectURL(blob), filename: `roundrx-plano-${model.team.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.pdf` };
       }
       return pdfDocument;
@@ -280,7 +264,7 @@
         iframe.title = `Plano de treino de ${model.team} em PDF`; iframe.src = doc.url;
         const viewer = $el("div", "rx-pdf-shell",
           $el("header", "rx-pdf-header", $el("div", "", $el("p", "rx-eyebrow", "ROUND RX / MISSÃO DE EVOLUÇÃO"), title), close),
-          $el("div", "rx-pdf-toolbar", $el("p", "", "Seu plano com exercícios, etapas e rounds de referência."), external, download),
+          $el("div", "rx-pdf-toolbar", $el("p", "", "Diagnóstico, rounds para VOD e plano de scrim do seu time."), external, download),
           iframe, $el("p", "rx-pdf-hint", "Se a prévia não aparecer neste navegador, abra o PDF em nova aba ou faça o download."));
         preview.append(viewer); document.body.append(preview); pdfDialog = preview;
         preview.addEventListener("close", () => {
@@ -295,14 +279,13 @@
       const copy = $el("div", "rx-copy", heading(["Escolha o foco", "do treino."]),
         $el("p", "rx-description", focuses.length ? "Escolha o que levar para o próximo treino." : "Explore mais partidas para encontrar focos de treino."),
         $el("div", "rx-plan-list", ...selected.map((f) => panel("div", "rx-panel--compact rx-plan-card", $el("span", "rx-plan-icon", "↗"),
-          $el("div", "rx-plan-copy", $el("b", "", trainingName(f)), $el("p", "", f.training.summary),
-            $el("small", "", `${f.training.minutes} min · ${f.training.steps.map((s) => s.title).join(" → ")}`))))));
+          $el("div", "rx-plan-copy", $el("b", "", trainingName(f)), $el("p", "", f.training.report.summary))))));
       const preview = button("rx-cta", "Visualizar PDF ↗", previewPlan); preview.disabled = !count;
       const download = button("rx-secondary rx-pdf-download", "Baixar plano em PDF ↓", downloadPlan); download.disabled = !count;
       const status = $el("p", "rx-plan-status"); status.setAttribute("role", "status");
       const aside = panel("aside", "rx-aside rx-panel--stack", panelLabel("Seu plano", `${count} de ${focuses.length} selecionados`),
         ...focuses.map((f, i) => objective(f, i, true)), preview, download, status,
-        $el("p", "rx-intel-note", count ? `${selected.reduce((n, f) => n + f.training.minutes, 0)} min de treino · PDF com instruções completas e espaço para anotações.` : "Selecionar adiciona o objetivo ao plano."));
+        $el("p", "rx-intel-note", count ? "PDF com contexto, indicadores, rounds para VOD e ações para o próximo scrim." : "Selecionar adiciona o objetivo ao plano."));
       body.append(copy, aside);
     }
     function paint() {
@@ -326,5 +309,5 @@
     }
     active = dialog; paint(); dialog.showModal(); body.querySelector("h2")?.focus({ preventScroll: true });
   }
-  window.RoundRxMission = { banner, open, selectFocus };
+  window.RoundRxMission = { banner, open, selectFocus, sceneForTeam };
 })();

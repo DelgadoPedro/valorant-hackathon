@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const context = { window: {} };
 vm.runInNewContext(readFileSync(resolve(__dirname, '../roundrx/viz/mission.js'), 'utf8'), context);
 const select = context.window.RoundRxMission.selectFocus;
+const sceneForTeam = context.window.RoundRxMission.sceneForTeam;
 const candidate = (key, extra = {}) => ({ id: key, key, observed: .4, expected: .6, gap: -20, events: 100, matches: 8, selected: false, ...extra });
 const model = (candidates) => ({ candidates, minEvents: 30, minMatches: 3 });
 
@@ -34,4 +35,17 @@ test('above-expected patterns remain exploratory rather than weaknesses', () => 
 test('missing/empty performance data produces no invented objectives', () => {
   assert.equal(select(model([])).length, 0);
   assert.equal(select(model([candidate('trade', { observed: null, events: 0 })])).length, 0);
+});
+
+test('backdrop assignments stay fixed for canonical team names and use all four scenes', () => {
+  const expected = { a2e_uff: 'Haven', inatel_gray: 'Ascent', gdu_ufpb: 'Sunset', caap_auroras: 'Lotus' };
+  for (const [team, scene] of Object.entries(expected)) assert.equal(sceneForTeam(team), scene);
+});
+
+test('a fresh session and normalized team spelling keep the same backdrop without storage', () => {
+  const fresh = { window: {} };
+  vm.runInNewContext(readFileSync(resolve(__dirname, '../roundrx/viz/mission.js'), 'utf8'), fresh);
+  assert.equal(fresh.window.RoundRxMission.sceneForTeam('a2e_uff'), sceneForTeam('a2e_uff'));
+  assert.equal(sceneForTeam('  INATEL_GRAY  '), sceneForTeam('inatel_gray'));
+  assert.equal(sceneForTeam('e\u0301quipe'), sceneForTeam('équipe'));
 });

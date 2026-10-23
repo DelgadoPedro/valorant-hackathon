@@ -11,25 +11,31 @@ const create = context.window.RoundRxMissionPDF.create;
 const decoder = new TextDecoder('windows-1252');
 const extractText = (pdf) => [...pdf.matchAll(/<([0-9A-F]+)> Tj/g)].map((match) => decoder.decode(Buffer.from(match[1], 'hex'))).join('\n');
 const read = async (blob) => Buffer.from(await blob.arrayBuffer()).toString('ascii');
-const model = { team: 'Águia (BR) \\ Academy', scope: 'Últimas 10 partidas', matches: 8, rounds: 167 };
+const model = {
+  team: 'Águia (BR) \\ Academy', scope: 'Últimas 10 partidas', period: '15/09 a 22/10/2026', matches: 8, rounds: 167,
+  report: {
+    intro: 'Os três pontos abaixo mostram onde a equipe deve começar pela revisão do VOD.',
+    howToRead: 'Observado = o que o time fez; esperado = outros times na mesma situação. R1 = pistol.',
+    caveats: ['Olhem a soma de 3 a 4 mapas antes de concluir algo.'],
+  },
+};
 const focus = (overrides = {}) => ({
   key: 'trade', name: 'Trocar kills em dupla', observed: 0.43, expected: 0.62, gap: -19,
   events: 93, matches: 8, confirmed: true, enough: true,
   training: {
-    title: 'Contato com cobertura', summary: 'Transforme a análise em uma rotina de comunicação e resposta.',
-    minutes: 25, objective: 'Preparar uma resposta ao primeiro contato.', context: 'Ataque em Ascent, após a primeira eliminação.',
-    setup: 'Servidor personalizado com duas duplas e um observador. Use o mesmo corredor do VOD.',
-    roles: ['Dupla de entrada: abrir e cobrir.', 'Observador: registrar distância, tempo e comunicação.'],
-    steps: [
-      { title: 'Revisão e hipótese', minutes: 5, instruction: 'Assistam a três rounds. Confirmem a possibilidade de troca antes de apontar uma causa.' },
-      { title: 'Prática com papéis alternados', minutes: 15, instruction: 'Façam duas séries de seis entradas. Alternem quem inicia e quem cobre.' },
-      { title: 'Debrief e ajuste', minutes: 5, instruction: 'Comparem as séries e combinem uma regra para o próximo scrim.' },
-    ],
-    repetitions: 'Duas séries de seis entradas; inverta as funções na segunda série.',
-    success: 'Em 8 de 12 entradas, o segundo jogador consegue responder sem perder a cobertura.',
-    progression: 'Adicione um ângulo defensor depois de estabilizar a coordenação.',
-    watch: 'Compare a taxa de trocas na mesma janela de tempo e no mesmo contexto.',
-    evidence: [{ map: 'Ascent', round: 8, opponent: 'Equipe Ñ', date: '2026-09-15', why: 'Primeira baixa sem troca: verificar distância e linha de visão.' }],
+    report: {
+      title: 'Trocar kills com cobertura no ataque em Ascent',
+      evidence: 'No ataque em Ascent, o time troca 40 de 93 mortes (43%); o esperado é 62%. Comecem pela revisão do VOD.',
+      indicators: [{ label: 'Mortes trocadas no ataque em Ascent', team: '43% (40 de 93)', expected: '62%', league: '57%' }],
+      context: ['São 93 eventos em 8 partidas; confirmem no VOD a cobertura possível.', 'Sinal recorrente; valide a causa nas imagens.'],
+      rounds: [{ map: 'Ascent', round: 8, opponent: 'Equipe Ñ', date: '15/09', why: 'Primeira baixa sem troca: verificar distância e linha de visão.' }],
+      actions: [
+        { label: 'Scrim', text: 'Treinem contatos em dupla na mesma rota; quem cobre confirma a possibilidade de responder antes da entrada.' },
+        { label: 'VOD', text: 'Pausem antes da morte e confiram obstáculos, utilitários e comunicação.' },
+        { label: 'Referências', text: 'Observem contatos profissionais no mesmo mapa e lado, com atenção à cobertura.' },
+      ],
+      measurement: [{ point: 'Trades no ataque em Ascent', today: '43%', target: 'Acompanhar a diferença para 62% em situações equivalentes.' }],
+    },
   },
   ...overrides,
 });
@@ -56,17 +62,28 @@ function assertValidStructure(pdf) {
   return pageCount;
 }
 
-test('creates an actual A4 PDF with exact xref offsets and stream lengths', async () => {
+test('creates an actual A4 report with exact xref offsets and stream lengths', async () => {
   const blob = create(model, [focus(), focus({ name: 'Retake' }), focus({ name: 'Pós-plant' })]);
   assert.ok(blob instanceof Blob);
   assert.equal(blob.type, 'application/pdf');
   const pdf = await read(blob);
   const pages = assertValidStructure(pdf);
-  assert.ok(pages >= 4 && pages <= 10, `cover and complete training sheets: ${pages} pages`);
+  assert.ok(pages >= 2 && pages <= 10, `opening and flowing analytical report: ${pages} pages`);
   const text = extractText(pdf);
-  assert.match(text, /75 min/);
-  assert.match(text, /PARTIDAS ANALISADAS/);
-  assert.match(text, /REGISTRO DA EQUIPE/);
+  assert.match(text, /Plano de treino/);
+  assert.match(text, /Como ler/);
+  assert.match(text, /8 partidas analisadas/);
+  assert.match(text, /15\/09 a 22\/10\/2026/);
+  assert.match(text, /Indicador\nTime\nEsperado\nLiga/);
+  assert.match(text, /Contexto/);
+  assert.match(text, /Rounds para o VOD/);
+  assert.match(text, /O que fazer/);
+  assert.match(text, /Scrim:/);
+  assert.match(text, /VOD:/);
+  assert.match(text, /Referências:/);
+  assert.match(text, /Como medir no próximo scrim/);
+  assert.match(text, /Alvo de acompanhamento/);
+  assert.ok(!text.includes('FICHA') && !text.includes('ROTEIRO DA PRÁTICA'), 'analytical report replaces exercise sheets');
   assert.match(text, new RegExp(`01 / ${String(pages).padStart(2, '0')}`));
 });
 
@@ -75,11 +92,10 @@ test('preserves selectable Portuguese accents and safe literal punctuation', asy
   const text = extractText(pdf);
   assert.ok(text.includes(model.team));
   assert.ok(text.includes('MISSÃO DE EVOLUÇÃO'));
-  assert.ok(text.includes('REVISÃO') || text.includes('Revisão e hipótese'));
-  assert.ok(text.includes('PREPARAÇÃO'));
+  assert.ok(text.includes('revisão do VOD'));
   assert.ok(text.includes('vs Equipe Ñ'));
-  assert.ok(text.includes('Round 8'));
-  assert.ok(text.includes('43%'));
+  assert.ok(text.includes('Ascent R8'));
+  assert.ok(text.includes('43% (40 de 93)'));
   assert.ok(text.includes('62%'));
   assert.match(pdf, /\/Encoding \/WinAnsiEncoding/);
   assert.match(pdf, /\/ToUnicode \d+ 0 R/);
@@ -88,23 +104,59 @@ test('preserves selectable Portuguese accents and safe literal punctuation', asy
   assert.ok(!source.toLowerCase().includes('<' + '/script'), 'can be safely embedded in the offline HTML template');
 });
 
-test('distinguishes exploratory and limited samples without inventing weaknesses', async () => {
-  const pdf = await read(create(model, [focus({ confirmed: false, enough: true, observed: 0.8 }), focus({ confirmed: false, enough: false, events: 7, matches: 1 })]));
+test('renders the supplied analytical content without adding rates or confirmed causes', async () => {
+  const item = focus();
+  item.training.report.indicators[0].league = null;
+  item.training.report.context = ['Amostra limitada: sem conclusão de fragilidade.', 'Exploração: confirme se a cobertura era possível no VOD.'];
+  item.training.report.measurement[0].target = 'Revisar mais partidas no mesmo contexto.';
+  item.training.report.caveat = 'Amostra em formação: recorte exploratório, sem padrão recorrente confirmado.';
+  const reportBefore = JSON.stringify(item.training.report);
+  const modelBefore = JSON.stringify(model);
+  const pdf = await read(create(model, [item]));
   const text = extractText(pdf);
   assert.ok(text.includes('Exploração'));
   assert.ok(text.includes('Amostra limitada'));
   assert.ok(text.includes('sem conclusão de fragilidade'));
-  assert.ok(!text.includes('Prioridade recorrente'));
+  assert.ok(!text.includes('57%'));
+  assert.ok(!text.includes('Sinal recorrente'));
+  const focusText = text.slice(text.indexOf('FOCO 01 / 01'));
+  assert.ok(focusText.indexOf('Amostra em formação') < focusText.indexOf('Indicador'), 'focus caveat appears before the evidence table');
+  assert.equal(JSON.stringify(item.training.report), reportBefore, 'rendering does not mutate the training report');
+  assert.equal(JSON.stringify(model), modelBefore, 'rendering does not mutate report caveats');
 });
 
-test('paginates long names, titles, instructions, and evidence within page bounds', async () => {
+test('flows short focus sections and monitoring onto available page space', async () => {
+  const concise = (name) => ({
+    key: name, name,
+    training: { report: {
+      title: name, evidence: 'Confiram a cobertura no VOD.',
+      indicators: [{ label: name, team: '43%', expected: '62%', league: null }],
+      context: ['Comparar o mesmo recorte.'],
+      rounds: ['Ascent R8: observar a cobertura.'],
+      actions: [{ label: 'Scrim', text: 'Definam contato e apoio antes da entrada.' }],
+      measurement: [{ point: name, today: '43%', target: 'Comparar o mesmo recorte.' }],
+    } },
+  });
+  const pdf = await read(create(model, [concise('Cobertura'), concise('Retake'), concise('Pós-plant')]));
+  assertValidStructure(pdf);
+  const pageTexts = [...pdf.matchAll(/stream\n([\s\S]*?)endstream/g)]
+    .filter((match) => match[1].includes('BT /')).map((match) => extractText(match[1]));
+  assert.ok(pageTexts.some((text) => text.includes('FOCO 01 / 03') && text.includes('FOCO 02 / 03')), 'later focuses share remaining space on a page');
+  const single = await read(create(model, [concise('Cobertura')]));
+  const singleTexts = [...single.matchAll(/stream\n([\s\S]*?)endstream/g)]
+    .filter((match) => match[1].includes('BT /')).map((match) => extractText(match[1]));
+  assert.ok(singleTexts.some((text) => text.includes('FOCO 01 / 01') && text.includes('Como medir no próximo scrim')), 'monitoring follows the last focus when its complete block fits');
+  assert.ok(pageTexts.some((text) => text.includes('PLANO DE TREINO')), 'mixed pages receive a generic running header');
+});
+
+test('paginates long titles, paragraphs, rows, and evidence within page bounds', async () => {
   const long = 'Coordenação e preparação para a próxima decisão. '.repeat(65);
   const item = focus();
-  item.training.title = long;
-  item.training.setup = long;
-  item.training.steps[0].title = long;
-  item.training.steps[1].instruction = long;
-  item.training.evidence[0].opponent = 'Outro time ' + 'Á'.repeat(380);
+  item.training.report.title = long;
+  item.training.report.evidence = long;
+  item.training.report.indicators[0].label = long;
+  item.training.report.actions[1].text = long;
+  item.training.report.rounds[0].opponent = 'Outro time ' + 'Á'.repeat(380);
   const pdf = await read(create({ ...model, team: 'Equipe ' + long }, [item]));
   const pages = assertValidStructure(pdf);
   assert.ok(pages > 4);
@@ -114,13 +166,20 @@ test('paginates long names, titles, instructions, and evidence within page bound
     assert.ok(baseline >= 24 && baseline <= 813, `text baseline ${baseline} stays within the page`);
   }
   const text = extractText(pdf);
-  assert.ok(text.includes('REGISTRO DA EQUIPE'), 'notes remain present after all long content');
-  assert.ok(text.includes('EQUIPE'), 'full overflowing team name is also rendered in the body');
+  assert.ok(text.includes('Como medir no próximo scrim'), 'monitoring remains present after all long content');
+  assert.ok(text.includes('Ponto') && text.includes('Alvo de acompanhamento'));
+  assert.ok(text.split('Indicador').length >= 3, 'table heading repeats when an oversized row continues');
 });
 
-test('handles absent optional fields without adding placeholder exercises', async () => {
-  const pdf = await read(create({}, []));
-  assert.equal(assertValidStructure(pdf), 1);
-  assert.ok(extractText(pdf).includes('00'));
-  assert.ok(!extractText(pdf).includes('undefined'));
+test('handles absent optional fields and saved older plans without placeholder exercises', async () => {
+  const emptyPdf = await read(create({}, []));
+  assert.equal(assertValidStructure(emptyPdf), 1);
+  assert.ok(extractText(emptyPdf).includes('00'));
+  assert.ok(!extractText(emptyPdf).includes('undefined'));
+  const older = focus({ training: { title: 'Cobertura em dupla', evidence: [], objective: 'Preparar o contato com cobertura.', watch: 'Comparar o mesmo contexto.' } });
+  const text = extractText(await read(create({}, [older])));
+  assert.ok(text.includes('Cobertura em dupla'));
+  assert.ok(text.includes('43%'));
+  assert.ok(text.includes('Rounds para o VOD'));
+  assert.ok(!text.includes('undefined'));
 });
