@@ -151,6 +151,7 @@ def test_last_alive_death_is_not_eligible(synthetic_deaths):
 
 def _toy(n_teams=6, n_matches=8, per_match=60, seed=0, plant=None):
     rng = np.random.default_rng(seed)
+    windows = load_config()["fundamentals"]["trade_windows_s"]
     rows = []
     for t in range(n_teams):
         for m in range(n_matches):
@@ -166,7 +167,7 @@ def _toy(n_teams=6, n_matches=8, per_match=60, seed=0, plant=None):
                              "side": rng.choice(["atk", "def"]), "economy": "equipamento equilibrado", "killer_to_ally_cm": 1500.0,
                              "map_name": rng.choice(["Ascent", "Haven"]), "fb_context": "time fez o FB",
                              "victim_name": f"P{t}{e % 5}", "nearest_ally_name": f"P{t}{(e + 1) % 5}",
-                             "traded_3s": y, "traded_5s": y, "traded_7s": y})
+                             **{f"traded_{w}s": y for w in windows}})
     return pd.DataFrame(rows)
 
 

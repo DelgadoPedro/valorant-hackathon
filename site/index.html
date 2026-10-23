@@ -1367,33 +1367,23 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
   const NAMES = { trade: "Mortes trocadas", advantage: "Vantagem numérica convertida", fb_open: "Duelos de abertura vencidos",
     fb_rec: "Vitórias após sofrer o first blood", post: "Pós-plant", retake: "Retake", keyrounds: "Rounds-chave",
     halfopen: "Rounds 2 e 3 do half", pressure: "Rounds decisivos" };
-  // Only tactical dimensions enter the search. Player identities remain descriptive context.
-  const DIMENSIONS = {
-    trade: ["map_name", "side", "phase", "numbers", "ally_dist", "allies_near_b", "economy", "fb_context"],
-    advantage: ["map_name", "side", "spike", "when", "state", "economy"],
-    fb_open: ["map_name", "side", "when", "duel_role", "economy"],
-    fb_rec: ["map_name", "side", "when", "duel_role", "economy"],
-    post: ["map_name", "numbers", "pstate", "site", "pwhen", "economy"],
-    retake: ["map_name", "numbers", "pstate", "site", "pwhen", "economy"],
-    keyrounds: ["map_name", "side", "round_type", "half", "economy"],
-    halfopen: ["map_name", "side", "moment", "half", "economy"],
-    pressure: ["map_name", "side", "lead", "phase", "economy"],
-  };
-  const TITLES = { map_name: "Mapa", side: "Lado", state: "Situação de vivos", pstate: "Vivos no plant",
+  const TITLES = { map_name: "Mapa", map_site: "Mapa e site", side: "Lado", state: "Situação de vivos", pstate: "Vivos no plant",
     economy: "Economia", when: "Momento do contato", pwhen: "Momento do plant", phase: "Momento",
     numbers: "Saldo de vivos", spike: "Spike", site: "Site", round_type: "Tipo de round", moment: "Caminho do half",
     half: "Half", lead: "Placar", ally_dist: "Distância do aliado", allies_near_b: "Aliados próximos",
     fb_context: "Abertura", duel_role: "Função no duelo", duel_name: "Jogadores nos duelos", victim_name: "Quem morreu" };
   const validValue = (v) => (typeof v === "string" && v.trim() !== "" && !["?", "null", "undefined", "nan"].includes(v.trim().toLowerCase()))
     || (typeof v === "number" && Number.isFinite(v));
-  const cleanDims = (dims) => Object.fromEntries(Object.entries(dims && typeof dims === "object" ? dims : {}).filter(([, v]) => validValue(v)));
+  // Unknown categories still constrain a selected slice; dropping '?' would
+  // silently expand it to known sites/players and change the reported sample.
+  const cleanDims = (dims) => Object.fromEntries(Object.entries(dims && typeof dims === "object" ? dims : {})
+    .filter(([, v]) => (typeof v === "string" && v.trim() !== "") || (typeof v === "number" && Number.isFinite(v))));
   const text = (v) => typeof v === "string" ? v.trim() : "";
   const matches = (event, dims) => Object.entries(dims).every(([k, v]) => event.context[k] === v);
   const pct = (value) => Math.round(100 * value) + "%";
   const humanValue = (dim, value) => dim === "side" ? ({ atk: "ataque", def: "defesa" }[value] || String(value))
     : dim === "site" ? "site " + value : dim === "spike" ? (value === "plantada" ? "spike plantada" : "sem spike plantada")
       : dim === "ally_dist" ? "aliado a " + value : String(value);
-  const sameDims = (a, b) => Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([k, v]) => b[k] === v);
   const labelFor = (name, dims) => [name, ...Object.entries(dims).map(([k, v]) => humanValue(k, v))].join(" · ");
   const countMatches = (events) => new Set(events.map((e) => e.matchId).filter((id) => id != null)).size;
   const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(8, 10) + "/" + value.slice(5, 7) : value;
@@ -1402,13 +1392,18 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
     const m = /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})$/.exec(value);
     return m ? `${m[3].length === 2 ? "20" + m[3] : m[3]}-${m[2]}-${m[1]}` : "";
   };
+  function eventContext(event) {
+    const context = cleanDims({ ...(event.context || {}), ...(text(event.map) && !event.context?.map_name ? { map_name: text(event.map) } : {}) });
+    if (!context.map_site && text(context.map_name) && text(context.site)) context.map_site = `${context.map_name} · ${context.site}`;
+    return context;
+  }
   function normalize(events, league) {
     if (!Array.isArray(events)) return [];
     return events.filter((e) => e && (e.outcome === 0 || e.outcome === 1)
       && (league || (Number.isFinite(e.expected) && e.expected >= 0 && e.expected <= 1))).map((e) => ({
       ...e, matchId: e.matchId == null ? null : e.matchId, map: text(e.map) || text(e.context?.map_name),
       date: text(e.date), opponent: text(e.opponent), round: Number.isInteger(e.round) && e.round >= 1 ? e.round : null,
-      context: cleanDims({ ...(e.context || {}), ...(text(e.map) && !e.context?.map_name ? { map_name: text(e.map) } : {}) }),
+      context: eventContext(e),
       why: text(e.why),
     }));
   }
@@ -1429,21 +1424,9 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
     const minMatches = Math.max(2, Number.isFinite(input.minMatches) ? Math.floor(input.minMatches) : 2);
     const baseEvents = all.filter((e) => matches(e, initialDims));
     const sufficient = (events) => events.length >= minEvents && countMatches(events) >= minMatches;
-    const lostCount = (events) => events.reduce((sum, e) => sum + e.expected - e.outcome, 0);
-    const candidates = [{ dims: initialDims, events: baseEvents, loss: lostCount(baseEvents) }];
-    if (!input.confirmed && sufficient(baseEvents)) {
-      const dimensions = (DIMENSIONS[input.key] || []).filter((k) => !(k in initialDims));
-      const sets = dimensions.map((k) => [k]);
-      for (let a = 0; a < dimensions.length; a++) for (let b = a + 1; b < dimensions.length; b++) sets.push([dimensions[a], dimensions[b]]);
-      for (const dimensions of sets) for (const group of groups(baseEvents, dimensions)) {
-        if (!sufficient(group.events) || group.events.length === baseEvents.length) continue;
-        candidates.push({ dims: { ...initialDims, ...group.dims }, events: group.events, loss: lostCount(group.events) });
-      }
-    }
-    candidates.sort((a, b) => b.loss - a.loss || Object.keys(a.dims).length - Object.keys(b.dims).length
-      || JSON.stringify(a.dims).localeCompare(JSON.stringify(b.dims)));
-    // When every outcome is at/above its expectation, keep the base rather than inventing a weak point.
-    const chosen = !input.confirmed && candidates[0].loss > 1e-8 ? candidates[0] : candidates.find((c) => sameDims(c.dims, initialDims));
+    // The diagnosis owns slice selection. Mining a worse child here would turn
+    // ordinary variation inside a strong fundamental into an unsupported tip.
+    const chosen = { dims: initialDims, events: baseEvents };
     function stats(dims, events, label) {
       const n = events.length, y = events.reduce((sum, e) => sum + e.outcome, 0), p = events.reduce((sum, e) => sum + e.expected, 0);
       const reference = league.filter((e) => matches(e, dims)), leagueY = reference.reduce((sum, e) => sum + e.outcome, 0);
@@ -1452,12 +1435,15 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
         gap: n ? 100 * (y - p) / n : null, league: reference.length ? leagueY / reference.length : null,
         leagueEvents: reference.length, unit };
     }
-    const primary = stats(chosen.dims, chosen.events, input.confirmed && text(input.label) ? text(input.label) : null);
+    const primary = stats(chosen.dims, chosen.events, text(input.label) || null);
+    const enough = input.enough !== false && sufficient(chosen.events);
+    const below = primary.events > 0 && primary.expected - primary.observed > 1e-8;
+    const confirmed = !!input.confirmed && enough && below;
     const indicators = [primary];
     if (Object.keys(primary.dims).length) indicators.push(stats({}, all, name + " no geral"));
     // A complementary site/side/map gives the reader a useful control, with the same other conditions.
     for (const dimension of ["site", "side", "map_name", "spike", "round_type", "moment"]) {
-      if (!(dimension in primary.dims)) continue;
+      if (!(dimension in primary.dims) || (dimension === "map_name" && "site" in primary.dims)) continue;
       const rest = { ...primary.dims }; delete rest[dimension];
       const alternatives = groups(all.filter((e) => matches(e, rest)), [dimension])
         .filter((g) => g.dims[dimension] !== primary.dims[dimension] && sufficient(g.events))
@@ -1466,14 +1452,10 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
         const g = alternatives[0]; indicators.push(stats({ ...rest, ...g.dims }, g.events)); break;
       }
     }
-    if (indicators.length === 1) {
-      const next = candidates.find((c) => !sameDims(c.dims, primary.dims));
-      if (next) indicators.push(stats(next.dims, next.events));
-    }
     const context = [], failed = chosen.events.filter((e) => !e.outcome);
     const failureNoun = input.key === "trade" ? "mortes sem trade" : "derrotas";
-    if (!sufficient(chosen.events)) context.push(`Amostra em formação: ${primary.events} eventos em ${primary.matches} partidas; use a revisão do VOD antes de definir um ajuste.`);
-    else if (input.confirmed) context.push("O recorte mantém o padrão recorrente identificado no diagnóstico; a causa precisa ser validada no VOD.");
+    if (!enough) context.push(`Amostra em formação: ${primary.events} eventos em ${primary.matches} partidas; use a revisão do VOD antes de definir um ajuste.`);
+    else if (confirmed) context.push("O recorte mantém o padrão recorrente identificado no diagnóstico; a causa precisa ser validada no VOD.");
     else context.push("Recorte descritivo, sem padrão recorrente confirmado; comece pela revisão do VOD.");
     if (primary.events && primary.deltaEvents <= 1e-8) context.push("O resultado do recorte está no esperado ou acima dele; os dados não indicam uma fragilidade nesse ponto.");
     const dated = groups(chosen.events.filter((e) => e.date && e.opponent).map((e) => ({ ...e,
@@ -1504,12 +1486,17 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
         `${humanValue(dimension, g.dims[dimension])} em ${g.events.length} de ${primary.events} eventos`).join("; ") + ".");
     }
     const seen = new Set();
-    const evidence = [...failed].sort((a, b) => b.expected - a.expected || dateOrder(b.date).localeCompare(dateOrder(a.date)))
+    // Strong slices illustrate what already works; a few lost rounds do not
+    // establish a problem when the full slice meets its expectation.
+    const investigate = below && (confirmed || primary.expected - primary.observed >= .005 - 1e-10);
+    const examples = investigate ? failed : chosen.events.filter((e) => e.outcome === 1);
+    const evidence = [...examples].sort((a, b) => (investigate ? b.expected - a.expected : a.expected - b.expected)
+      || dateOrder(b.date).localeCompare(dateOrder(a.date)))
       .filter((e, i) => {
         const identity = e.round == null ? ["unknown", i] : e.matchId != null ? [e.matchId, e.round] : [e.map, e.date, e.opponent, e.round];
         const key = JSON.stringify(identity); if (seen.has(key)) return false; seen.add(key); return true;
       }).slice(0, 4).map((e) => ({ ...e, context: { ...e.context } }));
-    return { primary, indicators: indicators.slice(0, 3), context, evidence,
+    return { primary, indicators: indicators.slice(0, 3), context, evidence, enough, confirmed, minEvents, minMatches,
       measurement: { point: primary.label, today: primary.observed, target: primary.expected,
         events: primary.events, matches: primary.matches, unit, dims: { ...primary.dims },
         instruction: "Compare a soma de 3 a 4 mapas novos no mesmo contexto antes de concluir; o esperado é uma referência, não uma promessa de resultado." } };
@@ -1529,7 +1516,7 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
   const side = (value) => ({ atk: "ataque", def: "defesa" }[value] || "");
   const sidePhrase = (value) => ({ atk: "no ataque", def: "na defesa" }[value] || "");
   const DIM_NAMES = {
-    map_name: "Mapa", side: "Lado", phase: "Momento", numbers: "Saldo de vivos", state: "Vivos do time × adversário",
+    map_name: "Mapa", map_site: "Mapa e site", side: "Lado", phase: "Momento", numbers: "Saldo de vivos", state: "Vivos do time × adversário",
     pstate: "Vivos do time × adversário no plant", site: "Site", pwhen: "Momento do plant", when: "Momento do evento",
     economy: "Economia", spike: "Spike", round_type: "Tipo de round", moment: "Caminho do half", half: "Half",
     lead: "Placar", victim_name: "Quem morreu", nearest_ally_name: "Aliado mais próximo", duel_name: "Jogador no duelo",
@@ -1567,16 +1554,65 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
 
   function openingReview(evidence) {
     const refs = evidence.filter((ev) => Number.isInteger(ev.round) && ev.round > 0).slice(0, 2);
-    if (!refs.length) return "Separem até dois rounds do recorte em Explorar evidências; se não houver VOD, façam uma repetição diagnóstica antes de corrigir.";
+    if (!refs.length) return "Separem até dois rounds do recorte em Explorar evidências; se não houver VOD, registrem novas situações comparáveis antes de concluir.";
     return `Revisem ${refs.map((ev) => join(known(ev.map), `round ${ev.round}`, known(ev.opponent) ? `vs ${ev.opponent}` : "")).join(" e ")}.`;
   }
 
+  function effectiveFocus(f, analysis) {
+    const source = analysis?.primary || f;
+    const rate = (value) => Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
+    const observed = rate(source.observed), expected = rate(source.expected);
+    const events = source.events, matches = source.matches;
+    const minEvents = Math.max(8, Number.isFinite(analysis?.minEvents) ? analysis.minEvents : Number.isFinite(f.minEvents) ? f.minEvents : 8);
+    const minMatches = Math.max(2, Number.isFinite(analysis?.minMatches) ? analysis.minMatches : Number.isFinite(f.minMatches) ? f.minMatches : 2);
+    const measured = observed != null && expected != null && Number.isFinite(events) && events > 0;
+    const enough = measured && f.enough !== false && analysis?.enough !== false && events >= minEvents
+      && Number.isFinite(matches) && matches >= minMatches;
+    const below = measured && expected - observed > 1e-8;
+    const confirmed = !!f.confirmed && analysis?.confirmed !== false && enough && below;
+    const within = !below || (!confirmed && expected - observed < .005 - 1e-10);
+    const mode = !measured || !enough ? "observation" : within ? "maintenance" : confirmed ? "correction" : "investigation";
+    return { ...f, observed, expected, events, matches, enough, confirmed, mode };
+  }
+
   function uncertainty(f) {
-    if (f.enough === false) return "Amostra em formação: use o treino para observar o comportamento antes de concluir que existe uma fragilidade.";
-    if (!f.confirmed) return Number.isFinite(f.observed) && Number.isFinite(f.expected) && f.observed >= f.expected
-      ? "Resultado no esperado ou acima dele: exercício exploratório para testar consistência, sem fragilidade confirmada."
-      : "Exercício exploratório: valide a hipótese na revisão; ainda não há fragilidade recorrente confirmada.";
+    if (f.mode === "observation") return "Amostra em formação: acompanhamento exploratório para observar o comportamento, sem conclusão de fragilidade nem meta corretiva.";
+    if (f.mode === "maintenance") return f.observed >= f.expected - 1e-8
+      ? "Resultado no esperado ou acima dele: preservar a execução, sem fragilidade confirmada neste ponto."
+      : "Resultado próximo da referência: preservar a execução, sem fragilidade confirmada neste ponto.";
+    if (f.mode === "investigation") return "Investigação exploratória: valide a hipótese na revisão; ainda não há fragilidade recorrente confirmada.";
     return "Hipótese de treino: valide a causa na revisão antes de escolher a correção.";
+  }
+
+  function observationRecipe(recipe, f, d) {
+    if (f.mode === "correction") return recipe;
+    const maintenance = f.mode === "maintenance", small = f.mode === "observation";
+    const label = text(f.name) || text(f.label) || "fundamento do time";
+    const location = join(known(d.map_name) ? `em ${d.map_name}` : "", sidePhrase(d.side), known(d.site) ? `no site ${d.site}` : "");
+    const alive = state(d.state || d.pstate);
+    const scenario = join(location, alive ? `em ${alive}` : "");
+    const review = maintenance
+      ? "Revisem exemplos bem-sucedidos do mesmo recorte e identifiquem quais decisões ajudaram a execução. Documentem o que deve ser preservado."
+      : "Comparem resultados positivos e negativos do mesmo recorte. Confiram informação, recursos e decisões no VOD antes de atribuir uma causa à diferença.";
+    return {
+      title: `${maintenance ? "Manutenção" : small ? "Observação" : "Investigação"}: ${label}${scenario ? ` · ${scenario}` : ""}`,
+      scenario: scenario ? `Mantenham o recorte ${scenario}.` : "",
+      objective: maintenance ? "Documentar e preservar a execução do time, acompanhando a referência."
+        : "Observar a execução e verificar se existe uma hipótese tática sustentada pelos rounds revisados.",
+      setup: "Usem situações do mesmo recorte, mantendo mapa, lado, recursos e cenário comparáveis. Comecem pela revisão dos rounds disponíveis.",
+      roles: "O time descreve as decisões tomadas e um observador registra o contexto, a execução e o resultado separadamente.",
+      review,
+      practice: maintenance ? "Reproduzam uma execução bem-sucedida e registrem as decisões que o time deseja manter. Variem apenas a resposta adversária para observar consistência."
+        : small ? "Registrem novas situações do recorte sem impor uma mudança tática. Se usarem personalizada, tratem as repetições como observação; elas não substituem partidas na amostra."
+          : "Após a revisão, testem uma hipótese apenas se houver evidência de um problema de execução. Comparem a execução atual com uma variação, mantendo o contexto igual; sem hipótese sustentada, continuem observando.",
+      debrief: maintenance ? "Registrem as práticas que funcionaram e como preservá-las no próximo scrim."
+        : "Separem observações de hipóteses. Registrem o que ainda precisa ser verificado antes de escolher qualquer ajuste.",
+      repetitions: "Revisar até dois rounds comparáveis e registrar as observações; repetições em personalizada são opcionais.",
+      success: maintenance ? "Critério da sessão: documentar decisões bem-sucedidas que o time pretende manter."
+        : "Critério da sessão: registrar contexto e decisões, sem exigir uma taxa de conversão ou concluir que há uma falha.",
+      progression: "Acompanhem situações comparáveis em 3 a 4 novos mapas antes de reavaliar a execução.",
+      watch: "Comparar observado, esperado e número de eventos no mesmo recorte; preservar decisões bem-sucedidas identificadas no VOD.",
+    };
   }
 
   function trade(d, f) {
@@ -1851,12 +1887,19 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
 
   function buildReport(f, recipe, analysis, d, evidence) {
     const raw = analysis?.primary || {};
-    const observed = Number.isFinite(raw.observed) ? raw.observed : f.observed;
-    const expected = Number.isFinite(raw.expected) ? raw.expected : f.expected;
-    const events = Number.isFinite(raw.events) ? raw.events : f.events;
+    const observed = f.observed, expected = f.expected, events = f.events;
     const successes = Number.isFinite(raw.successes) ? raw.successes : Number.isFinite(observed) && Number.isFinite(events) ? Math.round(observed * events) : null;
-    const primary = { label: raw.label || text(f.label) || text(f.name) || "Recorte do fundamento", observed, expected, events, successes, league: raw.league };
-    const title = reportTitle(f.key, d), action = scrimAction(f.key, d, f);
+    const primary = { label: raw.label || text(f.label) || text(f.name) || "Recorte do fundamento", observed, expected,
+      events, successes, league: raw.league, matches: f.matches, dims: { ...(raw.dims || f.dims || {}) },
+      gap: Number.isFinite(observed) && Number.isFinite(expected) ? 100 * (observed - expected) : null };
+    const correction = f.mode === "correction";
+    const title = correction ? reportTitle(f.key, d) : recipe.title;
+    const action = correction ? scrimAction(f.key, d, f) : {
+      short: f.mode === "maintenance" ? "Preservem a execução e revisem exemplos bem-sucedidos."
+        : f.mode === "observation" ? "Coletem novas situações comparáveis antes de definir ajustes."
+          : "Investiguem a diferença no VOD antes de definir qualquer ajuste.",
+      text: join(recipe.practice, recipe.scenario),
+    };
     const delta = Number.isFinite(raw.deltaEvents) ? raw.deltaEvents : Number.isFinite(expected) && Number.isFinite(observed) && Number.isFinite(events) ? (expected - observed) * events : null;
     const units = f.key === "trade" ? "trades" : "rounds";
     const results = {
@@ -1871,11 +1914,13 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
       : "Separem os rounds do recorte para revisão antes de definir o ajuste de treino; ainda não há dados completos para a comparação.";
     const fmtIndicator = (row) => ({ label: row.label, team: Number.isFinite(row.observed) ? `${percent(row.observed)}${Number.isFinite(row.successes) && Number.isFinite(row.events) ? ` (${row.successes} de ${row.events})` : ""}` : "—", expected: percent(row.expected), league: percent(row.league) });
     const indicators = (analysis?.indicators?.length ? analysis.indicators : [primary]).map(fmtIndicator);
-    const target = !Number.isFinite(expected) ? "Coletar novas situações comparáveis antes de definir uma meta."
-      : observed < expected ? `Aproximar-se da referência de ${percent(expected)}, validando o processo no VOD.` : `Manter a execução e acompanhar a referência de ${percent(expected)}.`;
+    const target = f.mode === "observation" ? "Coletar novas situações comparáveis antes de definir uma meta."
+      : f.mode === "maintenance" ? `Manter a execução e acompanhar a referência de ${percent(expected)}.`
+        : f.mode === "investigation" ? `Acompanhar a referência de ${percent(expected)} e investigar a diferença antes de definir uma meta corretiva.`
+          : `Aproximar-se da referência de ${percent(expected)}, validando o processo no VOD.`;
     return {
       title, summary: `${primary.label}: ${percent(observed)}; esperado ${percent(expected)}. ${action.short}`,
-      evidence: narrative, indicators,
+      evidence: narrative, indicators, primary,
       context: analysis?.context?.length ? analysis.context.filter((fact) => !/^(Recorte descritivo|O recorte mantém o padrão|Amostra em formação)/.test(fact)) : [analyzedContext(f, d)],
       rounds: evidence,
       actions: [
@@ -1884,38 +1929,56 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
         { label: "Referências", text: `Busquem VODs profissionais ${known(d.map_name) ? `em ${d.map_name}` : "nos mesmos mapas"}${sidePhrase(d.side) ? `, ${sidePhrase(d.side)}` : ""}, pela página de partidas do VLR.gg. Comparem ${f.key === "trade" ? "a cobertura entre jogadores e o timing da resposta" : f.key === "post" || f.key === "retake" || f.key === "advantage" ? "a sequência dos contatos, o uso do tempo e a condição da spike" : "a preparação do primeiro contato e as chamadas que mudam o plano"}.` },
       ],
       measurement: [{ point: title, today: `${percent(observed)}${Number.isFinite(successes) && Number.isFinite(events) ? ` (${successes} de ${events})` : ""}`, target }],
-      caveat: f.confirmed ? "Padrão recorrente no recorte do diagnóstico. A revisão do VOD deve validar a causa e o ajuste." : f.enough === false ? "Amostra em formação: este recorte serve para observação, sem conclusão de fragilidade." : "Recorte exploratório, sem padrão recorrente confirmado. Comecem pela revisão do VOD.",
+      mode: f.mode, confirmed: f.confirmed, enough: f.enough,
+      caveat: f.confirmed ? "Padrão recorrente no recorte do diagnóstico. A revisão do VOD deve validar a causa e o ajuste."
+        : f.mode === "maintenance" ? uncertainty(f)
+          : !f.enough ? "Amostra em formação: este recorte serve para observação, sem conclusão de fragilidade nem meta corretiva."
+            : "Recorte exploratório, sem padrão recorrente confirmado. Comecem pela revisão do VOD.",
     };
   }
 
   function plan(model, focuses) {
-    const count = focuses.length, confirmed = focuses.filter((f) => f.confirmed).length;
+    const count = focuses.length, confirmed = focuses.filter((f) => {
+      if (f.training?.report) return f.training.report.confirmed;
+      return effectiveFocus(f, typeof f.analyze === "function" ? f.analyze() : f.analysis).confirmed;
+    }).length;
     const record = Number.isFinite(model.wins) && Number.isFinite(model.matches) ? ` venceu ${model.wins} de ${model.matches} mapas no período analisado.` : ` tem ${model.matches || 0} mapas no período analisado.`;
     return {
       intro: `${model.team || "O time"}${record} Este plano reúne ${count} ${count === 1 ? "foco escolhido" : "focos escolhidos"} para revisão e treino. ${confirmed === count && count > 0 ? "Os focos têm padrão recorrente confirmado; a causa precisa ser validada no VOD." : confirmed ? `${confirmed} ${confirmed === 1 ? "tem padrão recorrente confirmado" : "têm padrões recorrentes confirmados"}; os demais recortes são exploratórios.` : "Nenhum tem padrão recorrente confirmado; comecem pela revisão do VOD."}`,
-      howToRead: "Observado é o resultado do time; esperado é a referência ajustada de outros times em situações parecidas. Liga é a taxa bruta da base no mesmo recorte, incluindo o time analisado. A diferença em rounds ou trades é descritiva, não uma previsão de ganho. Rounds numerados como no jogo (R1 = pistol); — indica referência indisponível.",
+      howToRead: "Observado é o resultado do time; esperado é a referência ajustada de outros times em situações parecidas. Liga é a taxa bruta da base no mesmo recorte, incluindo o time analisado. A diferença em rounds ou trades é descritiva, não uma previsão de ganho. Rounds numerados como no jogo (R1 = pistol); — indica referência indisponível."
+        + (text(model.scope).includes("com eventos") ? " A campanha e o período do resumo usam as últimas 10 partidas gerais. Cada indicador usa até 10 partidas com eventos daquele fundamento; essa janela pode incluir partidas anteriores ao período do resumo." : ""),
       caveats: ["Somem situações comparáveis de 3 a 4 novos mapas antes de concluir se houve evolução; mostrem sempre o número de casos.", "O alvo de acompanhamento usa o esperado como referência, sem prometer que será atingido no próximo scrim. O treinador ajusta a meta após revisar o VOD.", "Os recortes descritivos ajudam a investigar; resultados e proximidade no snapshot não comprovam posicionamento incorreto, intenção ou comunicação."],
     };
   }
 
   function create(focus) {
-    const f = focus && typeof focus === "object" ? focus : {};
-    const analysis = typeof f.analyze === "function" ? f.analyze() : f.analysis;
-    const dims = analysis?.primary?.dims || (f.dims && typeof f.dims === "object" && !Array.isArray(f.dims) ? f.dims : {});
+    const input = focus && typeof focus === "object" ? focus : {};
+    const analysis = typeof input.analyze === "function" ? input.analyze() : input.analysis;
+    const f = effectiveFocus(input, analysis);
+    const selectedDims = analysis?.primary?.dims || (f.dims && typeof f.dims === "object" && !Array.isArray(f.dims) ? f.dims : {});
+    const dims = { ...selectedDims };
+    // The detector scopes sites by map. Expand its compound category only for
+    // instructions; the reported/filtered dimensions remain exactly selected.
+    const mapSite = text(dims.map_site), separator = mapSite.lastIndexOf(" · ");
+    if (separator > 0 && separator + 3 < mapSite.length) {
+      dims.map_name = mapSite.slice(0, separator).trim();
+      dims.site = mapSite.slice(separator + 3).trim();
+    }
     const rawEvidence = analysis?.evidence || f.evidence;
-    const evidence = Array.isArray(rawEvidence) ? rawEvidence.filter((ev) => ev && typeof ev === "object") : [];
+    const evidence = Array.isArray(rawEvidence) ? rawEvidence.filter((ev) => ev && typeof ev === "object"
+      && (f.mode !== "maintenance" || ev.outcome === 1)) : [];
     const recipes = {
       trade: () => trade(dims, f), advantage: () => advantage(dims), fb_open: () => firstBlood(dims, false),
       fb_rec: () => firstBlood(dims, true), post: () => planted(dims, false), retake: () => planted(dims, true),
       keyrounds: () => keyrounds(dims), halfopen: () => halfopen(dims), pressure: () => pressure(dims),
     };
-    const recipe = (Object.prototype.hasOwnProperty.call(recipes, f.key) ? recipes[f.key] : () => keyrounds(dims))();
+    const recipe = observationRecipe((Object.prototype.hasOwnProperty.call(recipes, f.key) ? recipes[f.key] : () => keyrounds(dims))(), f, dims);
     const economy = known(dims.economy) ? `Reproduzam a condição de economia do recorte: ${dims.economy}; confiram armas e utilitários na revisão.` : "Confiram as compras na revisão e mantenham os recursos iguais entre as séries.";
     const report = buildReport(f, recipe, analysis, dims, evidence);
     return {
-      title: recipe.title, summary: report.summary, minutes: 25, report,
+      title: recipe.title, summary: report.summary, minutes: 25, report, primary: report.primary, mode: f.mode, confirmed: f.confirmed, enough: f.enough,
       objective: join(recipe.objective, uncertainty(f)), context: analyzedContext(f, dims),
-      setup: join(practiceLocation(dims, evidence), recipe.setup, participants(f.key, dims), economy), roles: recipe.roles,
+      setup: join(practiceLocation(dims, evidence), recipe.setup, recipe.scenario, participants(f.key, dims), economy), roles: recipe.roles,
       steps: [
         { title: "Revisão guiada", minutes: 5, instruction: join(openingReview(evidence), recipe.review) },
         { title: "Prática em personalizada", minutes: 15, instruction: recipe.practice },
@@ -2347,17 +2410,29 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
   const trainingName = (f) => f.name || f.copy.title.join(" ").replace(/\.$/, "");
 
   function selectFocus(model) {
-    const valid = model.candidates.filter((c) => c.events > 0 && Number.isFinite(c.observed) && Number.isFinite(c.expected));
+    const valid = model.candidates.filter((c) => Object.prototype.hasOwnProperty.call(COPY, c.key)
+      && Number.isFinite(c.events) && c.events > 0
+      && Number.isFinite(c.observed) && c.observed >= 0 && c.observed <= 1
+      && Number.isFinite(c.expected) && c.expected >= 0 && c.expected <= 1);
     const enough = (c) => c.matches >= model.minMatches && c.events >= model.minEvents;
-    const recurring = valid.filter((c) => c.selected && c.gap < 0 && enough(c));
-    const eligible = valid.filter(enough);
-    // Recurring deficits come first. Without one, this is explicitly exploratory.
-    const pool = recurring.length ? recurring : eligible.length ? eligible : valid;
+    // Use the rates as the source of truth, not a separately rounded gap. For
+    // exploration, keep the dashboard's precision: less than 0.5 pp is neutral.
+    const deficits = valid.filter((c) => c.observed < c.expected
+      && (c.selected || Math.round(100 * (c.expected - c.observed)) >= 1));
+    const recurring = deficits.filter((c) => c.selected && enough(c));
+    const eligible = deficits.filter(enough);
+    // Never fill unused slots with strengths. A strong team can have no focus.
+    const pool = recurring.length ? recurring : eligible.length ? eligible : deficits;
     const sorted = [...pool].sort((a, b) => ((b.expected - b.observed) * b.events) - ((a.expected - a.observed) * a.events));
     const keys = new Set();
     return sorted.filter((c) => { if (keys.has(c.key)) return false; keys.add(c.key); return true; }).slice(0, 3)
-      .map((c) => ({ ...c, confirmed: !!c.selected && c.gap < 0 && enough(c),
+      .map((c) => ({ ...c, gap: 100 * (c.observed - c.expected), confirmed: !!c.selected && enough(c),
         enough: enough(c), copy: COPY[c.key] || COPY.keyrounds }));
+  }
+
+  function hasSufficientData(model) {
+    return model.candidates.some((c) => c.events >= model.minEvents && c.matches >= model.minMatches
+      && Number.isFinite(c.observed) && Number.isFinite(c.expected));
   }
 
   function banner(model) {
@@ -2372,7 +2447,9 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
     const launch = button("rx-launch-button", ["Iniciar missão ", ARROW].join(""), () => open(model, focuses));
     bannerEl.append(art, mark, $el("div", "rx-launch-copy",
       $el("div", "rx-launch-kicker", "ValoStrat.gg  /  MISSÃO DE EVOLUÇÃO"), title,
-      $el("p", "rx-launch-sub", count ? `${count} ${count === 1 ? "foco de atenção" : "focos de atenção"}. Uma nova forma de preparar o próximo treino.` : "Conheça seus indicadores. Escolha o foco do próximo treino.")),
+      $el("p", "rx-launch-sub", count ? `${count} ${count === 1 ? "foco de atenção" : "focos de atenção"}. Uma nova forma de preparar o próximo treino.`
+        : !focuses.length && hasSufficientData(model) ? "Sem foco de correção nos dados disponíveis. Acompanhe a consistência dos pontos fortes."
+          : "Conheça seus indicadores. Escolha o foco do próximo treino.")),
       launch, $el("span", "rx-launch-code", "BRIEFING INTERATIVO  //  ~2 MIN"));
     return bannerEl;
   }
@@ -2380,7 +2457,11 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
   let active = null;
   function open(model, focuses = selectFocus(model)) {
     if (active) return;
-    focuses = focuses.map((f) => ({ ...f, training: window.RoundRxTraining.create(f) }));
+    focuses = focuses.map((f) => {
+      const training = window.RoundRxTraining.create(f);
+      const primary = training.primary;
+      return { ...f, ...primary, training, confirmed: training.confirmed, enough: training.enough };
+    });
     const opener = document.activeElement;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const dialog = $el("dialog", "rx-mission");
@@ -2468,15 +2549,18 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
     }
     function intro() {
       const recurring = focuses.filter((f) => f.confirmed).length;
-      const enough = focuses.some((f) => f.enough);
-      const condition = recurring ? "Padrões recorrentes" : enough ? "Exploração" : "Amostra em formação";
-      const description = recurring ? "Escolha por onde começar a revisão do time." : enough ? "Explore os indicadores; ainda não há fragilidades confirmadas." : "Mais partidas ajudam a encontrar padrões do time.";
+      const enough = focuses.some((f) => f.enough), noDeficit = !focuses.length && hasSufficientData(model);
+      const condition = noDeficit ? "Sem foco de correção" : recurring ? "Padrões recorrentes" : enough ? "Exploração" : "Amostra em formação";
+      const description = noDeficit ? "Os dados disponíveis não justificam um foco de correção. Preservem o que funciona e acompanhem a consistência nas próximas partidas."
+        : recurring ? "Escolha por onde começar a revisão do time." : enough ? "Explore os indicadores; ainda não há fragilidades confirmadas." : "Mais partidas ajudam a encontrar padrões do time.";
       const copy = $el("div", "rx-copy", heading(["Prepare o", "próximo treino."]),
         $el("p", "rx-description", description),
         $el("p", "rx-context", `${model.matches} mapas · ${number(model.rounds)} rounds · ${model.scope}`));
       const aside = panel("aside", "rx-aside rx-panel--stack", panelLabel(condition, `${focuses.length} ${focuses.length === 1 ? "foco" : "focos"}`),
         ...focuses.map((f, i) => objective(f, i, false)));
-      if (!focuses.length) aside.append($el("p", "rx-empty", "Ainda não há eventos suficientes para montar os focos. Explore mais partidas no Panorama."));
+      if (!focuses.length) aside.append($el("p", "rx-empty", noDeficit
+        ? "Nenhum objetivo corretivo foi gerado. Consulte os pontos fortes no Panorama e mantenha o acompanhamento."
+        : "Ainda não há dados que sustentem um foco de correção. Acompanhe novas partidas no Panorama."));
       body.append(copy, aside);
     }
     function focusChapter(f, idx) {
@@ -2553,7 +2637,9 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
     function plan() {
       const selected = focuses.filter((f) => checked.has(f.id)), count = selected.length;
       const copy = $el("div", "rx-copy", heading(["Escolha o foco", "do treino."]),
-        $el("p", "rx-description", focuses.length ? "Escolha o que levar para o próximo treino." : "Explore mais partidas para encontrar focos de treino."),
+        $el("p", "rx-description", focuses.length ? "Escolha o que levar para o próximo treino."
+          : hasSufficientData(model) ? "Nenhum objetivo corretivo foi gerado. Mantenham os pontos fortes e acompanhem novas partidas."
+            : "Acompanhem novas partidas antes de definir um ajuste de treino."),
         $el("div", "rx-plan-list", ...selected.map((f) => panel("div", "rx-panel--compact rx-plan-card", $el("span", "rx-plan-icon", "↗"),
           $el("div", "rx-plan-copy", $el("b", "", trainingName(f)), $el("p", "", f.training.report.summary))))));
       const preview = button("rx-cta", "Visualizar PDF ↗", previewPlan); preview.disabled = !count;
@@ -5137,7 +5223,10 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
   function scopeEvents(fk, team, scope) {
     let ev = FX[fk].byTeam[team];
     if (scope && scope.startsWith("ultimas_")) {
-      const keep = new Set(teamMatches[team].slice(-Number(scope.split("_")[1])));
+      // Match the detector's _scopes and evidence: games with no eligible event
+      // in this fundamental cannot consume a place in its last-N window.
+      const eligibleMatches = new Set(ev.map((i) => Fd(fk).E.m[i]));
+      const keep = new Set(teamMatches[team].filter((m) => eligibleMatches.has(m)).slice(-Number(scope.split("_")[1])));
       ev = ev.filter((i) => keep.has(Fd(fk).E.m[i]));
     }
     return ev;
@@ -5152,7 +5241,7 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
   const pp = (v) => (v == null || !isFinite(v) ? "—" : (Math.abs(v) < 0.5 ? "±" : v > 0 ? "+" : "−") + NF0.format(Math.abs(v)) + " pp");
   const unitsVs = (fk, vs) => { const a = Math.round(Math.abs(vs)), u = FUI[fk]; return a === 0 ? `o mesmo número de ${u.unit}` : `${a} ${a === 1 ? u.unitSing : u.unit} a ${vs < 0 ? "menos" : "mais"}`; };
   const fdRows = (fk, team, scope) => { const FD = Fd(fk).FD; return range(0, FD.id.length).filter((i) => FD.t[i] === team && FD.scope[i] === scope); };
-  const scopeName = (sc) => (sc === "todas" ? "todas as partidas" : `últimas ${sc.split("_")[1]} partidas`);
+  const scopeName = (sc) => (sc === "todas" ? "todas as partidas" : `últimas ${sc.split("_")[1]} partidas com eventos do fundamento`);
   const openPat = (fk, i, rv) => () => {
     state.patFrom = state.section !== "diag" ? state.section : null;  // volta para a seção de onde veio
     state.section = "diag"; state.dfund = fk; state.pat = i; state.rv = rv && !ROUND_FK.has(fk) ? { j: 0 } : null; render(); window.scrollTo({ top: 0 });
@@ -5771,6 +5860,7 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
       }
       if (fk === "post") context.side = "atk";
       if (fk === "retake") context.side = "def";
+      if (context.map_name && context.site) context.map_site = `${context.map_name} · ${context.site}`;
       records[i] = { outcome, expected: expected[i] / 1000, context, m: E.m[i], r: E.r[i], ts: E.ts && E.ts[i] };
       league.push({ outcome, context });
     }
@@ -5826,8 +5916,8 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
                   outcome: event.outcome, expected: event.expected, context: event.context, why: missionEventWhy(fk, event) }];
               });
               analysis = window.RoundRxReport.analyze({ key: fk, name, label: FD.label[i], dims,
-                confirmed: !!FD.sel[i] && FD.gap[i] < 0 && enough, enough,
-                minEvents: 8, minMatches: 2, events, league: data.league });
+                confirmed: !!FD.sel[i] && FD.obs[i] < FD.exp[i] && enough, enough,
+                minEvents: min.min_events, minMatches: min.min_matches, events, league: data.league });
             }
             return analysis;
           },
@@ -5842,7 +5932,7 @@ dialog.rx-pdf-dialog { width: min(1160px, calc(100vw - 32px)); height: calc(100d
     }
     const sceneName = window.RoundRxMission.sceneForTeam(D.teams[team]);
     return window.RoundRxMission.banner({
-      team: prettyTeam(D.teams[team]), scope: scope === "todas" ? "Todas as partidas" : "Últimas 10 partidas",
+      team: prettyTeam(D.teams[team]), scope: scope === "todas" ? "Todas as partidas" : "Últimas 10 partidas com eventos de cada fundamento",
       matches: ms.length, rounds: ms.reduce((n, m) => n + M.rs[m] + M.bs[m], 0),
       wins: ms.filter((m) => { const [a, b] = scoreOf(m, team); return a > b; }).length,
       period: ms.length ? `${fmtDate(M.date[ms[0]])} a ${fmtDate(M.date[ms[ms.length - 1]])}` : "",

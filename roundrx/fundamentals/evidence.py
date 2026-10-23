@@ -2,9 +2,9 @@
 
 Padrão "abaixo do esperado": eventos do recorte em que o desfecho NÃO aconteceu, dos que outros times mais
 conseguiriam (maior esperado) para os menos. Padrão "acima": desfechos que aconteceram onde o esperado era baixo.
-O recorte geral de cada time (nível 0) também recebe evidências: são as "maiores chances perdidas" para revisão,
-mesmo quando nenhum padrão foi detectado. Cada linha diz por que está na lista, em linguagem de revisão, nunca
-como erro.
+O recorte geral de cada time (nível 0) também recebe evidências na direção do resultado, mesmo quando nenhum
+padrão foi detectado. Pontos fortes mostram sucessos; resultados abaixo do esperado mostram oportunidades para
+revisão. Cada linha diz por que está na lista, em linguagem de revisão, nunca como erro.
 """
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ def build_evidence(events: pd.DataFrame, patterns: pd.DataFrame, cfg, spec=None)
             e = e[[(pt.team, m) in keep for m in e["match_id"]]]
         for k, v in json.loads(pt.dims).items():
             e = e[e[k].astype(str) == v]
-        e = e[~e["y"]].sort_values("p", ascending=False) if pt.direction == "abaixo" or pt.level == 0 else e[e["y"]].sort_values("p")
+        e = e[~e["y"]].sort_values("p", ascending=False) if pt.direction == "abaixo" else e[e["y"]].sort_values("p")
         for rank, r in enumerate(e.head(MAX_PER_PATTERN).itertuples(index=False)):
             base = {"pattern_id": pt.pattern_id, "fundamental": spec.name, "rank": rank, "match_id": r.match_id,
                     "round_num": int(r.round_num), "expected": float(r.p), "outcome": bool(r.y), "side": r.side, "map_name": r.map_name}

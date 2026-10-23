@@ -27,10 +27,42 @@ test('a single match never becomes a confirmed weakness', () => {
   assert.equal(rows[0].enough, false);
   assert.equal(rows[0].confirmed, false);
 });
-test('above-expected patterns remain exploratory rather than weaknesses', () => {
+test('above-expected patterns never become correction objectives, even when selected', () => {
   const rows = select(model([candidate('trade', { observed: .8, gap: 20, selected: true })]));
+  assert.equal(rows.length, 0);
+});
+test('a strong team receives no invented focus or compulsory three-item plan', () => {
+  const rows = select(model(['trade', 'post', 'retake', 'advantage'].map((key) => candidate(key, { observed: .9, gap: 30 }))));
+  assert.equal(rows.length, 0);
+});
+test('one exploratory deficit is not padded with strong or neutral fundamentals', () => {
+  const rows = select(model([candidate('trade'), candidate('post', { observed: .8, gap: 20 }),
+    candidate('retake', { observed: .6, gap: 0 })]));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].key, 'trade');
   assert.equal(rows[0].confirmed, false);
-  assert.equal(rows[0].observed, .8);
+});
+test('unconfirmed differences that round to zero pp do not trigger a focus', () => {
+  assert.equal(select(model([candidate('trade', { observed: .599, gap: -.1 })])).length, 0);
+});
+test('rates determine direction even when the stored gap contradicts them', () => {
+  assert.equal(select(model([candidate('trade', { observed: .8, gap: -20, selected: true })])).length, 0);
+  const rows = select(model([candidate('trade', { gap: 20, selected: true })]));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].confirmed, true);
+  assert.ok(rows[0].gap < 0);
+});
+test('a proven contextual weakness remains actionable within a strong fundamental', () => {
+  const rows = select(model([candidate('trade', { observed: .8, gap: 20, selected: true }),
+    candidate('trade', { id: 'trade-def', selected: true, dims: { side: 'def' }, events: 40 })]));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].id, 'trade-def');
+  assert.equal(rows[0].confirmed, true);
+});
+test('invalid rates and unsupported fundamentals do not receive unrelated tips', () => {
+  const invalid = [candidate('unknown'), candidate('trade', { observed: -.2 }),
+    candidate('post', { expected: 1.2 }), candidate('retake', { events: Infinity })];
+  assert.equal(select(model(invalid)).length, 0);
 });
 test('missing/empty performance data produces no invented objectives', () => {
   assert.equal(select(model([])).length, 0);

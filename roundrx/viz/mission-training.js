@@ -10,7 +10,7 @@
   const side = (value) => ({ atk: "ataque", def: "defesa" }[value] || "");
   const sidePhrase = (value) => ({ atk: "no ataque", def: "na defesa" }[value] || "");
   const DIM_NAMES = {
-    map_name: "Mapa", side: "Lado", phase: "Momento", numbers: "Saldo de vivos", state: "Vivos do time × adversário",
+    map_name: "Mapa", map_site: "Mapa e site", side: "Lado", phase: "Momento", numbers: "Saldo de vivos", state: "Vivos do time × adversário",
     pstate: "Vivos do time × adversário no plant", site: "Site", pwhen: "Momento do plant", when: "Momento do evento",
     economy: "Economia", spike: "Spike", round_type: "Tipo de round", moment: "Caminho do half", half: "Half",
     lead: "Placar", victim_name: "Quem morreu", nearest_ally_name: "Aliado mais próximo", duel_name: "Jogador no duelo",
@@ -48,16 +48,65 @@
 
   function openingReview(evidence) {
     const refs = evidence.filter((ev) => Number.isInteger(ev.round) && ev.round > 0).slice(0, 2);
-    if (!refs.length) return "Separem até dois rounds do recorte em Explorar evidências; se não houver VOD, façam uma repetição diagnóstica antes de corrigir.";
+    if (!refs.length) return "Separem até dois rounds do recorte em Explorar evidências; se não houver VOD, registrem novas situações comparáveis antes de concluir.";
     return `Revisem ${refs.map((ev) => join(known(ev.map), `round ${ev.round}`, known(ev.opponent) ? `vs ${ev.opponent}` : "")).join(" e ")}.`;
   }
 
+  function effectiveFocus(f, analysis) {
+    const source = analysis?.primary || f;
+    const rate = (value) => Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
+    const observed = rate(source.observed), expected = rate(source.expected);
+    const events = source.events, matches = source.matches;
+    const minEvents = Math.max(8, Number.isFinite(analysis?.minEvents) ? analysis.minEvents : Number.isFinite(f.minEvents) ? f.minEvents : 8);
+    const minMatches = Math.max(2, Number.isFinite(analysis?.minMatches) ? analysis.minMatches : Number.isFinite(f.minMatches) ? f.minMatches : 2);
+    const measured = observed != null && expected != null && Number.isFinite(events) && events > 0;
+    const enough = measured && f.enough !== false && analysis?.enough !== false && events >= minEvents
+      && Number.isFinite(matches) && matches >= minMatches;
+    const below = measured && expected - observed > 1e-8;
+    const confirmed = !!f.confirmed && analysis?.confirmed !== false && enough && below;
+    const within = !below || (!confirmed && expected - observed < .005 - 1e-10);
+    const mode = !measured || !enough ? "observation" : within ? "maintenance" : confirmed ? "correction" : "investigation";
+    return { ...f, observed, expected, events, matches, enough, confirmed, mode };
+  }
+
   function uncertainty(f) {
-    if (f.enough === false) return "Amostra em formação: use o treino para observar o comportamento antes de concluir que existe uma fragilidade.";
-    if (!f.confirmed) return Number.isFinite(f.observed) && Number.isFinite(f.expected) && f.observed >= f.expected
-      ? "Resultado no esperado ou acima dele: exercício exploratório para testar consistência, sem fragilidade confirmada."
-      : "Exercício exploratório: valide a hipótese na revisão; ainda não há fragilidade recorrente confirmada.";
+    if (f.mode === "observation") return "Amostra em formação: acompanhamento exploratório para observar o comportamento, sem conclusão de fragilidade nem meta corretiva.";
+    if (f.mode === "maintenance") return f.observed >= f.expected - 1e-8
+      ? "Resultado no esperado ou acima dele: preservar a execução, sem fragilidade confirmada neste ponto."
+      : "Resultado próximo da referência: preservar a execução, sem fragilidade confirmada neste ponto.";
+    if (f.mode === "investigation") return "Investigação exploratória: valide a hipótese na revisão; ainda não há fragilidade recorrente confirmada.";
     return "Hipótese de treino: valide a causa na revisão antes de escolher a correção.";
+  }
+
+  function observationRecipe(recipe, f, d) {
+    if (f.mode === "correction") return recipe;
+    const maintenance = f.mode === "maintenance", small = f.mode === "observation";
+    const label = text(f.name) || text(f.label) || "fundamento do time";
+    const location = join(known(d.map_name) ? `em ${d.map_name}` : "", sidePhrase(d.side), known(d.site) ? `no site ${d.site}` : "");
+    const alive = state(d.state || d.pstate);
+    const scenario = join(location, alive ? `em ${alive}` : "");
+    const review = maintenance
+      ? "Revisem exemplos bem-sucedidos do mesmo recorte e identifiquem quais decisões ajudaram a execução. Documentem o que deve ser preservado."
+      : "Comparem resultados positivos e negativos do mesmo recorte. Confiram informação, recursos e decisões no VOD antes de atribuir uma causa à diferença.";
+    return {
+      title: `${maintenance ? "Manutenção" : small ? "Observação" : "Investigação"}: ${label}${scenario ? ` · ${scenario}` : ""}`,
+      scenario: scenario ? `Mantenham o recorte ${scenario}.` : "",
+      objective: maintenance ? "Documentar e preservar a execução do time, acompanhando a referência."
+        : "Observar a execução e verificar se existe uma hipótese tática sustentada pelos rounds revisados.",
+      setup: "Usem situações do mesmo recorte, mantendo mapa, lado, recursos e cenário comparáveis. Comecem pela revisão dos rounds disponíveis.",
+      roles: "O time descreve as decisões tomadas e um observador registra o contexto, a execução e o resultado separadamente.",
+      review,
+      practice: maintenance ? "Reproduzam uma execução bem-sucedida e registrem as decisões que o time deseja manter. Variem apenas a resposta adversária para observar consistência."
+        : small ? "Registrem novas situações do recorte sem impor uma mudança tática. Se usarem personalizada, tratem as repetições como observação; elas não substituem partidas na amostra."
+          : "Após a revisão, testem uma hipótese apenas se houver evidência de um problema de execução. Comparem a execução atual com uma variação, mantendo o contexto igual; sem hipótese sustentada, continuem observando.",
+      debrief: maintenance ? "Registrem as práticas que funcionaram e como preservá-las no próximo scrim."
+        : "Separem observações de hipóteses. Registrem o que ainda precisa ser verificado antes de escolher qualquer ajuste.",
+      repetitions: "Revisar até dois rounds comparáveis e registrar as observações; repetições em personalizada são opcionais.",
+      success: maintenance ? "Critério da sessão: documentar decisões bem-sucedidas que o time pretende manter."
+        : "Critério da sessão: registrar contexto e decisões, sem exigir uma taxa de conversão ou concluir que há uma falha.",
+      progression: "Acompanhem situações comparáveis em 3 a 4 novos mapas antes de reavaliar a execução.",
+      watch: "Comparar observado, esperado e número de eventos no mesmo recorte; preservar decisões bem-sucedidas identificadas no VOD.",
+    };
   }
 
   function trade(d, f) {
@@ -332,12 +381,19 @@
 
   function buildReport(f, recipe, analysis, d, evidence) {
     const raw = analysis?.primary || {};
-    const observed = Number.isFinite(raw.observed) ? raw.observed : f.observed;
-    const expected = Number.isFinite(raw.expected) ? raw.expected : f.expected;
-    const events = Number.isFinite(raw.events) ? raw.events : f.events;
+    const observed = f.observed, expected = f.expected, events = f.events;
     const successes = Number.isFinite(raw.successes) ? raw.successes : Number.isFinite(observed) && Number.isFinite(events) ? Math.round(observed * events) : null;
-    const primary = { label: raw.label || text(f.label) || text(f.name) || "Recorte do fundamento", observed, expected, events, successes, league: raw.league };
-    const title = reportTitle(f.key, d), action = scrimAction(f.key, d, f);
+    const primary = { label: raw.label || text(f.label) || text(f.name) || "Recorte do fundamento", observed, expected,
+      events, successes, league: raw.league, matches: f.matches, dims: { ...(raw.dims || f.dims || {}) },
+      gap: Number.isFinite(observed) && Number.isFinite(expected) ? 100 * (observed - expected) : null };
+    const correction = f.mode === "correction";
+    const title = correction ? reportTitle(f.key, d) : recipe.title;
+    const action = correction ? scrimAction(f.key, d, f) : {
+      short: f.mode === "maintenance" ? "Preservem a execução e revisem exemplos bem-sucedidos."
+        : f.mode === "observation" ? "Coletem novas situações comparáveis antes de definir ajustes."
+          : "Investiguem a diferença no VOD antes de definir qualquer ajuste.",
+      text: join(recipe.practice, recipe.scenario),
+    };
     const delta = Number.isFinite(raw.deltaEvents) ? raw.deltaEvents : Number.isFinite(expected) && Number.isFinite(observed) && Number.isFinite(events) ? (expected - observed) * events : null;
     const units = f.key === "trade" ? "trades" : "rounds";
     const results = {
@@ -352,11 +408,13 @@
       : "Separem os rounds do recorte para revisão antes de definir o ajuste de treino; ainda não há dados completos para a comparação.";
     const fmtIndicator = (row) => ({ label: row.label, team: Number.isFinite(row.observed) ? `${percent(row.observed)}${Number.isFinite(row.successes) && Number.isFinite(row.events) ? ` (${row.successes} de ${row.events})` : ""}` : "—", expected: percent(row.expected), league: percent(row.league) });
     const indicators = (analysis?.indicators?.length ? analysis.indicators : [primary]).map(fmtIndicator);
-    const target = !Number.isFinite(expected) ? "Coletar novas situações comparáveis antes de definir uma meta."
-      : observed < expected ? `Aproximar-se da referência de ${percent(expected)}, validando o processo no VOD.` : `Manter a execução e acompanhar a referência de ${percent(expected)}.`;
+    const target = f.mode === "observation" ? "Coletar novas situações comparáveis antes de definir uma meta."
+      : f.mode === "maintenance" ? `Manter a execução e acompanhar a referência de ${percent(expected)}.`
+        : f.mode === "investigation" ? `Acompanhar a referência de ${percent(expected)} e investigar a diferença antes de definir uma meta corretiva.`
+          : `Aproximar-se da referência de ${percent(expected)}, validando o processo no VOD.`;
     return {
       title, summary: `${primary.label}: ${percent(observed)}; esperado ${percent(expected)}. ${action.short}`,
-      evidence: narrative, indicators,
+      evidence: narrative, indicators, primary,
       context: analysis?.context?.length ? analysis.context.filter((fact) => !/^(Recorte descritivo|O recorte mantém o padrão|Amostra em formação)/.test(fact)) : [analyzedContext(f, d)],
       rounds: evidence,
       actions: [
@@ -365,38 +423,56 @@
         { label: "Referências", text: `Busquem VODs profissionais ${known(d.map_name) ? `em ${d.map_name}` : "nos mesmos mapas"}${sidePhrase(d.side) ? `, ${sidePhrase(d.side)}` : ""}, pela página de partidas do VLR.gg. Comparem ${f.key === "trade" ? "a cobertura entre jogadores e o timing da resposta" : f.key === "post" || f.key === "retake" || f.key === "advantage" ? "a sequência dos contatos, o uso do tempo e a condição da spike" : "a preparação do primeiro contato e as chamadas que mudam o plano"}.` },
       ],
       measurement: [{ point: title, today: `${percent(observed)}${Number.isFinite(successes) && Number.isFinite(events) ? ` (${successes} de ${events})` : ""}`, target }],
-      caveat: f.confirmed ? "Padrão recorrente no recorte do diagnóstico. A revisão do VOD deve validar a causa e o ajuste." : f.enough === false ? "Amostra em formação: este recorte serve para observação, sem conclusão de fragilidade." : "Recorte exploratório, sem padrão recorrente confirmado. Comecem pela revisão do VOD.",
+      mode: f.mode, confirmed: f.confirmed, enough: f.enough,
+      caveat: f.confirmed ? "Padrão recorrente no recorte do diagnóstico. A revisão do VOD deve validar a causa e o ajuste."
+        : f.mode === "maintenance" ? uncertainty(f)
+          : !f.enough ? "Amostra em formação: este recorte serve para observação, sem conclusão de fragilidade nem meta corretiva."
+            : "Recorte exploratório, sem padrão recorrente confirmado. Comecem pela revisão do VOD.",
     };
   }
 
   function plan(model, focuses) {
-    const count = focuses.length, confirmed = focuses.filter((f) => f.confirmed).length;
+    const count = focuses.length, confirmed = focuses.filter((f) => {
+      if (f.training?.report) return f.training.report.confirmed;
+      return effectiveFocus(f, typeof f.analyze === "function" ? f.analyze() : f.analysis).confirmed;
+    }).length;
     const record = Number.isFinite(model.wins) && Number.isFinite(model.matches) ? ` venceu ${model.wins} de ${model.matches} mapas no período analisado.` : ` tem ${model.matches || 0} mapas no período analisado.`;
     return {
       intro: `${model.team || "O time"}${record} Este plano reúne ${count} ${count === 1 ? "foco escolhido" : "focos escolhidos"} para revisão e treino. ${confirmed === count && count > 0 ? "Os focos têm padrão recorrente confirmado; a causa precisa ser validada no VOD." : confirmed ? `${confirmed} ${confirmed === 1 ? "tem padrão recorrente confirmado" : "têm padrões recorrentes confirmados"}; os demais recortes são exploratórios.` : "Nenhum tem padrão recorrente confirmado; comecem pela revisão do VOD."}`,
-      howToRead: "Observado é o resultado do time; esperado é a referência ajustada de outros times em situações parecidas. Liga é a taxa bruta da base no mesmo recorte, incluindo o time analisado. A diferença em rounds ou trades é descritiva, não uma previsão de ganho. Rounds numerados como no jogo (R1 = pistol); — indica referência indisponível.",
+      howToRead: "Observado é o resultado do time; esperado é a referência ajustada de outros times em situações parecidas. Liga é a taxa bruta da base no mesmo recorte, incluindo o time analisado. A diferença em rounds ou trades é descritiva, não uma previsão de ganho. Rounds numerados como no jogo (R1 = pistol); — indica referência indisponível."
+        + (text(model.scope).includes("com eventos") ? " A campanha e o período do resumo usam as últimas 10 partidas gerais. Cada indicador usa até 10 partidas com eventos daquele fundamento; essa janela pode incluir partidas anteriores ao período do resumo." : ""),
       caveats: ["Somem situações comparáveis de 3 a 4 novos mapas antes de concluir se houve evolução; mostrem sempre o número de casos.", "O alvo de acompanhamento usa o esperado como referência, sem prometer que será atingido no próximo scrim. O treinador ajusta a meta após revisar o VOD.", "Os recortes descritivos ajudam a investigar; resultados e proximidade no snapshot não comprovam posicionamento incorreto, intenção ou comunicação."],
     };
   }
 
   function create(focus) {
-    const f = focus && typeof focus === "object" ? focus : {};
-    const analysis = typeof f.analyze === "function" ? f.analyze() : f.analysis;
-    const dims = analysis?.primary?.dims || (f.dims && typeof f.dims === "object" && !Array.isArray(f.dims) ? f.dims : {});
+    const input = focus && typeof focus === "object" ? focus : {};
+    const analysis = typeof input.analyze === "function" ? input.analyze() : input.analysis;
+    const f = effectiveFocus(input, analysis);
+    const selectedDims = analysis?.primary?.dims || (f.dims && typeof f.dims === "object" && !Array.isArray(f.dims) ? f.dims : {});
+    const dims = { ...selectedDims };
+    // The detector scopes sites by map. Expand its compound category only for
+    // instructions; the reported/filtered dimensions remain exactly selected.
+    const mapSite = text(dims.map_site), separator = mapSite.lastIndexOf(" · ");
+    if (separator > 0 && separator + 3 < mapSite.length) {
+      dims.map_name = mapSite.slice(0, separator).trim();
+      dims.site = mapSite.slice(separator + 3).trim();
+    }
     const rawEvidence = analysis?.evidence || f.evidence;
-    const evidence = Array.isArray(rawEvidence) ? rawEvidence.filter((ev) => ev && typeof ev === "object") : [];
+    const evidence = Array.isArray(rawEvidence) ? rawEvidence.filter((ev) => ev && typeof ev === "object"
+      && (f.mode !== "maintenance" || ev.outcome === 1)) : [];
     const recipes = {
       trade: () => trade(dims, f), advantage: () => advantage(dims), fb_open: () => firstBlood(dims, false),
       fb_rec: () => firstBlood(dims, true), post: () => planted(dims, false), retake: () => planted(dims, true),
       keyrounds: () => keyrounds(dims), halfopen: () => halfopen(dims), pressure: () => pressure(dims),
     };
-    const recipe = (Object.prototype.hasOwnProperty.call(recipes, f.key) ? recipes[f.key] : () => keyrounds(dims))();
+    const recipe = observationRecipe((Object.prototype.hasOwnProperty.call(recipes, f.key) ? recipes[f.key] : () => keyrounds(dims))(), f, dims);
     const economy = known(dims.economy) ? `Reproduzam a condição de economia do recorte: ${dims.economy}; confiram armas e utilitários na revisão.` : "Confiram as compras na revisão e mantenham os recursos iguais entre as séries.";
     const report = buildReport(f, recipe, analysis, dims, evidence);
     return {
-      title: recipe.title, summary: report.summary, minutes: 25, report,
+      title: recipe.title, summary: report.summary, minutes: 25, report, primary: report.primary, mode: f.mode, confirmed: f.confirmed, enough: f.enough,
       objective: join(recipe.objective, uncertainty(f)), context: analyzedContext(f, dims),
-      setup: join(practiceLocation(dims, evidence), recipe.setup, participants(f.key, dims), economy), roles: recipe.roles,
+      setup: join(practiceLocation(dims, evidence), recipe.setup, recipe.scenario, participants(f.key, dims), economy), roles: recipe.roles,
       steps: [
         { title: "Revisão guiada", minutes: 5, instruction: join(openingReview(evidence), recipe.review) },
         { title: "Prática em personalizada", minutes: 15, instruction: recipe.practice },

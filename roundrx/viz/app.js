@@ -2547,7 +2547,10 @@
   function scopeEvents(fk, team, scope) {
     let ev = FX[fk].byTeam[team];
     if (scope && scope.startsWith("ultimas_")) {
-      const keep = new Set(teamMatches[team].slice(-Number(scope.split("_")[1])));
+      // Match the detector's _scopes and evidence: games with no eligible event
+      // in this fundamental cannot consume a place in its last-N window.
+      const eligibleMatches = new Set(ev.map((i) => Fd(fk).E.m[i]));
+      const keep = new Set(teamMatches[team].filter((m) => eligibleMatches.has(m)).slice(-Number(scope.split("_")[1])));
       ev = ev.filter((i) => keep.has(Fd(fk).E.m[i]));
     }
     return ev;
@@ -2562,7 +2565,7 @@
   const pp = (v) => (v == null || !isFinite(v) ? "—" : (Math.abs(v) < 0.5 ? "±" : v > 0 ? "+" : "−") + NF0.format(Math.abs(v)) + " pp");
   const unitsVs = (fk, vs) => { const a = Math.round(Math.abs(vs)), u = FUI[fk]; return a === 0 ? `o mesmo número de ${u.unit}` : `${a} ${a === 1 ? u.unitSing : u.unit} a ${vs < 0 ? "menos" : "mais"}`; };
   const fdRows = (fk, team, scope) => { const FD = Fd(fk).FD; return range(0, FD.id.length).filter((i) => FD.t[i] === team && FD.scope[i] === scope); };
-  const scopeName = (sc) => (sc === "todas" ? "todas as partidas" : `últimas ${sc.split("_")[1]} partidas`);
+  const scopeName = (sc) => (sc === "todas" ? "todas as partidas" : `últimas ${sc.split("_")[1]} partidas com eventos do fundamento`);
   const openPat = (fk, i, rv) => () => {
     state.patFrom = state.section !== "diag" ? state.section : null;  // volta para a seção de onde veio
     state.section = "diag"; state.dfund = fk; state.pat = i; state.rv = rv && !ROUND_FK.has(fk) ? { j: 0 } : null; render(); window.scrollTo({ top: 0 });
@@ -3181,6 +3184,7 @@
       }
       if (fk === "post") context.side = "atk";
       if (fk === "retake") context.side = "def";
+      if (context.map_name && context.site) context.map_site = `${context.map_name} · ${context.site}`;
       records[i] = { outcome, expected: expected[i] / 1000, context, m: E.m[i], r: E.r[i], ts: E.ts && E.ts[i] };
       league.push({ outcome, context });
     }
@@ -3236,8 +3240,8 @@
                   outcome: event.outcome, expected: event.expected, context: event.context, why: missionEventWhy(fk, event) }];
               });
               analysis = window.RoundRxReport.analyze({ key: fk, name, label: FD.label[i], dims,
-                confirmed: !!FD.sel[i] && FD.gap[i] < 0 && enough, enough,
-                minEvents: 8, minMatches: 2, events, league: data.league });
+                confirmed: !!FD.sel[i] && FD.obs[i] < FD.exp[i] && enough, enough,
+                minEvents: min.min_events, minMatches: min.min_matches, events, league: data.league });
             }
             return analysis;
           },
@@ -3252,7 +3256,7 @@
     }
     const sceneName = window.RoundRxMission.sceneForTeam(D.teams[team]);
     return window.RoundRxMission.banner({
-      team: prettyTeam(D.teams[team]), scope: scope === "todas" ? "Todas as partidas" : "Últimas 10 partidas",
+      team: prettyTeam(D.teams[team]), scope: scope === "todas" ? "Todas as partidas" : "Últimas 10 partidas com eventos de cada fundamento",
       matches: ms.length, rounds: ms.reduce((n, m) => n + M.rs[m] + M.bs[m], 0),
       wins: ms.filter((m) => { const [a, b] = scoreOf(m, team); return a > b; }).length,
       period: ms.length ? `${fmtDate(M.date[ms[0]])} a ${fmtDate(M.date[ms[ms.length - 1]])}` : "",

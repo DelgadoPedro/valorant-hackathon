@@ -71,17 +71,29 @@
   const trainingName = (f) => f.name || f.copy.title.join(" ").replace(/\.$/, "");
 
   function selectFocus(model) {
-    const valid = model.candidates.filter((c) => c.events > 0 && Number.isFinite(c.observed) && Number.isFinite(c.expected));
+    const valid = model.candidates.filter((c) => Object.prototype.hasOwnProperty.call(COPY, c.key)
+      && Number.isFinite(c.events) && c.events > 0
+      && Number.isFinite(c.observed) && c.observed >= 0 && c.observed <= 1
+      && Number.isFinite(c.expected) && c.expected >= 0 && c.expected <= 1);
     const enough = (c) => c.matches >= model.minMatches && c.events >= model.minEvents;
-    const recurring = valid.filter((c) => c.selected && c.gap < 0 && enough(c));
-    const eligible = valid.filter(enough);
-    // Recurring deficits come first. Without one, this is explicitly exploratory.
-    const pool = recurring.length ? recurring : eligible.length ? eligible : valid;
+    // Use the rates as the source of truth, not a separately rounded gap. For
+    // exploration, keep the dashboard's precision: less than 0.5 pp is neutral.
+    const deficits = valid.filter((c) => c.observed < c.expected
+      && (c.selected || Math.round(100 * (c.expected - c.observed)) >= 1));
+    const recurring = deficits.filter((c) => c.selected && enough(c));
+    const eligible = deficits.filter(enough);
+    // Never fill unused slots with strengths. A strong team can have no focus.
+    const pool = recurring.length ? recurring : eligible.length ? eligible : deficits;
     const sorted = [...pool].sort((a, b) => ((b.expected - b.observed) * b.events) - ((a.expected - a.observed) * a.events));
     const keys = new Set();
     return sorted.filter((c) => { if (keys.has(c.key)) return false; keys.add(c.key); return true; }).slice(0, 3)
-      .map((c) => ({ ...c, confirmed: !!c.selected && c.gap < 0 && enough(c),
+      .map((c) => ({ ...c, gap: 100 * (c.observed - c.expected), confirmed: !!c.selected && enough(c),
         enough: enough(c), copy: COPY[c.key] || COPY.keyrounds }));
+  }
+
+  function hasSufficientData(model) {
+    return model.candidates.some((c) => c.events >= model.minEvents && c.matches >= model.minMatches
+      && Number.isFinite(c.observed) && Number.isFinite(c.expected));
   }
 
   function banner(model) {
@@ -96,7 +108,9 @@
     const launch = button("rx-launch-button", ["Iniciar missão ", ARROW].join(""), () => open(model, focuses));
     bannerEl.append(art, mark, $el("div", "rx-launch-copy",
       $el("div", "rx-launch-kicker", "ValoStrat.gg  /  MISSÃO DE EVOLUÇÃO"), title,
-      $el("p", "rx-launch-sub", count ? `${count} ${count === 1 ? "foco de atenção" : "focos de atenção"}. Uma nova forma de preparar o próximo treino.` : "Conheça seus indicadores. Escolha o foco do próximo treino.")),
+      $el("p", "rx-launch-sub", count ? `${count} ${count === 1 ? "foco de atenção" : "focos de atenção"}. Uma nova forma de preparar o próximo treino.`
+        : !focuses.length && hasSufficientData(model) ? "Sem foco de correção nos dados disponíveis. Acompanhe a consistência dos pontos fortes."
+          : "Conheça seus indicadores. Escolha o foco do próximo treino.")),
       launch, $el("span", "rx-launch-code", "BRIEFING INTERATIVO  //  ~2 MIN"));
     return bannerEl;
   }
@@ -104,7 +118,11 @@
   let active = null;
   function open(model, focuses = selectFocus(model)) {
     if (active) return;
-    focuses = focuses.map((f) => ({ ...f, training: window.RoundRxTraining.create(f) }));
+    focuses = focuses.map((f) => {
+      const training = window.RoundRxTraining.create(f);
+      const primary = training.primary;
+      return { ...f, ...primary, training, confirmed: training.confirmed, enough: training.enough };
+    });
     const opener = document.activeElement;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const dialog = $el("dialog", "rx-mission");
@@ -192,15 +210,18 @@
     }
     function intro() {
       const recurring = focuses.filter((f) => f.confirmed).length;
-      const enough = focuses.some((f) => f.enough);
-      const condition = recurring ? "Padrões recorrentes" : enough ? "Exploração" : "Amostra em formação";
-      const description = recurring ? "Escolha por onde começar a revisão do time." : enough ? "Explore os indicadores; ainda não há fragilidades confirmadas." : "Mais partidas ajudam a encontrar padrões do time.";
+      const enough = focuses.some((f) => f.enough), noDeficit = !focuses.length && hasSufficientData(model);
+      const condition = noDeficit ? "Sem foco de correção" : recurring ? "Padrões recorrentes" : enough ? "Exploração" : "Amostra em formação";
+      const description = noDeficit ? "Os dados disponíveis não justificam um foco de correção. Preservem o que funciona e acompanhem a consistência nas próximas partidas."
+        : recurring ? "Escolha por onde começar a revisão do time." : enough ? "Explore os indicadores; ainda não há fragilidades confirmadas." : "Mais partidas ajudam a encontrar padrões do time.";
       const copy = $el("div", "rx-copy", heading(["Prepare o", "próximo treino."]),
         $el("p", "rx-description", description),
         $el("p", "rx-context", `${model.matches} mapas · ${number(model.rounds)} rounds · ${model.scope}`));
       const aside = panel("aside", "rx-aside rx-panel--stack", panelLabel(condition, `${focuses.length} ${focuses.length === 1 ? "foco" : "focos"}`),
         ...focuses.map((f, i) => objective(f, i, false)));
-      if (!focuses.length) aside.append($el("p", "rx-empty", "Ainda não há eventos suficientes para montar os focos. Explore mais partidas no Panorama."));
+      if (!focuses.length) aside.append($el("p", "rx-empty", noDeficit
+        ? "Nenhum objetivo corretivo foi gerado. Consulte os pontos fortes no Panorama e mantenha o acompanhamento."
+        : "Ainda não há dados que sustentem um foco de correção. Acompanhe novas partidas no Panorama."));
       body.append(copy, aside);
     }
     function focusChapter(f, idx) {
@@ -277,7 +298,9 @@
     function plan() {
       const selected = focuses.filter((f) => checked.has(f.id)), count = selected.length;
       const copy = $el("div", "rx-copy", heading(["Escolha o foco", "do treino."]),
-        $el("p", "rx-description", focuses.length ? "Escolha o que levar para o próximo treino." : "Explore mais partidas para encontrar focos de treino."),
+        $el("p", "rx-description", focuses.length ? "Escolha o que levar para o próximo treino."
+          : hasSufficientData(model) ? "Nenhum objetivo corretivo foi gerado. Mantenham os pontos fortes e acompanhem novas partidas."
+            : "Acompanhem novas partidas antes de definir um ajuste de treino."),
         $el("div", "rx-plan-list", ...selected.map((f) => panel("div", "rx-panel--compact rx-plan-card", $el("span", "rx-plan-icon", "↗"),
           $el("div", "rx-plan-copy", $el("b", "", trainingName(f)), $el("p", "", f.training.report.summary))))));
       const preview = button("rx-cta", "Visualizar PDF ↗", previewPlan); preview.disabled = !count;

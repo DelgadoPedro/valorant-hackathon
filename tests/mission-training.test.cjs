@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const context = { window: {} };
 vm.runInNewContext(readFileSync(resolve(__dirname, '../roundrx/viz/mission-training.js'), 'utf8'), context);
 const create = context.window.RoundRxTraining.create;
-const focus = (key, dims = {}, extra = {}) => ({ key, dims, label: 'Recorte analisado', confirmed: true, enough: true, observed: .4, expected: .6, gap: -20, ...extra });
+const focus = (key, dims = {}, extra = {}) => ({ key, dims, label: 'Recorte analisado', confirmed: true, enough: true, events: 100, matches: 8, observed: .4, expected: .6, gap: -20, ...extra });
 
 test('all nine fundamentals yield distinct executable sessions whose timing adds up', () => {
   const keys = ['trade', 'advantage', 'fb_open', 'fb_rec', 'post', 'retake', 'keyrounds', 'halfopen', 'pressure'];
@@ -205,7 +205,7 @@ test('analytical report and popup summary use the same detailed context and real
   const result = create(focus('advantage', {}, {
     confirmed: false, noun: 'vantagens', did: 'convertidas', observed: .7, expected: .68,
     analysis: {
-      primary: { label: 'Vantagem na defesa com spike plantada', dims: { side: 'def', spike: 'plantada', state: '2v1' }, observed: .375, expected: .661, events: 24, successes: 9, league: .561, deltaEvents: 6.864 },
+      primary: { label: 'Vantagem na defesa com spike plantada', dims: { side: 'def', spike: 'plantada', state: '2v1' }, observed: .375, expected: .661, events: 24, matches: 4, successes: 9, league: .561, deltaEvents: 6.864 },
       indicators: [{ label: 'Vantagem na defesa com spike plantada', observed: .375, expected: .661, events: 24, successes: 9, league: .561 }],
       context: ['12 das 15 derrotas vieram das duas últimas séries.'],
       evidence: [{ map: 'Haven', round: 18, opponent: 'Time B', why: '2v1, perdeu o round' }],
@@ -213,14 +213,15 @@ test('analytical report and popup summary use the same detailed context and real
   }));
   assert.equal(result.summary, result.report.summary);
   assert.match(result.summary, /38%; esperado 66%/);
-  assert.match(result.report.title, /no retake/);
+  assert.match(result.report.title, /Investigação/);
   assert.match(result.report.evidence, /converteu 9 de 24 vantagens/);
   assert.match(result.report.evidence, /7 rounds a menos/);
   assert.equal(result.report.indicators[0].team, '38% (9 de 24)');
   assert.equal(result.report.indicators[0].league, '56%');
   assert.equal(result.report.rounds[0].round, 18);
-  assert.match(result.report.actions[0].text, /2v1/);
-  assert.match(result.report.actions[1].text, /kill que abriu a vantagem/);
+  assert.match(result.report.actions[0].text, /hipótese apenas se houver evidência/);
+  assert.match(result.report.actions[1].text, /positivos e negativos/);
+  assert.doesNotMatch(result.objective, /Resultado no esperado ou acima/);
   assert.match(result.report.caveat, /sem padrão recorrente confirmado/);
   assert.deepEqual(Array.from(result.report.actions, (a) => a.label), ['Scrim', 'VOD', 'Referências']);
 });
@@ -243,4 +244,90 @@ test('plan introduction follows the selected team and explains the analytical re
   assert.match(plan.howToRead, /R1 = pistol/);
   assert.ok(plan.caveats.some((value) => /3 a 4 novos mapas/.test(value)));
   assert.doesNotMatch(plan.intro, /caap|Pedro|13 de 18/);
+});
+
+
+test('every strong or equal fundamental preserves execution even with a stale confirmed flag', () => {
+  for (const key of ['trade', 'advantage', 'fb_open', 'fb_rec', 'post', 'retake', 'keyrounds', 'halfopen', 'pressure']) {
+    for (const observed of [.6, .9]) {
+      const result = create(focus(key, {}, { observed, expected: .6, confirmed: true,
+        evidence: [{ round: 1, outcome: 0 }, { round: 2, outcome: 1 }] }));
+      assert.equal(result.mode, 'maintenance', key);
+      assert.equal(result.confirmed, false, key);
+      assert.match(result.report.actions[0].text, /execução bem-sucedida/);
+      assert.match(result.report.actions[1].text, /exemplos bem-sucedidos/);
+      assert.match(result.report.measurement[0].target, /Manter a execução/);
+      assert.doesNotMatch(result.success, /8 de 10|5 de 6|3 de 4/);
+      assert.deepEqual(Array.from(result.evidence, (e) => e.round), [2]);
+    }
+  }
+});
+
+test('the analyzed sample can revoke a stale confirmed flag and supplies all status metrics', () => {
+  const result = create(focus('post', {}, { analysis: {
+    primary: { dims: {}, observed: .9, expected: .7, events: 100, matches: 8, successes: 90 },
+    enough: true, confirmed: false,
+  } }));
+  assert.equal(result.mode, 'maintenance');
+  assert.equal(result.confirmed, false);
+  assert.match(result.summary, /90%; esperado 70%/);
+  assert.match(result.objective, /Resultado no esperado ou acima/);
+  assert.doesNotMatch(result.report.caveat, /Padrão recorrente no/);
+});
+
+test('small or missing samples only observe and never prescribe a corrective target', () => {
+  for (const extra of [{ events: 7 }, { matches: 1 }, { enough: false }, { events: undefined, matches: undefined },
+    { analysis: { primary: { observed: .1, expected: .8, events: 7, matches: 4 }, enough: false, confirmed: false } }]) {
+    const result = create(focus('trade', {}, extra));
+    assert.equal(result.mode, 'observation');
+    assert.equal(result.confirmed, false);
+    assert.equal(result.enough, false);
+    assert.match(result.report.measurement[0].target, /Coletar novas situações/);
+    assert.match(result.steps[1].instruction, /sem impor uma mudança/);
+    assert.doesNotMatch(result.report.measurement[0].target, /Aproximar/);
+  }
+});
+
+test('unconfirmed deficits investigate causes before any optional tactical change', () => {
+  const result = create(focus('trade', {}, { confirmed: false }));
+  assert.equal(result.mode, 'investigation');
+  assert.equal(result.confirmed, false);
+  assert.match(result.report.actions[0].text, /apenas se houver evidência/);
+  assert.match(result.report.measurement[0].target, /investigar.*antes de definir/);
+  assert.doesNotMatch(result.success, /8 de 10/);
+});
+
+test('plan confirmation counts use effective training evidence instead of stale input flags', () => {
+  const f = focus('post', {}, { observed: .9 });
+  const plan = context.window.RoundRxTraining.plan({ team: 'Time forte', wins: 8, matches: 8 }, [f]);
+  assert.match(plan.intro, /Nenhum tem padrão recorrente confirmado/);
+});
+
+
+test('compound map-site scopes generate the correct location without changing report dimensions', () => {
+  const result = create(focus('post', { map_site: 'Haven · A' }));
+  assert.match(result.title, /no A/);
+  assert.match(result.setup, /^Personalizada em Haven/);
+  assert.match(result.report.actions[0].text, /no A/);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.primary.dims)), { map_site: 'Haven · A' });
+  const exploratory = create(focus('post', { map_site: 'Haven · A' }, { confirmed: false }));
+  assert.match(exploratory.title, /em Haven no site A/);
+  assert.match(exploratory.report.actions[0].text, /em Haven no site A/);
+});
+
+test('an unconfirmed difference smaller than half a point remains maintenance', () => {
+  const result = create(focus('post', {}, { confirmed: false, observed: .599, expected: .6 }));
+  assert.equal(result.mode, 'maintenance');
+  assert.match(result.objective, /próximo da referência/);
+  assert.match(result.report.measurement[0].target, /Manter a execução/);
+});
+
+
+test('recent-scope plans distinguish overall campaign dates from eligible fundamental matches', () => {
+  const plan = context.window.RoundRxTraining.plan({ team: 'Time', matches: 10, scope: 'Últimas 10 partidas com eventos de cada fundamento' }, []);
+  assert.match(plan.howToRead, /campanha e o período.*últimas 10 partidas gerais/);
+  assert.match(plan.howToRead, /até 10 partidas com eventos daquele fundamento/);
+  assert.match(plan.howToRead, /partidas anteriores ao período do resumo/);
+  const all = context.window.RoundRxTraining.plan({ team: 'Time', scope: 'Todas as partidas' }, []);
+  assert.doesNotMatch(all.howToRead, /últimas 10/);
 });

@@ -77,12 +77,16 @@ comparação observado × esperado, acesso às evidências e objetivos selecion�
 ilustrativo tem movimentos de câmera e paralaxe. Ascent, Haven, Lotus ou Sunset é escolhido pelo hash do nome
 do time e permanece igual entre sessões, independentemente do filtro de partidas. O fundo não representa
 as partidas analisadas; o briefing não exibe minimapa nem nome do cenário.
-Os focos priorizam padrões recorrentes abaixo do esperado. Quando não há padrões confirmados, o briefing sinaliza
-explicitamente que a leitura é exploratória ou que a amostra ainda está em formação. A seleção de objetivos é salva
+Os focos priorizam padrões recorrentes abaixo do esperado. Pontos fortes e resultados dentro do esperado não
+preenchem vagas: um time pode receber zero objetivos corretivos. Sem padrão confirmado, apenas diferenças negativas
+visíveis na precisão do painel entram como investigação; amostras pequenas recebem orientação de observação.
+O relatório preserva o recorte escolhido pelo diagnóstico, sem procurar um subgrupo pior para justificar a dica.
+A seleção de objetivos é salva
 apenas no navegador, por time, recorte e versão da base. O PDF segue o formato de um plano analítico: resumo do time,
 indicadores Time × Esperado × Liga, contexto, rounds para VOD, ações de Scrim/VOD/Referências e acompanhamento.
-Os números vêm dos eventos elegíveis; recortes adicionais são exploratórios e não alteram os três fundamentos
-selecionados. A coluna de focos mostra apenas um resumo do mesmo plano, sem expansão de execução.
+Os números vêm dos eventos elegíveis; comparações descritivas não alteram o recorte nem os até três fundamentos
+selecionados. As recomendações distinguem correção, investigação, observação e manutenção de pontos fortes.
+A coluna de focos mostra apenas um resumo do mesmo plano, sem expansão de execução.
 Prévia e download usam o mesmo PDF e funcionam offline. Setas navegam e Esc fecha; a experiência respeita movimento
 reduzido. Interface em `viz/mission.js` e `mission.css`, recortes em `mission-report.js`, recomendações em
 `mission-training.js` e documento em `mission-pdf.js`. A janela de trade acompanha a do diagnóstico.
