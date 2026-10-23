@@ -971,3 +971,34 @@ details.more .more-body p { margin: 0; color: var(--mut); font-size: 12.5px; lin
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---- replay do round (evento a evento, em loop) */
+.rp { display: grid; gap: 10px; }
+.rp-hud { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 44px; padding: 8px 12px; background: var(--panel-2); border-radius: var(--r-block); font-size: 13.5px; }
+.rp-clock { font-variant-numeric: tabular-nums; color: var(--mut); min-width: 92px; }
+.rp-score { font-family: var(--font-display, inherit); font-size: 18px; font-variant-numeric: tabular-nums; display: inline-flex; gap: 4px; align-items: baseline; }
+.rp-score .us { color: var(--accent); } .rp-score .them { color: var(--opp); } .rp-score span { color: var(--faint); font-size: 13px; }
+.rp-cap { flex: 1 1 260px; color: var(--ink); }
+.tag.hl { background: var(--warn); }
+.rp-ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rp-ctl .btn.sm { min-height: 32px; }
+.rp-play { min-width: 118px; }
+.rp-track { position: relative; flex: 1 1 200px; height: 22px; margin: 0 8px; }
+.rp-track::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--line); border-radius: 2px; }
+.rp-fill { position: absolute; left: 0; top: 10px; height: 2px; background: var(--ink); border-radius: 2px; transition: width .35s ease; }
+.rp-mk { position: absolute; top: 5px; width: 12px; height: 12px; margin-left: -6px; padding: 0; border-radius: 50%; border: 2px solid var(--panel); cursor: pointer; background: var(--opp); }
+.rp-mk.ours { background: var(--accent); }
+.rp-mk.plant { background: var(--ink); border-radius: 2px; transform: rotate(45deg); }
+.rp-mk.hl { box-shadow: 0 0 0 2px var(--warn); }
+.rp-mk.fut { opacity: .35; }
+.rp-mk.cur { width: 16px; height: 16px; top: 3px; margin-left: -8px; }
+.rp-ov .rp-lbl { font-size: 11.5px; font-weight: 700; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; }
+.rp-ov .rp-pulse { animation: rp-pulse 1.1s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes rp-pulse { 0% { transform: scale(.7); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+.tl li.rp-li { cursor: pointer; transition: opacity .25s, background-color .25s; }
+.tl li.rp-li:hover { background: var(--panel-2); }
+.tl li.fut { opacity: .38; }
+.tl li.cur { background: color-mix(in srgb, var(--ink) 9%, transparent); outline: 1px solid color-mix(in srgb, var(--ink) 30%, transparent); }
+.tl li.hl { box-shadow: inset 3px 0 0 var(--warn); }
+.tl li.hl.cur { background: color-mix(in srgb, var(--warn) 16%, transparent); outline-color: var(--warn); }
+.rp-cap .tag { display: inline-block; margin-left: 4px; }
