@@ -772,12 +772,22 @@
     const dims = cutsFor(id);
     if (!dims.length) return h("div", { class: "empty" }, "Sem recortes para esta métrica.");
     const cur = Math.min(state.cut[id] ?? Math.max(0, dims.findIndex((d) => d[0] === DEFAULT_CUT[id])), dims.length - 1);
-    const [name, items, type] = dims[cur];
+    let [name, items, type] = dims[cur];
+    // recorte por site: só dentro de um mapa (A, B e C de mapas diferentes não se somam)
+    let sitePick = null;
+    if (name === "Site") {
+      const maps = [...new Set(T.ms.map((m) => M.map[m]))].sort();
+      const mp = maps.includes(state.cutMap) ? state.cutMap : maps.includes(curMap()) ? curMap() : maps[0];
+      items = items.map((it) => ({ ...it, o: { ...(it.o || {}), map: mp } }));
+      sitePick = h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Mapa"), seg(maps.map((m) => [m, m]), mp, (v) => { state.cutMap = v; render(); }));
+    }
     const rows = items.map((it) => ({ label: it.label, m: METRICS[MI[it.id]], st: stat(it.id, it.s != null ? [it.s] : undefined, it.o || {}) }))
       .filter((r) => r.st.entries.length || r.st.league);
-    const notes = { Lado: "Ignora o filtro de lado da tabela.", Mapa: "“Esta partida” só aparece no mapa em que foi jogada; ignora o filtro de mapa da tabela." };
+    const notes = { Lado: "Ignora o filtro de lado da tabela.", Mapa: "“Esta partida” só aparece no mapa em que foi jogada; ignora o filtro de mapa da tabela.",
+                    Site: "A, B e C só se comparam dentro do mesmo mapa: escolha o mapa acima." };
     return h("div", null,
       dims.length > 1 ? h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Recortar por"), seg(dims.map((d, i) => [i, d[0]]), cur, (v) => { state.cut[id] = v; render(); })) : null,
+      sitePick,
       !rows.length ? h("div", { class: "empty" }, "Sem dados neste recorte.") : type === "ord" && rows.length >= 4 ? ordinalChart(rows) : cutsTable(rows),
       notes[name] ? h("p", { class: "note" }, notes[name]) : null);
   }
@@ -1778,7 +1788,7 @@
           pos.length ? grp("Ganha mais mapas que a liga", "good", pos.length) : null, pos.map(row)))),
       h("p", { class: "note" }, "Time e liga = mapas ganhos (+) ou perdidos (−) a cada 10 jogados nos rounds daquela situação, além do esperado para a economia do round. "
         + `Diferença −0,30 = a cada 10 mapas, nessa situação, o time perde 0,3 mapa a mais que ${cmpMap ? "a liga nos mesmos mapas" : "a liga"}. `
-        + "Uma situação pode pesar porque acontece muito ou porque o time converte pouco. Linhas apagadas têm menos de 20 rounds. Passe o mouse para ver a margem de erro. As situações se sobrepõem: não some as linhas."));
+        + "Uma situação pode pesar porque acontece muito ou porque o time converte pouco. Passe o mouse para ver a margem de erro. As situações se sobrepõem: não some as linhas."));
   }
 
   // ---- bloco 3: fechar e reagir — mapas entregues, viradas e rounds decisivos na frente / atrás
@@ -2443,7 +2453,7 @@
             q: () => "Depois de plantar, o time vence o round como times parecidos (mesmos vivos, site e momento)?",
             none: "Todos os rounds em que o time plantou", expWord: "vencem",
             dims: ["numbers", "pstate", "site", "pwhen", "map_name", "economy"],
-            dimNames: { numbers: "Saldo de vivos no plant", pstate: "Vivos no plant", site: "Site", pwhen: "Momento do plant" },
+            dimNames: { numbers: "Saldo de vivos no plant", pstate: "Vivos no plant", site: "Site (por mapa)", pwhen: "Momento do plant" },
             evBelow: "Plants que viraram derrota nas situações em que outros times mais convertem.",
             evAbove: "Plants convertidos onde outros times raramente convertem.",
             limit: "O esperado considera vivos no plant, site, momento do plant, economia e mapa; posições depois do plant e utilitários não entram." },
@@ -2451,7 +2461,7 @@
               q: () => "Quando o adversário planta, o time vence o round como times parecidos (mesmos vivos, site e momento)?",
               none: "Todos os rounds com a spike adversária plantada", expWord: "vencem",
               dims: ["numbers", "pstate", "site", "pwhen", "map_name", "economy"],
-              dimNames: { numbers: "Saldo de vivos no plant", pstate: "Vivos no plant", site: "Site", pwhen: "Momento do plant" },
+              dimNames: { numbers: "Saldo de vivos no plant", pstate: "Vivos no plant", site: "Site (por mapa)", pwhen: "Momento do plant" },
               evBelow: "Retakes perdidos nas situações em que outros times mais vencem.",
               evAbove: "Retakes vencidos onde outros times raramente vencem.",
               limit: "O esperado considera vivos no plant, site, momento do plant, economia e mapa; kit de defuse e utilitários não estão nos dados." },
@@ -2485,7 +2495,7 @@
     "pstate", "site", "pwhen", "round_type", "half", "moment", "lead"]);
   const DIM_NAME = { side: "Lado", map_name: "Mapa", phase: "Momento do round", numbers: "Nº de jogadores", ally_dist: "Distância do aliado mais próximo",
                      allies_near_b: "Aliados a até 15 m", economy: "Economia", fb_context: "First blood", victim_name: "Quem morreu", nearest_ally_name: "Aliado mais próximo",
-                     state: "Situação", spike: "Spike", when: "Quando começou", duel_role: "Função", duel_name: "Jogador" };
+                     state: "Situação", spike: "Spike", when: "Quando começou", duel_role: "Função", duel_name: "Jogador", map_site: "Mapa e site" };
   const VAL_ORDER = { ally_dist: ["≤ 5 m", "5–10 m", "10–20 m", "20–30 m", "> 30 m", "sem posição"], allies_near_b: ["0", "1", "2+", "sem posição"],
                       phase: ["1ª morte do round", "pré-plant", "pós-plant"], numbers: ["em vantagem", "igualdade", "em desvantagem"],
                       state: ["5v4", "4v3", "3v2", "2v1", "5v3", "4v2", "3v1", "5v2", "4v1", "5v1"], when: ["até 15 s", "15–35 s", "depois de 35 s"],
@@ -2502,6 +2512,7 @@
     const F = Fd(fk), E = F.E;
     if (CATDIMS.has(dim) && F.cats[dim]) return F.cats[dim][E[dim][i]];
     if (dim === "map_name") return M.map[E.m[i]];
+    if (dim === "map_site") return F.cats.site ? `${M.map[E.m[i]]} · ${F.cats.site[E.site[i]]}` : null;
     if (dim === "victim_name" || dim === "duel_name") return D.players[E.v[i]];
     if (dim === "nearest_ally_name") return E.a[i] == null ? null : D.players[E.a[i]];
     return null;
@@ -2676,7 +2687,7 @@
     const interp = general && !FD.sel[fi]
       ? `No conjunto, o time tem ${pct(a.obs)} das ${U.noun} ${U.did}; outros times, em situações parecidas, ${U.expWord} ${pct(a.exp)}. A diferença ainda não se distingue do acaso: use os recortes abaixo para explorar, sem tratá-los como padrão.`
       : `Nessas situações o time tem ${pct(a.obs)} das ${U.noun} ${U.did}; outros times, no mesmo contexto, ${U.expWord} ${pct(a.exp)}. São ${unitsVs(fk, a.vs)} do que o esperado em ${nmt} partidas, e a diferença aparece na mesma direção em ${recTxt}.`;
-    const dimsAvail = U.dims.filter((d) => !(d in dims));
+    const dimsAvail = U.dims.filter((d) => !(d in dims) && !("map_site" in dims && (d === "site" || d === "map_name")));
     const bd = state.pdim && dimsAvail.includes(state.pdim) ? state.pdim : dimsAvail[0];
     main.append(back,
       h("div", { class: "sec-head" }, h("h1", null, FD.label[fi]), h("p", null, h("span", { class: "badge " + (general && !FD.sel[fi] ? "neutral" : FD.dir[fi]) }, status),
@@ -2688,7 +2699,7 @@
           h("div", null, h("span", { class: "k" }, "Diferença"), h("b", { class: Math.abs(a.gap) < 0.5 ? "" : a.gap < 0 ? "d-bad" : "d-good" }, pp(a.gap)), h("small", null, Math.abs(a.gap) < 0.5 ? "igual ao esperado" : a.gap > 0 ? "melhor que o esperado" : "pior que o esperado")),
           h("div", null, h("span", { class: "k" }, "Recorrência"), h("b", null, recTxt), h("small", null, "partidas na mesma direção"))),
         h("p", { class: "interp" }, interp)),
-      panel("Onde aparece mais", `O mesmo recorte quebrado por outra dimensão. Linhas com menos de 10 ${U.noun} ficam apagadas: servem para localizar, não para concluir.`,
+      panel("Onde aparece mais", `O mesmo recorte quebrado por outra dimensão. Com poucos ${U.noun}, a linha serve para localizar, não para concluir.`,
         h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Quebrar por"), seg(dimsAvail.map((d) => [d, dimName(fk, d)]), bd, (v) => { state.pdim = v; render(); })),
         breakdownTable(fk, ev, bd)),
       panel("Partida a partida", `${U.unit[0].toUpperCase() + U.unit.slice(1)} a mais (verde) ou a menos (vermelho) do que o esperado em cada partida, nesse recorte.`, perMatchChart(fk, ev, team)),
@@ -2700,6 +2711,17 @@
           h("li", null, "O esperado vem de outros times do mesmo campeonato; times muito mais fortes ou fracos que a média distorcem a comparação."))));
   }
   function breakdownTable(fk, ev, dim) {
+    // site (A/B/C) só se compara dentro de um mapa: escolhe o mapa antes de quebrar por site
+    let mapPick = null;
+    if (dim === "site") {
+      const byMap = d3.rollups(ev, (v) => v.length, (i) => M.map[Fd(fk).E.m[i]]).sort((a, b) => b[1] - a[1]);
+      if (!byMap.length) return h("div", { class: "empty" }, "Sem eventos.");
+      const maps = byMap.map((x) => x[0]), mp = maps.includes(state.bdMap) ? state.bdMap : maps[0];
+      ev = ev.filter((i) => M.map[Fd(fk).E.m[i]] === mp);
+      mapPick = h("div", { class: "ctl-row" }, h("span", { class: "flbl" }, "Mapa"),
+        seg(byMap.map(([m, n]) => [m, `${m} (${n})`]), mp, (v) => { state.bdMap = v; render(); }),
+        h("span", { class: "mut", style: "font-size:12px" }, "A, B e C só se comparam dentro do mesmo mapa."));
+    }
     const groups = new Map();
     for (const i of ev) { const v = dval(fk, dim, i); if (v == null) continue; (groups.get(v) || groups.set(v, []).get(v)).push(i); }
     let rows = [...groups.entries()].map(([v, e]) => ({ v, a: agg(fk, e) }));
@@ -2708,8 +2730,8 @@
     if (!ord && rows.length > 12) rows = rows.filter((r) => r.a.n >= 5);
     const all = rows.flatMap((r) => [r.a.obs, r.a.exp]).filter((v) => v != null);
     const hi = pctTop(all), f = (v) => v / hi, U = FUI[fk];
-    return h("div", { class: "tbl-wrap" }, h("table", { class: "mt cuts" },
-      h("thead", null, h("tr", null, h("th", null, dimName(fk, dim)), h("th", { class: "num" }, U.noun[0].toUpperCase() + U.noun.slice(1)), h("th", { class: "num" }, U.did[0].toUpperCase() + U.did.slice(1)),
+    return h("div", null, mapPick, h("div", { class: "tbl-wrap" }, h("table", { class: "mt cuts" },
+      h("thead", null, h("tr", null, h("th", null, dim === "site" ? `Site em ${M.map[Fd(fk).E.m[ev[0]]] ?? ""}` : dimName(fk, dim)), h("th", { class: "num" }, U.noun[0].toUpperCase() + U.noun.slice(1)), h("th", { class: "num" }, U.did[0].toUpperCase() + U.did.slice(1)),
         h("th", { class: "num" }, "Esperado"), h("th", { class: "num" }, "Diferença"), h("th", { class: "num" }, "vs. esperado"), h("th", { class: "strip" }, `0% → ${NF0.format(100 * hi)}%`))),
       h("tbody", null, rows.map((r) => {
         const strip = h("td", { class: "strip" });
@@ -2719,7 +2741,7 @@
           h("td", { class: "num " + (Math.abs(r.a.gap) < 0.5 ? "d-neu" : r.a.gap < 0 ? "d-bad" : "d-good") }, pp(r.a.gap)),
           h("td", { class: "num" }, (r.a.vs < 0 ? "−" : "+") + NF1.format(Math.abs(r.a.vs))), strip);
       }))),
-      h("p", { class: "note" }, `Na faixa: traço = esperado, ponto = observado. “vs. esperado” = ${U.unit} a mais (+) ou a menos (−) do que outros times teriam nas mesmas situações.`));
+      h("p", { class: "note" }, `Na faixa: traço = esperado, ponto = observado. “vs. esperado” = ${U.unit} a mais (+) ou a menos (−) do que outros times teriam nas mesmas situações.`)));
   }
   function perMatchChart(fk, ev, team) {
     const E = Fd(fk).E, by = new Map(), U = FUI[fk];

@@ -98,7 +98,10 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
   padrões recorrentes com limiar calibrado por simulação nula, evidências), aparecem na Panorama e no bloco "Análise"
   das seções. Uma linha por time-round, desfecho = venceu o round:
   - pós-plant (o time plantou) e retake (o adversário plantou): contexto = vivos no plant, site, momento do plant,
-    economia e mapa (regressão logística escolhida; erro de calibração 1,9 e 1,7 pp);
+    economia e mapa (regressão logística escolhida; erro de calibração 1,9 e 1,7 pp). Site nunca aparece somado entre
+    mapas (22/10/2026): o detector usa o recorte "mapa e site" (`map_site`, ex. "Retakes no A de Haven"), e no painel
+    a quebra "Site (por mapa)" e o recorte "Site" de POS-01/RET-01 pedem um mapa antes. O déficit plantado do teste
+    do detector passou de "site A" para "plant entre 30 e 60 s" (detectado em 2 de 3 times, nos dois fundamentos);
   - rounds-chave: pistol, eco, anti-eco, force buy e armado (mesma regra das métricas KEY), contexto = tipo, lado,
     economia e mapa (células encolhidas);
   - início de half: rounds 2 e 3 de cada half pelo caminho até ali (2–0, 1–1, 0–2…), contexto = momento e economia
@@ -151,7 +154,7 @@ funciona offline (dados e d3 embutidos). Para regenerar só o painel: `python -m
        com vantagem/desvantagem numérica, pós-plant e retake), rounds, saldo do time e da liga e a diferença, em mapas a
        cada 10, agrupados em "perde mais mapas que a liga: o que treinar" e "ganha mais". Comparação com a liga **no mesmo
        mapa ou em todos os mapas**, à escolha. A força do sinal (forte ou fraco/variado) e a recorrência
-       ficam na dica de cada linha; linhas com menos de 20 rounds aparecem apagadas;
+       ficam na dica de cada linha (linhas com poucos casos não ficam mais apagadas: o nº de casos já está na tabela);
      - "Fechar e reagir": mapas entregues (a chance de vencer o mapa chegou a 80% e o time perdeu; liga ≈ 13%), viradas
        (esteve com 20% ou menos e venceu) e rounds decisivos (25% de maior pressão) na frente e atrás, contra o esperado
        pela economia; lista dos mapas entregues e virados com o pico/mínimo e o round que mais mudou o mapa depois dele;

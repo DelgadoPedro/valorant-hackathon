@@ -352,7 +352,6 @@ details.method li { margin: 4px 0; }
 .badge.acima { color: var(--good); border-color: currentColor; }
 .interp { margin: 8px 0 0; max-width: 90ch; }
 .limits ul { margin: 0; padding-left: 18px; color: var(--mut); font-size: 13px; }
-.mt tr.thin td { color: var(--faint); }
 .evlist { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; counter-reset: ev; }
 .evlist li { display: grid; grid-template-columns: 22px minmax(170px, 260px) minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; padding: 8px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; counter-increment: ev; }
 .evlist li::before { content: counter(ev); color: var(--faint); font-variant-numeric: tabular-nums; font-size: 12px; }

@@ -394,9 +394,10 @@ def validate_detector(deaths: pd.DataFrame, cfg, z_star: float, n_null: int = 5,
 
 
 # ---------------------------------------------------------------- fundamentos de round
-PLANT_DIMS = {"numbers": "saldo de vivos no plant", "pstate": "vivos no plant", "site": "site", "pwhen": "momento do plant",
+# site (A/B/C) só existe dentro de um mapa: o recorte é sempre mapa + site, nunca o site somado entre mapas
+PLANT_DIMS = {"numbers": "saldo de vivos no plant", "pstate": "vivos no plant", "map_site": "mapa e site", "pwhen": "momento do plant",
               "map_name": "mapa", "economy": "economia"}
-PLANT_PAIR_DIMS = ["numbers", "site", "pwhen", "map_name"]
+PLANT_PAIR_DIMS = ["numbers", "map_site", "pwhen"]
 PWHEN = {"até 30 s": "plantados nos primeiros 30 s", "30–60 s": "plantados entre 30 e 60 s", "depois de 60 s": "plantados depois de 60 s"}
 
 
@@ -407,9 +408,10 @@ def _plant_rest(ctx: dict, retake: bool) -> list[str]:
     elif "numbers" in ctx:
         out.append({"em vantagem": "com vantagem numérica no plant", "em desvantagem": "com desvantagem numérica no plant",
                     "igualdade": "em igualdade numérica no plant"}[ctx["numbers"]])
-    if "site" in ctx:
-        out.append(f"no {ctx['site']}")
-    if "map_name" in ctx:
+    if "map_site" in ctx:
+        mp, st = ctx["map_site"].split(" · ")
+        out.append(f"no {st} de {mp}")
+    elif "map_name" in ctx:
         out.append(f"em {ctx['map_name']}")
     if "pwhen" in ctx:
         out.append(PWHEN.get(ctx["pwhen"], ctx["pwhen"]))
@@ -456,11 +458,11 @@ def half_label(ctx: dict) -> str:
 
 
 def post_spec(cfg) -> Spec:
-    return Spec("post", "won", "exp_post", PLANT_DIMS, PLANT_PAIR_DIMS, post_label, ("site", "A"), eligible="eligible_post")
+    return Spec("post", "won", "exp_post", PLANT_DIMS, PLANT_PAIR_DIMS, post_label, ("pwhen", "30–60 s"), eligible="eligible_post")
 
 
 def ret_spec(cfg) -> Spec:
-    return Spec("retake", "won", "exp_ret", PLANT_DIMS, PLANT_PAIR_DIMS, ret_label, ("site", "A"), eligible="eligible_ret")
+    return Spec("retake", "won", "exp_ret", PLANT_DIMS, PLANT_PAIR_DIMS, ret_label, ("pwhen", "30–60 s"), eligible="eligible_ret")
 
 
 def key_spec(cfg) -> Spec:

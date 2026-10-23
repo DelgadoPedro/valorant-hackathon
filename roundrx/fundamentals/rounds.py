@@ -47,13 +47,14 @@ def build_plant_events(ctx) -> pd.DataFrame:
     d["pstate"] = d["alive"].astype(str) + "v" + d["opp_alive"].astype(str)
     d["numbers"] = np.where(d["diff"] > 0, "em vantagem", np.where(d["diff"] < 0, "em desvantagem", "igualdade"))
     d["site"] = d["plant_site"].fillna("?").astype(str)
+    d["map_site"] = d["map_name"].astype(str) + " · " + d["site"]   # site só faz sentido dentro de um mapa
     d["t_s"] = d["plant_time_ms"] / 1000
     d["pwhen"] = [_pwhen(x) for x in d["t_s"]]
     d["eligible_post"] = d["planter_team"] == d["team_id"]
     d["eligible_ret"] = ~d["eligible_post"]
     d["defused"] = d["has_defuse"].astype(bool)
     cols = KEY + ["team_name", "opponent_name", "series_key", "game_start_ms", "map_name", "side", "economy", "team_loadout",
-                  "opp_loadout", "t_s", "pwhen", "site", "alive", "opp_alive", "pstate", "numbers", "defused", "result", "won",
+                  "opp_loadout", "t_s", "pwhen", "site", "map_site", "alive", "opp_alive", "pstate", "numbers", "defused", "result", "won",
                   "eligible_post", "eligible_ret"]
     return d[cols].sort_values(KEY).reset_index(drop=True)
 
