@@ -584,6 +584,71 @@
         check("ck-map", "só no mapa desta partida", state.sameMap, (v) => setPref("sameMap", v))) : null);
   }
   function renderFilters() { const f = $("#filters"); f.replaceChildren(); f.hidden = true; }
+  // A navegação mantém a mesma árvore no desktop e em um diálogo no mobile.
+  const navMedia = window.matchMedia("(max-width: 900px)");
+  let navOpen = false, navOverflow = "", navInert = [];
+  function syncNav() {
+    const side = $("#side"), toggle = $("#nav-toggle"), backdrop = $("#nav-backdrop");
+    document.body.classList.toggle("nav-open", navOpen);
+    if (toggle) toggle.setAttribute("aria-expanded", String(navOpen));
+    if (backdrop) { backdrop.hidden = !navOpen; backdrop.tabIndex = -1; }
+    side.inert = navMedia.matches && !navOpen;
+    if (navOpen) { side.setAttribute("role", "dialog"); side.setAttribute("aria-modal", "true"); }
+    else { side.removeAttribute("role"); side.removeAttribute("aria-modal"); }
+  }
+  function setNavOpen(open, returnFocus = true) {
+    open = !!open && navMedia.matches;
+    if (open === navOpen) { syncNav(); return; }
+    navOpen = open;
+    if (open) {
+      navOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      navInert = [$(".skip-link"), $("#top"), $(".content")].filter(Boolean).map((el) => [el, el.inert]);
+      navInert.forEach(([el]) => { el.inert = true; });
+    } else {
+      document.body.style.overflow = navOverflow;
+      navInert.forEach(([el, inert]) => { el.inert = inert; });
+      navInert = [];
+    }
+    syncNav();
+    if (open) ($("#side [aria-current='page']") || $("#nav-close"))?.focus();
+    else if (returnFocus) $("#nav-toggle")?.focus({ preventScroll: true });
+  }
+  function focusPageHeading() {
+    const heading = $("#main h1");
+    if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+  }
+  $("#nav-toggle")?.addEventListener("click", () => setNavOpen(!navOpen));
+  $("#nav-backdrop")?.addEventListener("click", () => setNavOpen(false));
+  $(".skip-link")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (navOpen) setNavOpen(false, false);
+    $("#main")?.focus();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (!navOpen) return;
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setNavOpen(false); return; }
+    if (event.key !== "Tab") return;
+    const controls = [...$("#side").querySelectorAll("button:not([disabled]), a[href], select, input, [tabindex='0']")]
+      .filter((el) => el.getClientRects().length && !el.hidden);
+    const first = controls[0], last = controls[controls.length - 1];
+    if (!first) { event.preventDefault(); return; }
+    if (event.shiftKey && (document.activeElement === first || !$("#side").contains(document.activeElement))) {
+      event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !$("#side").contains(document.activeElement))) {
+      event.preventDefault(); first.focus();
+    }
+  }, true);
+  navMedia.addEventListener("change", () => {
+    const focusWasInNav = $("#side").contains(document.activeElement);
+    if (navOpen) setNavOpen(false, false);
+    else syncNav();
+    if (navMedia.matches && focusWasInNav) $("#nav-toggle")?.focus({ preventScroll: true });
+    else if (!navMedia.matches && document.activeElement?.id === "nav-close") {
+      const current = $("#side [aria-current='page']");
+      if (current) current.focus({ preventScroll: true }); else focusPageHeading();
+    }
+  });
   // navegação lateral agrupada por categoria
   const GROUP_NOTE = { Fundamentos: "padrões recorrentes e rounds para revisar", Vantagem: "numérica e de armamento", "First blood": "abertura do round", "Trade kill": "trocas e cobertura",
                        "Pós-plant": "depois de plantar", Retake: "depois do plant adversário",
@@ -593,10 +658,21 @@
   const ITEM_ICON = { about: "home", home: "fund", overview: "match" };
   function renderSide() {
     const groups = d3.groups(D.sections.filter((s) => s.group !== "Diagnóstico"), (s) => s.group);
-    const go = (id) => () => { state.section = id; state.pat = null; state.rv = null; state.rvr = null; state.rvrFrom = null; render(); window.scrollTo({ top: 0 }); };
+    const go = (id) => () => {
+      const fromDrawer = navOpen;
+      if (fromDrawer) setNavOpen(false, false);
+      state.section = id; state.pat = null; state.rv = null; state.rvr = null; state.rvrFrom = null;
+      render(); window.scrollTo({ top: 0 });
+      focusPageHeading();
+    };
     const cur = state.section === "diag" ? (state.patFrom || "home") : state.section;
+    const current = $("#nav-current"), currentLabel = D.sections.find((s) => s.id === cur)?.label || "Panorama";
+    if (current) current.textContent = currentLabel;
+    $("#nav-toggle")?.setAttribute("aria-label", `Abrir navegação. Seção atual: ${currentLabel}`);
     let firstCat = true;
-    $("#side").replaceChildren(...groups.flatMap(([g, items]) => {
+    const close = h("button", { id: "nav-close", class: "nav-close", type: "button", "aria-label": "Fechar navegação", onclick: () => setNavOpen(false) },
+      h("span", null, "Explorar"), h("span", { "aria-hidden": "true" }, "×"));
+    $("#side").replaceChildren(close, ...groups.flatMap(([g, items]) => {
       const item = (s) => h("button", { class: "side-item", type: "button", "aria-current": cur === s.id ? "page" : null, onclick: go(s.id) },
         ITEM_ICON[s.id] ? icon(ITEM_ICON[s.id]) : null, s.label);
       // blocos fixos: Home (abertura) no topo; "Analisar resultados" com Panorama e Partida
@@ -610,11 +686,7 @@
           "aria-current": cur === items[0].id ? "page" : null, onclick: go(items[0].id) }, icon(GROUP_ICON[g]), g))];
       return [sup, h("div", { class: "side-group" + (isStart ? " start" : g === "Fundamentos" ? " fund" : "") }, head, items.map(item))];
     }).filter(Boolean));
-    const side = $("#side"), curEl = side.querySelector('[aria-current="page"]');
-    if (curEl && side.scrollWidth > side.clientWidth + 4) {
-      const l = curEl.offsetLeft - side.offsetLeft, r = l + curEl.offsetWidth;
-      if (l < side.scrollLeft || r > side.scrollLeft + side.clientWidth) side.scrollLeft = Math.max(0, l - 40);
-    }
+    syncNav();
   }
 
   // ------------------------------------------------------------------ blocos genéricos
@@ -3118,23 +3190,47 @@
   }
   // ================================================================== COMO USAR (tela de abertura)
   function renderAbout(main) {
-    const go = (id, extra) => () => { Object.assign(state, extra || {}); state.section = id; state.pat = null; state.rv = null; state.rvr = null; render(); window.scrollTo({ top: 0 }); };
+    const go = (id, extra) => () => { Object.assign(state, extra || {}); state.section = id; state.pat = null; state.rv = null; state.rvr = null; fillMatches(); render(); window.scrollTo({ top: 0 }); focusPageHeading(); };
     const dates = M.date.slice().sort(), r = D.run;
-    const team = prettyTeam(D.teams[state.team]);
+    const team = prettyTeam(D.teams[state.team]), ms = teamMatches[state.team], last = ms[ms.length - 1];
+    const wins = ms.filter((m) => { const [a, b] = scoreOf(m, state.team); return a > b; }).length;
+    const rounds = ms.reduce((n, m) => n + M.rs[m] + M.bs[m], 0);
+    const lastScore = last == null ? null : scoreOf(last, state.team);
+    const latest = go("overview", { pos: ms.length - 1 });
     const FUNDS = [["trade", "Trade kill", "TRD"], ["adv", "Preservação de vantagem", "ADV"], ["fb", "First blood", "FB"], ["post", "Pós-plant", "POS"],
       ["retake", "Retake", "RET"], ["key", "Rounds-chave", "KEY"], ["calendar", "Início de half", "HAL"], ["gauge", "Pressão", "LEV"]];
     main.append(
       h("section", { class: "lp-hero" },
-        h("h1", null, "ValoStrat", h("span", { class: "lp-gg" }, ".gg")),
-        h("p", { class: "lp-lead" }, "Revisão pós-partida para times de VALORANT: onde o time fica acima ou abaixo do que outros times fazem nas mesmas situações, e quais rounds rever no VOD."),
-        h("div", { class: "lp-cta" },
-          h("button", { class: "btn", type: "button", onclick: go("home") }, `Abrir o Panorama de ${team}`, icon("next")),
-          h("button", { class: "btn ghost", type: "button", onclick: go("overview") }, "Ver a última partida")),
-        h("dl", { class: "lp-facts" },
-          h("div", null, h("dt", null, "Partidas"), h("dd", null, NF0.format(r.n_matches))),
-          h("div", null, h("dt", null, "Rounds"), h("dd", null, NF0.format(r.n_rounds))),
-          h("div", null, h("dt", null, "Times"), h("dd", null, D.teams.length)),
-          h("div", null, h("dt", null, "Período"), h("dd", { class: "sm" }, `${fmtDate(dates[0])} a ${fmtDate(dates[dates.length - 1])}`)))),
+        h("div", { class: "lp-copy" },
+          h("p", { class: "lp-kicker" }, "Inteligência coletiva · VALORANT"),
+          h("h1", null, "DO ROUND ", h("span", null, "AO PRÓXIMO "), h("em", null, "TREINO.")),
+          h("p", { class: "lp-lead" }, "Entenda o que os dados dizem sobre o seu time. Encontre padrões, reveja os rounds e leve um foco claro para o próximo treino."),
+          h("div", { class: "lp-cta" },
+            h("button", { class: "btn", type: "button", onclick: go("home") }, "Abrir Panorama", icon("next")),
+            h("button", { class: "lnk lp-last-link", type: "button", disabled: last == null, onclick: latest }, "Última partida", icon("next")))),
+        h("article", { class: "lp-preview", "aria-labelledby": "lp-preview-team" },
+          h("div", { class: "lp-preview-head" }, h("span", { class: "lp-preview-kicker" }, "Seu time em campo"), h("span", null, "Todas as partidas")),
+          h("h2", { class: "lp-preview-team", id: "lp-preview-team" }, team),
+          h("dl", { class: "lp-preview-stats" },
+            h("div", null, h("dt", null, "Mapas"), h("dd", null, ms.length)),
+            h("div", null, h("dt", null, "Vitórias · derrotas"), h("dd", null, `${wins}–${ms.length - wins}`)),
+            h("div", null, h("dt", null, "Rounds"), h("dd", null, NF0.format(rounds)))),
+          last == null ? h("p", { class: "empty" }, "Nenhuma partida disponível para esta equipe.") :
+            h("button", { class: `lp-latest mbg-${mapSlug(M.map[last])}`, type: "button", onclick: latest,
+              "data-scene": D.MISSIONIMG?.[M.map[last]] ? M.map[last] : null,
+              style: D.MISSIONIMG?.[M.map[last]] ? `--preview-art:url(data:image/jpeg;base64,${D.MISSIONIMG[M.map[last]]})` : null,
+              "aria-label": `Abrir última partida: ${M.map[last]}, ${lastScore[0]} a ${lastScore[1]} contra ${prettyTeam(D.teams[opp(last, state.team)])}` },
+              h("span", { class: "lp-latest-top" }, h("span", null, "Última partida"), h("span", null, fmtDate(M.date[last]))),
+              h("strong", { class: "lp-latest-map" }, M.map[last]),
+              h("span", { class: "lp-latest-score" }, h("b", null, `${lastScore[0]}–${lastScore[1]}`),
+                h("span", { class: lastScore[0] > lastScore[1] ? "t-good" : "t-bad" }, lastScore[0] > lastScore[1] ? "Vitória" : "Derrota")),
+              h("span", { class: "lp-latest-opponent" }, "vs ", prettyTeam(D.teams[opp(last, state.team)])),
+              h("span", { class: "lp-latest-link" }, "Abrir análise", icon("next"))))),
+      h("dl", { class: "lp-facts", "aria-label": "Base analisada" },
+        h("div", null, h("dt", null, "Partidas na base"), h("dd", null, NF0.format(r.n_matches))),
+        h("div", null, h("dt", null, "Rounds analisados"), h("dd", null, NF0.format(r.n_rounds))),
+        h("div", null, h("dt", null, "Times"), h("dd", null, D.teams.length)),
+        h("div", null, h("dt", null, "Período da base"), h("dd", { class: "sm" }, `${fmtDate(dates[0])} a ${fmtDate(dates[dates.length - 1])}`))),
       h("section", { class: "lp-block" }, h("h2", null, "Depois de cada partida"),
         h("ol", { class: "lp-steps four" },
           h("li", null, h("b", null, "Veja o que pede atenção"), h("span", null, "No Panorama, os pontos de atenção mostram onde o time ficou abaixo de outros times nas mesmas situações.")),
@@ -3278,14 +3374,20 @@
         h("div", null, h("dt", null, "Mapas"), h("dd", null, ms.length)),
         h("div", null, h("dt", null, "Vitórias"), h("dd", null, `${w}–${ms.length - w}`)),
         h("div", null, h("dt", null, "Rounds"), h("dd", null, `${rw}–${rl}`)),
-        h("div", null, h("dt", null, "Período"), h("dd", { class: "sm" }, ms.length ? `${fmtDate(M.date[ms[0]])} a ${fmtDate(M.date[ms[ms.length - 1]])}` : "—"))),
-      missionBanner(team, ms), mapCards(team, ms));
-    if (!FU) { main.append(hero); return; }
+        h("div", null, h("dt", null, "Período"), h("dd", { class: "sm" }, ms.length ? `${fmtDate(M.date[ms[0]])} a ${fmtDate(M.date[ms[ms.length - 1]])}` : "—"))));
+    const campaign = h("section", { class: "block home-campaign" },
+      h("div", { class: "block-head" }, h("h2", null, "Campanha por mapa"), h("p", { class: "sub" }, "Resultados e histórico do recorte selecionado")),
+      mapCards(team, ms));
+    if (!FU) { main.append(hero, campaign); return; }
     const bad = collectPatterns(team, "abaixo").slice(0, 4), good = collectPatterns(team, "acima").slice(0, 3);
-    // "Pontos de atenção" e "Pontos fortes" só aparecem quando há padrão recorrente naquela direção
-    const attention = bad.length ? h("section", { class: "block" },
-      h("div", { class: "block-head" }, h("h2", null, "Pontos de atenção")),
+    // Sem padrões corretivos, a missão ocupa toda a largura da composição.
+    const attention = bad.length ? h("section", { class: "block home-priorities" },
+      h("div", { class: "block-head" }, h("h2", null, "Pontos de atenção"),
+        h("p", { class: "sub" }, "Padrões recorrentes para revisar")),
       h("ol", { class: "att-list" }, bad.map(([fk, i]) => attentionItem(fk, i, "abaixo")))) : null;
+    const mission = missionBanner(team, ms);
+    const command = attention || mission ? h("div", { class: "home-command" + (attention && mission ? "" : " home-command--single") },
+      attention, mission ? h("div", { class: "home-mission" }, mission) : null) : null;
     const board = h("section", { class: "block" },
       h("div", { class: "block-head" }, h("h2", null, "Fundamentos"), h("p", { class: "sub" }, "Observado × esperado em situações parecidas"), methodHelp()),
       h("div", { class: "board" },
@@ -3300,7 +3402,7 @@
     const strengths = good.length ? h("section", { class: "block" },
       h("div", { class: "block-head" }, h("h2", null, "Pontos fortes")),
       h("ol", { class: "att-list" }, good.map(([fk, i]) => attentionItem(fk, i, "acima")))) : null;
-    main.append(...[hero, attention, strengths, board].filter(Boolean));
+    main.append(...[hero, command, board, strengths, campaign].filter(Boolean));
   }
 
   if (FU && FU.F.trade) state.dwin = FU.F.trade.meta.window;
@@ -3332,11 +3434,12 @@
   }
   function render() {
     drawers.length = 0; hideTip();
+    if (state.section === "diag" && state.pat == null) state.section = "home";
     renderFilters(); renderSide();
     const main = $("#main"); main.replaceChildren();
-    if (state.section === "diag" && state.pat == null) state.section = "home";
     document.body.classList.toggle("diag-mode", state.section === "diag" || state.section === "home" || state.section === "about");
     document.body.classList.toggle("home-mode", state.section === "home");
+    document.body.classList.toggle("about-mode", state.section === "about");
     if (state.section === "about") renderAbout(main);
     else if (state.section === "home") renderHome(main);
     else if (state.section === "diag") renderDiag(main);

@@ -1,0 +1,31 @@
+/* ValoStrat Tactical — shared foundations for the dashboard and Mission.
+   Keep the original Mission surface and typography values as the source of truth. */
+:root {
+  --rx-coral: #ff4655;
+  --rx-ivory: #f5f0e8;
+  --rx-muted: #b8c0c3;
+  --rx-dark: #0b141c;
+  --rx-rule: rgba(235, 241, 241, .2);
+  --rx-space-1: 4px;
+  --rx-space-2: 8px;
+  --rx-space-3: 12px;
+  --rx-space-4: 16px;
+  --rx-space-5: 20px;
+  --rx-space-6: 24px;
+  --rx-space-8: 32px;
+  --rx-type-label: 11px;
+  --rx-type-small: 12px;
+  --rx-type-body: 14px;
+  --rx-type-title: 15px;
+  --rx-text-primary: var(--rx-ivory);
+  --rx-text-secondary: #c4d2d9;
+  --rx-text-label: #d4e0e5;
+  --rx-text-accent: #ffa5ad;
+  --rx-surface-panel: linear-gradient(135deg, rgba(14, 30, 40, .88), rgba(13, 27, 36, .78));
+  --rx-border-panel: 1px solid rgba(220, 233, 235, .27);
+  --rx-blur-panel: 16px;
+  --rx-shadow-panel: 0 14px 45px rgba(0, 0, 0, .1);
+  --rx-panel-padding: var(--rx-space-6);
+  --rx-panel-accent-width: 40px;
+  --rx-duration-feedback: .2s;
+}

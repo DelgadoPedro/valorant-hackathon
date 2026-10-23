@@ -513,6 +513,7 @@ def build_html(out: Path, cfg, *, payload: dict | None = None) -> Path:
     logo = (HERE / "vendor" / "logo" / "valostrat-mark.svg").read_text(encoding="utf-8").strip()
     tpl = tpl.replace("<!--__LOGO__-->", logo).replace("__FAVICON__", "data:image/svg+xml;base64," + base64.b64encode(logo.encode()).decode())
     html = (tpl.replace("/*__FONTS__*/", fonts).replace("/*__ICONS__*/", "window.RRX_ICONS=" + icons + ";")
+               .replace("/*__DESIGN_SYSTEM_CSS__*/", (HERE / "design-system.css").read_text(encoding="utf-8"))
                .replace("/*__CSS__*/", (HERE / "app.css").read_text(encoding="utf-8"))
                .replace("/*__MISSION_CSS__*/", (HERE / "mission.css").read_text(encoding="utf-8"))
                .replace("/*__D3__*/", (HERE / "vendor" / "d3.min.js").read_text(encoding="utf-8"))

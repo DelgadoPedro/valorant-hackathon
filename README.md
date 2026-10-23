@@ -72,6 +72,12 @@ ou via `python -m roundrx run --data-dir "C:\...\Dados .Json"`). Requer Python �
 
 ## Painel interativo por equipe
 
+O painel usa a identidade **sala tática**: azul profundo, marfim e coral, com a Home de apresentação,
+prévia real da equipe, prioridades no início do Panorama e navegação móvel por menu. A fonte, os
+ícones, as imagens e os dados continuam incorporados no HTML offline. As fundações compartilhadas
+entre dashboard e missão ficam em `viz/design-system.css`; a composição e os contratos estão em
+[docs/DESIGN.md](docs/DESIGN.md).
+
 O botão **Iniciar missão**, no início do Panorama, abre um briefing imersivo de evolução: até três focos do time,
 comparação observado × esperado, acesso às evidências e objetivos selecionáveis para o próximo treino. O cenário
 ilustrativo tem movimentos de câmera e paralaxe. Ascent, Haven, Lotus ou Sunset é escolhido pelo hash do nome

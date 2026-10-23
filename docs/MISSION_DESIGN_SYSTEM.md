@@ -4,13 +4,15 @@ Referência visual: a box original de métricas da missão. O gradiente azul-esc
 a borda fina, o traço coral no canto superior esquerdo e a marca `+` no canto inferior direito
 formam uma única superfície reutilizável. O cenário continua visível, com desfoque atrás do conteúdo.
 
-O sistema está implementado em `roundrx/viz/mission.css` e `mission.js`. A missão é a primeira
-aplicação; a migração do restante do painel pode ser gradual. As regras anteriores do dashboard
-continuam documentadas em [DESIGN.md](DESIGN.md).
+As fundações compartilhadas estão em `roundrx/viz/design-system.css`; a experiência da missão
+continua implementada em `mission.css` e `mission.js`. O dashboard adota a mesma identidade,
+com superfícies estáveis para a leitura de tabelas e gráficos, conforme [DESIGN.md](DESIGN.md).
 
 ## 1. Fundações e tokens
 
-Tokens ficam no escopo `.rx-mission` e `.rx-launch`, evitando mudanças involuntárias no dashboard.
+Tokens ficam em `:root` no arquivo `design-system.css`, incorporado antes dos estilos do dashboard
+e da missão. Os valores originais da missão são preservados. Variações de densidade e câmera
+continuam locais a `.rx-mission` e `.rx-launch`; a extração dos tokens não altera sua experiência.
 
 | Família | Tokens implementados | Regra |
 |---|---|---|
